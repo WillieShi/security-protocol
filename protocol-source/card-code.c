@@ -1,8 +1,8 @@
 //Includes
 
 //Definitions
-#define SIGNATURE_SIZE 128;
-#define KEY_SIZE 128;
+#define SIGNATURE_SIZE 256;
+#define KEY_SIZE 256;
 
 
 //Function definitions
@@ -27,7 +27,7 @@ static void writeUART(uint8_t* buffer){
 }
 
 static uint8_t* readUART(){
-
+  
 }
 
 static uint8_t* readSignature(uint8_t* buffer){
