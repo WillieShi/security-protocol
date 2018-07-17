@@ -22,5 +22,5 @@ def encrypt_message(message, key):
 
 def decrypt_message(message, key):
     decryption_suite = AES.new(key, AES.MODE_CBC, 'This is an IV456')
-    plain_text = decryption_suite.decrypt(message)
+    plain_text = decryption_suite.decrypt(message).decode('utf-8')
     return plain_text
