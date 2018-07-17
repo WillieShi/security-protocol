@@ -1,10 +1,12 @@
+
 //Includes
+#include <stdint.h>
+#include <stdlib.h>
 
 //Definitions
-#define SIGNATURE_SIZE 256;
-#define KEY_SIZE 256;
-#define SALT_SIZE 256;
-
+#define SIGNATURE_SIZE 256
+#define KEY_SIZE 256
+#define SALT_SIZE 256
 
 //Function definitions
 static uint8_t* rsaEncrypt(uint8_t* buffer, uint8_t* key){
@@ -33,7 +35,7 @@ static uint8_t* readUART(){
 
 //Reads the third 256 byte segment of data: salt
 static uint8_t* readSalt(uint8_t* buffer){
-  uint8_t* result = (uint8_t*)malloc(SALT_SIZE*sizeof(uint8_t));
+  uint8_t* result = malloc(SALT_SIZE*sizeof(uint8_t));
   for(int i = KEY_SIZE + SIGNATURE_SIZE; i < KEY_SIZE + SIGNATURE_SIZE + SALT_SIZE; i++){
     result[i - KEY_SIZE - SIGNATURE_SIZE] = buffer[i];
   }
@@ -42,7 +44,7 @@ static uint8_t* readSalt(uint8_t* buffer){
 
 //Reads the second 256 byte segment of data: signature
 static uint8_t* readSignature(uint8_t* buffer){
-  uint8_t* result = (uint8_t*)malloc(SIGNATURE_SIZE*sizeof(uint8_t));
+  uint8_t* result = malloc(SIGNATURE_SIZE*sizeof(uint8_t));
   for(int i = KEY_SIZE; i < KEY_SIZE + SIGNATURE_SIZE; i++){
     result[i - KEY_SIZE] = buffer[i];
   }
@@ -51,7 +53,7 @@ static uint8_t* readSignature(uint8_t* buffer){
 
 //Reads the first 256 byte segment of data: contents
 static uint8_t* readData(uint8_t* buffer){
-  uint8_t* result = (uint8_t*)malloc(KEY_SIZE*sizeof(uint8_t));
+  uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
   for(int i = 0; i < KEY_SIZE; i++){
     result[i] = buffer[i];
   }
@@ -59,8 +61,8 @@ static uint8_t* readData(uint8_t* buffer){
 }
 
 //Checks arrays against each other: for testing keys
-static int checkArrays(uint8_t array1, uint8_t array2){
-  for(int i = 0; i < sizeof(array1)/sizeof(uint8_t); i++){
+static int checkArrays(uint8_t* array1, uint8_t* array2, int size){
+  for(int i = 0; i < size; i++){
     if(array1[i] != array2[i]){
       return 0;
     }
@@ -83,10 +85,10 @@ int main() {
   //Read checknum, decrypt and return with salt to ATM
   uint8_t* checkNumE = readUART();
   writeUART((uint8_t*)"___Received checkNum___");
-  checkNumD = readData(rsaDecrypt(checkNumE, privKey));
+  uint8_t* checkNumD = readData(rsaDecrypt(checkNumE, privKey));
   uint8_t* candBankSig = readSignature(rsaDecrypt(checkNumE, privKey));
   uint8_t* salt = readSalt(rsaDecrypt(checkNumE, privKey));
-  if(checkArrays(candBankSig, bankSig)){
+  if(checkArrays(candBankSig, bankSig, SIGNATURE_SIZE)){
     writeUART(checkNumD);
     writeUART(salt);
     writeUART((uint8_t*)"___Correct signature sent checknum___");
@@ -99,10 +101,10 @@ int main() {
   //Read onion, decrypt, and send back inner layer with salt back to ATM
   uint8_t* onionE = readUART();
   writeUART((uint8_t*)"___Received onion___");
-  onionD = readData(rsaDecrypt(onionE, privKey));
+  uint8_t* onionD = readData(rsaDecrypt(onionE, privKey));
   candBankSig = readSignature(rsaDecrypt(onionE, privKey));
   salt = readSalt(rsaDecrypt(onionE, privKey));
-  if(checkArrays(candBankSig, bankSig)){
+  if(checkArrays(candBankSig, bankSig, SIGNATURE_SIZE)){
     writeUART(onionD);
     writeUART(salt);
     writeUART((uint8_t*)"___Correct signature sent onion___");
