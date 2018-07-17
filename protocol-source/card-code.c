@@ -65,7 +65,6 @@ static int checkArrays(uint8_t array1, uint8_t array2){
 }
 
 int main() {
-  uint8_t*
   uint8_t* privKey = readMemory(0);
   uint8_t* bankSig = readMemory(1);
   int* cardNum = (int*)readMemory(2);
