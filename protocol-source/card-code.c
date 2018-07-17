@@ -53,14 +53,6 @@ static int checkArrays(uint8_t array1, uint8_t array2){
   return 1;
 }
 
-/*
-  Data structure
-  Row 0: Private Key
-  Row 1: Bank signature
-  Row 2: Card number
-*/
-
-//Main
 int main() {
   uint8_t*
   uint8_t* privKey = readMemory(0);
@@ -86,7 +78,7 @@ int main() {
 
 
   uint8_t* onionE = readUART();
-  writeUART((uint8_t*)"___Received onion");
+  writeUART((uint8_t*)"___Received onion___");
   onionD = readData(rsaDecrypt(onionE, privKey));
   candBankSig = readSignature(rsaDecrypt(onionD, privKey));
   if(checkArrays(candBankSig, bankSig)){
