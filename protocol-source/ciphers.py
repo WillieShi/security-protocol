@@ -1,5 +1,6 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
+from Crypto.Util import number
 import Crypto
 from Crypto.PublicKey import RSA
 from Crypto import Random
@@ -8,12 +9,17 @@ import base64
 import six
 
 #here we define initial variables
-n_length = 128
+n_length = 2048
 IV = 16 * '\x00'
+our_message = "testing here please"
 
 #here we define AES functions
+def pad(unpadded_message):
+    unpadded_message += (((32 - len(unpadded_message)) % 32 * '{'))
+    return unpadded_message
+
 def create_aes_key():
-    #this takes 16 random bytes to make our key
+    #this takes 32 random bytes to make our key
     new_key = get_random_bytes(32)
     return new_key
 
@@ -30,12 +36,9 @@ def decrypt_aes(encrypted_message, key):
     return plain_text
 
 #here we define RSA functions
-def generate_rsa_keys():
-    secret_code = "Unguessable"
-    key = RSA.generate(2048)
-    encrypted_key = key.exportKey(passphrase=secret_code, pkcs=8)
-    file_out = open("rsa_key.bin", "wb")
-    file_out.write(encrypted_key)
-    print(key.publickey().exportKey())
+def generate_prime_number():
+    generated_number = number.getPrime(n_length)
+    return generated_number
 #any test code goes here
-generate_rsa_keys()
+prime_number = generate_prime_number()
+print(prime_number)
