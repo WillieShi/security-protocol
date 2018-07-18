@@ -24,4 +24,4 @@ def decrypt_aes(encrypted_message, key):
     decrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
     #the decode thing stops the result from being b'decrypted_message'
     plain_text = decrypt_cipher.decrypt(encrypted_message).decode("utf-8")
-    return plain_text
+    return plain_text`
