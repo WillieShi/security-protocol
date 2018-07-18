@@ -4,7 +4,7 @@ import os
 import base64
 import six
 
-#here we define variables
+#here we define initial variables
 n_length = 128
 IV = 16 * '\x00'
 
