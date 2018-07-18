@@ -32,7 +32,7 @@ Signatures: 256 bytes
 Salts: 256 bytes
 
 ### Storage standards
-1 256 byte variable per row
+1 256 byte variable per 2 rows
 
 ### Card storage layout
 Row 0: Private Key
@@ -40,6 +40,8 @@ Row 0: Private Key
 Row 2: Bank signature
 
 Row 4: Card number
+
+Row 6:
 
 ### Method descriptions
 

@@ -13,10 +13,6 @@ static void init(){
   UART_Start();
 }
 
-static uint8_t* rsaEncrypt(uint8_t* buffer, uint8_t* key){
-
-}
-
 static uint8_t* rsaDecrypt(uint8_t* buffer, uint8_t* key){
 
 }
