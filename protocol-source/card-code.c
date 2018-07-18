@@ -10,15 +10,15 @@
 #define ENCRYPTION_NUMBER_SIZE 64;
 
 //Function definitions
-static void init(){
+ void init(){
   UART_Start();
 }
 
-static uint8_t* rsaDecrypt(uint8_t* buffer, uint8_t* key){
+uint8_t* rsaDecrypt(uint8_t* buffer, uint8_t* key){
 
 }
 
-static void writeMemory(int row, uint8_t* buffer){
+void writeMemory(int row, uint8_t* buffer){
   uint8_t* firstHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
   uint8_t* secondHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
   for(int i = 0; i < CY_FLASH_SIZEOF_ROW; i++){
@@ -29,7 +29,7 @@ static void writeMemory(int row, uint8_t* buffer){
   CySysFlashWriteRow((uint32_t)(row+1), secondHalf);
 }
 
-static uint8_t* readMemory(int row, int size){
+uint8_t* readMemory(int row, int size){
   uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
   for(int i = 0; i < size; i++){
     result[i] = (uint8_t)&(CY_FLASH_BASE + (CY_FLASH_SIZEOF_ROW * row) + (i*sizeof(uint8_t));
@@ -37,13 +37,13 @@ static uint8_t* readMemory(int row, int size){
   return result;
 }
 
-static void writeUART(uint8_t* buffer){
+void writeUART(uint8_t* buffer){
   for(int i = 0; i < KEY_SIZE; i++){
     UART_Uart_putChar((char)buffer[i]);
   }
 }
 
-static uint8_t* readUART(){
+uint8_t* readUART(){
   uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
   for(int i = 0; i < KEY_SIZE;){
     uint8_t rxData = (uint8_t)PC_PSoC_UART_UartGetChar();
@@ -55,7 +55,7 @@ static uint8_t* readUART(){
 }
 
 //Reads the third 256 byte segment of data: salt
-static uint8_t* readSalt(uint8_t* buffer){
+uint8_t* readSalt(uint8_t* buffer){
   uint8_t* result = malloc(SALT_SIZE*sizeof(uint8_t));
   for(int i = KEY_SIZE + SIGNATURE_SIZE; i < KEY_SIZE + SIGNATURE_SIZE + SALT_SIZE; i++){
     result[i - KEY_SIZE - SIGNATURE_SIZE] = buffer[i];
@@ -64,7 +64,7 @@ static uint8_t* readSalt(uint8_t* buffer){
 }
 
 //Reads the second 256 byte segment of data: signature
-static uint8_t* readSignature(uint8_t* buffer){
+uint8_t* readSignature(uint8_t* buffer){
   uint8_t* result = malloc(SIGNATURE_SIZE*sizeof(uint8_t));
   for(int i = KEY_SIZE; i < KEY_SIZE + SIGNATURE_SIZE; i++){
     result[i - KEY_SIZE] = buffer[i];
@@ -73,7 +73,7 @@ static uint8_t* readSignature(uint8_t* buffer){
 }
 
 //Reads the first 256 byte segment of data: contents
-static uint8_t* readData(uint8_t* buffer){
+uint8_t* readData(uint8_t* buffer){
   uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
   for(int i = 0; i < KEY_SIZE; i++){
     result[i] = buffer[i];
@@ -81,7 +81,7 @@ static uint8_t* readData(uint8_t* buffer){
   return result;
 }
 
-static int512_t* readFancyNumbers(int row){
+int512_t* readFancyNumbers(int row){
   uint512_t* result = malloc(4*sizeof(uint512_t));
   result[0] = *readMemory(row, CY_FLASH_SIZEOF_ROW);
   result[1] = *(readMemory(row, CY_FLASH_SIZEOF_ROW)+(CY_FLASH_SIZEOF_ROW/2));
@@ -90,7 +90,7 @@ static int512_t* readFancyNumbers(int row){
 }
 
 //Checks arrays against each other: for testing keys
-static int checkArrays(uint8_t* array1, uint8_t* array2, int size){
+int checkArrays(uint8_t* array1, uint8_t* array2, int size){
   for(int i = 0; i < size; i++){
     if(array1[i] != array2[i]){
       return 0;
