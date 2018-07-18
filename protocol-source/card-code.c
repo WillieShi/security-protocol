@@ -30,17 +30,17 @@ static uint8_t* readMemory(int row){
 }
 
 static void writeUART(uint8_t* buffer){
-  for(int i = 0; i < KEY_SIZE, i++){
+  for(int i = 0; i < KEY_SIZE; i++){
     UART_Uart_putChar((char)buffer[i]);
   }
 }
 
 static uint8_t* readUART(){
-  uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t))
+  uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
   for(int i = 0; i < KEY_SIZE;){
-    rxData = PC_PSoC_UART_UartGetChar();
+    uint8_t rxData = (uint8_t)PC_PSoC_UART_UartGetChar();
     if(rxData){
-      result[i] = (uint8_t)rxData;
+      result[i] = rxData;
     }
   }
   return result;
