@@ -1,48 +1,27 @@
-from Crypto import Random
-from Crypto.Cipher import AES
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Hash import SHA
-from Crypto.Util import number
+from cryptography.fernet import Fernet
 import os
 import base64
 import six
+import rsa
 
 #here we define variables
-n_length = 256
-prime_number_1 = 0
-prime_number_2 = 0
+n_length = 128
+symmetric_key = Fernet.generate_key()
+#here we define functions
 
-#both the key and the message must be a multiple of 16 in length"
+#here we define fernet encryption and decryption
+def encrypt_message_symmetric(message, key):
+    cipher_suite = Fernet(key)
+    encrypted_text = cipher_suite.encrypt(message.encode("utf-8"))
+    return encrypted_text
 
-def encrypt_message_AES(message, key):
-    #don't know what this line does. the var key is passed as an argument
-    encryption_suite = AES.new(key, AES.MODE_CBC, 'This is an IV456')
-    #cipher_text is the encrypted code
-    cipher_text = encryption_suite.encrypt(message)
-    return cipher_text
+def decrypt_message_symmetric(message, key):
+    cipher_suite = Fernet(key)
+    return(cipher_suite.decrypt(message).decode("utf-8"))
 
-def decrypt_message_AES(message, key):
-    #still got no clue. key is passed as an arg yet again
-    decryption_suite = AES.new(key, AES.MODE_CBC, 'This is an IV456')
-    #plain_text is the decrypted message
-    plain_text = decryption_suite.decrypt(message).decode('utf-8')
-    return plain_text
+#here we define RSA
 
-#RSA begins here
-def is_prime(a):
-    x = True
-    for i in (2, a):
-            while x:
-               if a%i == 0:
-                   x = False
-               else:
-                   x = True
-    if x:
-        print("prime")
-    else:
-        print("not prime")
-
-def generate_prime_numbers():
-    prime_number = number.getPrime(n_length)
-    return prime_number
+#code goes here
+create_rsa_keys()
+send_through_rsa("testing my rsa")
+decrypt_rsa(encrypted_box)
