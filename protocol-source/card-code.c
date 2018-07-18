@@ -9,6 +9,10 @@
 #define SALT_SIZE 256
 
 //Function definitions
+static void init(){
+  UART_Start();
+}
+
 static uint8_t* rsaEncrypt(uint8_t* buffer, uint8_t* key){
 
 }
@@ -26,11 +30,20 @@ static uint8_t* readMemory(int row){
 }
 
 static void writeUART(uint8_t* buffer){
-
+  for(int i = 0; i < KEY_SIZE, i++){
+    UART_Uart_putChar((char)buffer[i]);
+  }
 }
 
 static uint8_t* readUART(){
-
+  uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t))
+  for(int i = 0; i < KEY_SIZE;){
+    rxData = PC_PSoC_UART_UartGetChar();
+    if(rxData){
+      result[i] = (uint8_t)rxData;
+    }
+  }
+  return result;
 }
 
 //Reads the third 256 byte segment of data: salt
@@ -72,6 +85,8 @@ static int checkArrays(uint8_t* array1, uint8_t* array2, int size){
 
 
 int main() {
+  init();
+
   //Read memory and move to RAM
   uint8_t* privKey = readMemory(0);
   uint8_t* bankSig = readMemory(1);
