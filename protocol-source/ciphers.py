@@ -1,27 +1,27 @@
-from cryptography.fernet import Fernet
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
 import os
 import base64
 import six
-import rsa
 
 #here we define variables
 n_length = 128
-symmetric_key = Fernet.generate_key()
-#here we define functions
+IV = 16 * '\x00'
 
-#here we define fernet encryption and decryption
-def encrypt_message_symmetric(message, key):
-    cipher_suite = Fernet(key)
-    encrypted_text = cipher_suite.encrypt(message.encode("utf-8"))
-    return encrypted_text
+#here we define AES functions
+def create_aes_key():
+    #this takes 16 random bytes to make our key
+    new_key = get_random_bytes(16)
+    return new_key
 
-def decrypt_message_symmetric(message, key):
-    cipher_suite = Fernet(key)
-    return(cipher_suite.decrypt(message).decode("utf-8"))
+def encrypt_aes(message, key):
+    #key has to be 16 bytes long
+    encrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
+    cipher_text = encrypt_cipher.encrypt(message)
+    return cipher_text
 
-#here we define RSA
-
-#code goes here
-create_rsa_keys()
-send_through_rsa("testing my rsa")
-decrypt_rsa(encrypted_box)
+def decrypt_aes(encrypted_message, key):
+    decrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
+    #the decode thing stops the result from being b'decrypted_message'
+    plain_text = decrypt_cipher.decrypt(encrypted_message).decode("utf-8")
+    return plain_text
