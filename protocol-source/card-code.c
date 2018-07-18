@@ -22,7 +22,14 @@ static uint8_t* rsaDecrypt(uint8_t* buffer, uint8_t* key){
 }
 
 static void writeMemory(int row, uint8_t* buffer){
-  CySysFlashWriteRow((uint32_t)row, (uint8_t*)buffer);
+  uint8_t* firstHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
+  uint8_t* secondHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
+  for(int i = 0; i < CY_FLASH_SIZEOF_ROW; i++){
+    firstHalf[i] = buffer[i];
+    secondHalf[i] = buffer[i+CY_FLASH_SIZEOF_ROW];
+  }
+  CySysFlashWriteRow((uint32_t)row, firstHalf);
+  CySysFlashWriteRow((uint32_t)(row+1), secondHalf);
 }
 
 static uint8_t* readMemory(int row){
