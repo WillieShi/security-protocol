@@ -21,12 +21,16 @@ static uint8_t* rsaDecrypt(uint8_t* buffer, uint8_t* key){
 
 }
 
-static void writeMemory(int row){
-
+static void writeMemory(int row, uint8_t* buffer){
+  CySysFlashWriteRow((uint32_t)row, (uint8_t*)buffer);
 }
 
 static uint8_t* readMemory(int row){
-
+  uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
+  for(int i = 0; i < CY_FLASH_SIZEOF_ROW; i++){
+    result[i] = (uint8_t)&(CY_FLASH_BASE + (CY_FLASH_SIZEOF_ROW * row) + (i*sizeof(uint8_t));
+  }
+  return result;
 }
 
 static void writeUART(uint8_t* buffer){
