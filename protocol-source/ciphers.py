@@ -10,10 +10,15 @@ import six
 #here we define initial variables
 n_length = 128
 IV = 16 * '\x00'
+our_message = "testing here please"
 
 #here we define AES functions
+def pad(unpadded_message):
+    unpadded_message += (((32 - len(unpadded_message)) % 32 * '{'))
+    return unpadded_message
+
 def create_aes_key():
-    #this takes 16 random bytes to make our key
+    #this takes 32 random bytes to make our key
     new_key = get_random_bytes(32)
     return new_key
 
@@ -38,4 +43,3 @@ def generate_rsa_keys():
     file_out.write(encrypted_key)
     print(key.publickey().exportKey())
 #any test code goes here
-generate_rsa_keys()
