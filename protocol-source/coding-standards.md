@@ -37,9 +37,9 @@ Salts: 256 bytes
 ### Card storage layout
 Row 0: Private Key
 
-Row 1: Bank signature
+Row 2: Bank signature
 
-Row 2: Card number
+Row 4: Card number
 
 ### Method descriptions
 

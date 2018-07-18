@@ -100,8 +100,8 @@ int main() {
 
   //Read memory and move to RAM
   uint8_t* privKey = readMemory(0);
-  uint8_t* bankSig = readMemory(1);
-  int* cardNum = (int*)readMemory(2);
+  uint8_t* bankSig = readMemory(2);
+  int* cardNum = (int*)readMemory(4);
 
   //Send card number to ATM
   writeUART((uint8_t*)"___Sending card number___");
