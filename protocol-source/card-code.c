@@ -7,6 +7,7 @@
 #define SIGNATURE_SIZE 256
 #define KEY_SIZE 256
 #define SALT_SIZE 256
+#define ENCRYPTION_NUMBER_SIZE 64;
 
 //Function definitions
 static void init(){
@@ -28,9 +29,9 @@ static void writeMemory(int row, uint8_t* buffer){
   CySysFlashWriteRow((uint32_t)(row+1), secondHalf);
 }
 
-static uint8_t* readMemory(int row){
+static uint8_t* readMemory(int row, int size){
   uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
-  for(int i = 0; i < CY_FLASH_SIZEOF_ROW; i++){
+  for(int i = 0; i < size; i++){
     result[i] = (uint8_t)&(CY_FLASH_BASE + (CY_FLASH_SIZEOF_ROW * row) + (i*sizeof(uint8_t));
   }
   return result;
@@ -80,6 +81,14 @@ static uint8_t* readData(uint8_t* buffer){
   return result;
 }
 
+static int512_t* readFancyNumbers(int row){
+  uint512_t* result = malloc(4*sizeof(uint512_t));
+  result[0] = *readMemory(row, CY_FLASH_SIZEOF_ROW);
+  result[1] = *(readMemory(row, CY_FLASH_SIZEOF_ROW)+(CY_FLASH_SIZEOF_ROW/2));
+  result[2] = *readMemory(row+1, CY_FLASH_SIZEOF_ROW);
+  result[3] = *(readMemory(row+1, CY_FLASH_SIZEOF_ROW)+(CY_FLASH_SIZEOF_ROW/2));
+}
+
 //Checks arrays against each other: for testing keys
 static int checkArrays(uint8_t* array1, uint8_t* array2, int size){
   for(int i = 0; i < size; i++){
@@ -95,9 +104,14 @@ int main() {
   init();
 
   //Read memory and move to RAM
-  uint8_t* privKey = readMemory(0);
-  uint8_t* bankSig = readMemory(2);
-  int* cardNum = (int*)readMemory(4);
+  uint8_t* privKey = readMemory(0, KEY_SIZE);
+  uint8_t* bankSig = readMemory(2, SIGNATURE_SIZE);
+  int* cardNum = (int*)readMemory(4, KEY_SIZE);
+  uint512_t* fancyNumbers = readFancyNumbers(6);
+  uint512_t fancyNumberOne = fancyNumbers[0];
+  uint512_t fancyNumberTwo = fancyNumbers[1];
+  uint512_t fancyNumberThree = fancyNumbers[2];
+  uint512_t fancyNumberFour = fancyNumbers[3];
 
   //Send card number to ATM
   writeUART((uint8_t*)"___Sending card number___");

@@ -31,6 +31,14 @@ Signatures: 256 bytes
 
 Salts: 256 bytes
 
+Fancy number 0: 64 bytes
+
+Fancy number 1: 64 bytes
+
+Fancy number 2: 64 bytes
+
+Fancy number 3: 64 bytes
+
 ### Storage standards
 1 256 byte variable per 2 rows
 
