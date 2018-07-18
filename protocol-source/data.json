@@ -1,0 +1,17 @@
+bank = {
+   "user-info":[{
+      "user_one":{
+         "cc-number":"1234567891234567",
+         "user_signature":"insert_user_sig",
+
+      }
+      }],
+   "bank-info":[{
+      "public_rsa_key":"insert_pub_rsa_key",
+      "private_rsa_key":"insert_priv_rsa_key",
+      "public_outerlayer_key":"insert_pub_outer_key",
+      "private_innerlayer_key":"insert_priv_inner_key",
+      "public_innerlayer_key":"insert_pub_inner_key",
+      "bank-sig":"insert_bank_sig"
+      }],
+}
