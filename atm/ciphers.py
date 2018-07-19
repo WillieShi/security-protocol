@@ -66,7 +66,13 @@ def decrypt_rsa(cipher_rsa):
     decrypted_rsa = priv_key.decrypt(cipher_rsa).decode("utf-8")
     return decrypted_rsa
 
-
+def hash_message(message):
+    salt = bcrypt.gensalt()
+    message = str(message)
+    salt = salt.decode("utf-8")
+    message = message + salt
+    message = message.encode("utf-8")
+    return(hashlib.sha3_256(message).hexdigest())
 #any test code goes here
 
 priv_key, pub_key = generate_key()
