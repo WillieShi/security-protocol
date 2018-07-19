@@ -1,6 +1,5 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
-from Crypto.Util import number
 import Crypto
 from Crypto.PublicKey import RSA
 from Crypto import Random
@@ -9,7 +8,7 @@ import base64
 import six
 
 #here we define initial variables
-n_length = 2048
+n_length = 128
 IV = 16 * '\x00'
 our_message = "testing here please"
 
@@ -36,18 +35,11 @@ def decrypt_aes(encrypted_message, key):
     return plain_text
 
 #here we define RSA functions
-def generate_prime_number():
-    generated_number = number.getPrime(n_length)
-    return generated_number
+def generate_rsa_keys():
+    secret_code = "Unguessable"
+    key = RSA.generate(2048)
+    encrypted_key = key.exportKey(passphrase=secret_code, pkcs=8)
+    file_out = open("rsa_key.bin", "wb")
+    file_out.write(encrypted_key)
+    print(key.publickey().exportKey())
 #any test code goes here
-prime_number = generate_prime_number()
-print(prime_number)
-
-#not sure if these imports are more or less correct than the ones above for RSA.
-#What version should we use for RSA..?
-from Crypto.Cipher import PKCS51_OAEP
-
-#decryption
-def decrypt_rsa(encrypted_rsa):
-    decrypted_rsa = decrypt(encrypted_rsa)
-    return decrypted_rsa
