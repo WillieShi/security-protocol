@@ -7,11 +7,14 @@ from Crypto import Random
 import os
 import base64
 import six
+import hashlib
+import bcrypt
 
 #here we define initial variables
 n_length = 2048
 IV = 16 * '\x00'
 our_message = "testing here please"
+salt = bcrypt.gensalt()
 
 #here we define AES functions
 def pad(unpadded_message):
@@ -39,6 +42,15 @@ def decrypt_aes(encrypted_message, key):
 def generate_prime_number():
     generated_number = number.getPrime(n_length)
     return generated_number
-#any test code goes here
-prime_number = generate_prime_number()
-print(prime_number)
+#here we define hash function code
+def hash_message(message):
+    salt = bcrypt.gensalt()
+    message = str(message)
+    salt = salt.decode("utf-8")
+    message = message + salt
+    message = message.encode("utf-8")
+    return(hashlib.sha3_256(message).hexdigest())
+
+#test code here
+hashed_message = hash_message("Help us this is a hash")
+print(hashed_message)
