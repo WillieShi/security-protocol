@@ -65,8 +65,4 @@ def decrypt_rsa(cipher_rsa):
     else:
         print("Encrypted RSA is too large.")
 
-
-
 #any test code goes here
-prime_number = generate_prime_number()
-print(prime_number)
