@@ -53,11 +53,11 @@ def generate_key():
     return priv_key, pub_key
 
 #rsa encryption
-def encrypted_key():
+def encrypt_key():
 
 
 #rsa decryption
-def decrypt_rsa(encrypted_rsa):
+def decrypt_rsa(encrypted_rsa, priv_key):
     if 0 < encrypted_rsa < self.n:
         decrypted_rsa = priv_key.decrypt(encrypted_rsa)
         return decrypted_rsa
