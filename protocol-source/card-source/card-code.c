@@ -25,10 +25,10 @@
 
 const uint8_t row[CY_FLASH_SIZEOF_ROW] CY_ALIGN(CY_FLASH_SIZEOF_ROW) = {0};
 
-static uint8_t* readUART();
-static void writeUART(uint8_t* buffer);
-static void writeMemory(int row, uint8_t* buffer);
-static uint8_t* readMemory(int row,  int size);
+uint8_t* readUART();
+void writeUART(uint8_t* buffer);
+void writeMemory(int row, uint8_t* buffer);
+uint8_t* readMemory(int row,  int size);
 int checkArrays(uint8_t* array1, uint8_t* array2, int size);
 uint8_t* readData(uint8_t* buffer);
 uint8_t* readSignature(uint8_t* buffer);
@@ -109,7 +109,7 @@ int main(void)
     }
 }
 
-static uint8_t* readUART(){
+uint8_t* readUART(){
   uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
   for(int i = 0; i < KEY_SIZE;){
     uint8_t rxData = (uint8_t)UART_GetChar();
@@ -121,7 +121,7 @@ static uint8_t* readUART(){
   return result;
 }
 
-static void writeUART(uint8_t* buffer)
+void writeUART(uint8_t* buffer)
 {
   for(int i = 0; i < KEY_SIZE; i++)
   {
@@ -130,7 +130,7 @@ static void writeUART(uint8_t* buffer)
 }
 
 //TEST TOMORROW
-static void writeMemory(int row, uint8_t* buffer){
+void writeMemory(int row, uint8_t* buffer){
   uint8_t* firstHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
   uint8_t* secondHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
   for(uint32 i = 0; i < CY_FLASH_SIZEOF_ROW; i++){
@@ -142,7 +142,7 @@ static void writeMemory(int row, uint8_t* buffer){
 }
 
 //NOT TESTED YET
-static uint8_t* readMemory(int row, int size){
+uint8_t* readMemory(int row, int size){
   uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
   for(int i = 0; i < size; i++){
     result[i] = (uint8_t)(CY_FLASH_BASE + (CY_FLASH_SIZEOF_ROW * row) + (i*sizeof(uint8_t)));
