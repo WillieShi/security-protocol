@@ -44,6 +44,14 @@ def generate_prime_number():
 #What version should we use for RSA..?
 from Crypto.Cipher import PKCS51_OAEP
 
+def generate_key():
+    priv_key = RSA.generate(1016, Random.new(), e=65537)
+    pub_key = priv_key.publickey()
+    return priv_key, pub_key
+
+def encrypted_key():
+
+    
 #decryption
 def decrypt_rsa(encrypted_rsa):
     if 0 < encrypted_rsa < self.n:
