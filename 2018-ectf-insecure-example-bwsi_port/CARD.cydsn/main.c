@@ -9,96 +9,185 @@
  *
  * ========================================
 */
-#include <project.h>
-#include "usbserialprotocol.h"
+#include "project.h"
+#include "mbedtls\rsa.h"
 
-#define PIN_LEN 8
-#define UUID_LEN 36
-#define PINCHG_SUC "SUCCESS"
-#define PROV_MSG "P"
-#define RECV_OK "K"
-#define PIN_OK "OK"
-#define PIN_BAD "BAD"
-#define CHANGE_PIN '3'
+#include <stdlib.h>
 
-#define PIN ((uint8*)(CY_FLASH_BASE + 0x8000))
-#define UUID ((uint8*)(CY_FLASH_BASE + 0x8080))
-#define PROVISIONED ((uint8*)(CY_FLASH_BASE + 0x8100))
-#define write_pin(p) CySysFlashWriteRow(256, p);
-#define write_uuid(u) CySysFlashWriteRow(257, u);
+#include "mbedtls/entropy.h"
+#include "mbedtls/ctr_drbg.h"
 
-void mark_provisioned()
+#define SIGNATURE_SIZE 25
+#define KEY_SIZE 256
+#define SALT_SIZE 256
+#define ENCRYPTION_NUMBER_SIZE 64;
+
+
+const uint8_t row[CY_FLASH_SIZEOF_ROW] CY_ALIGN(CY_FLASH_SIZEOF_ROW) = {0};
+
+uint8_t* readUART();
+void writeUART(uint8_t* buffer);
+void writeMemory(int row, uint8_t* buffer);
+uint8_t* readMemory(int row,  int size);
+int checkArrays(uint8_t* array1, uint8_t* array2, int size);
+uint8_t* readData(uint8_t* buffer);
+uint8_t* readSignature(uint8_t* buffer);
+uint8_t* readSalt(uint8_t* buffer);
+
+int main(void)
 {
-    uint8 row[128];
-    *row = 1;
-    CySysFlashWriteRow(258, row);
-}
+    CyGlobalIntEnable; /* Enable global interrupts. */
+    uint32_t vc_length;
+    uint32_t hashlength;
+    uint8_t vcbuf[vc_length];
+    uint8_t* pubbuf;
+    uint8_t rdata[CY_FLASH_SIZEOF_ROW];
 
-// provisions card (should only ever be called once)
-void provision()
-{
-    uint8 message[128];
-    
-    // synchronize with bank
-    syncConnection(SYNC_PROV);
- 
-    pushMessage((uint8*)PROV_MSG, (uint8)strlen(PROV_MSG));
-        
-    // set PIN
-    pullMessage(message);
-    write_pin(message);
-    pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
-    
-    // set account number
-    pullMessage(message);
-    write_uuid(message);
-    pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
-}
+    uint8_t* privKey = readMemory(0, KEY_SIZE);
+    uint8_t* bankSig = readMemory(2, SIGNATURE_SIZE);
+    int* cardNum = (int*)readMemory(4, KEY_SIZE);
 
-int main (void)
-{
-    CyGlobalIntEnable;      /* Enable global interrupts */
-    
+    //rsa BSVARIABLES
+    mbedtls_rsa_context rsa;
+    mbedtls_mpi N, P, Q, D, E, DP, DQ, QP;
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+
+    int return_val;
+
     UART_Start();
-    
-    /* Declare vairables here */
-    uint8 message[128];
-    
-    //while(1) UART_UartPutString("HELLO WORLD!\r\n");
-    // Provision card if on first boot
-    if (*PROVISIONED == 0x00) {
-        provision();
-        mark_provisioned();
-    }
-    
-    // Go into infinite loop
-    while (1) {
+    /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+
+    for(;;)
+    {
         /* Place your application code here. */
-        
-        // syncronize communication with bank
-        syncConnection(SYNC_NORM);
-        
-        // receive pin number from ATM
-        pullMessage(message);
-        
-        if (strncmp((char*)message, (char*)PIN, PIN_LEN)) {
-            pushMessage((uint8*)PIN_BAD, strlen(PIN_BAD));
-        } else {
-            pushMessage((uint8*)PIN_OK, strlen(PIN_OK));
-            
-            // get command
-            pullMessage(message);
-            pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
-            
-            // change PIN or broadcast UUID
-            if(message[0] == CHANGE_PIN)
-            {
-                pullMessage(message);
-                write_pin(message);
-                pushMessage((uint8*)PINCHG_SUC, strlen(PINCHG_SUC));
-            } else {
-                pushMessage(UUID, UUID_LEN);   
-            }
+        //UART_PutString("Test String \n");
+        //TODO Card checking ATM identity
+        //code for sending hash
+        writeUART((uint8_t*)"___Sending card number___");
+        writeUART((uint8_t*)cardNum);
+        writeUART((uint8_t*)"___Sent card number___");
+
+
+
+
+        //Read checknum, decrypt and return with salt to ATM
+        uint8_t* checkNumE = readUART();
+        writeUART((uint8_t*)"___Received checkNum___");
+        uint8_t* checkNumD = readData(rsaDecrypt(checkNumE, privKey));
+        uint8_t* candBankSig = readSignature(rsaDecrypt(checkNumE, privKey));
+        uint8_t* salt = readSalt(rsaDecrypt(checkNumE, privKey));
+        if(checkArrays(candBankSig, bankSig, SIGNATURE_SIZE))
+        {
+            writeUART(checkNumD);
+            writeUART(salt);
+            writeUART((uint8_t*)"___Correct signature sent checknum___");
         }
+        else
+        {
+            writeUART((uint8_t*)"___Incorrect signature did not send checknum___");
+        }
+
+
+        //Read onion, decrypt, and send back inner layer with salt back to ATM
+        uint8_t* onionE = readUART();
+        writeUART((uint8_t*)"___Received onion___");
+        uint8_t* onionD = readData(rsaDecrypt(onionE, privKey));
+        candBankSig = readSignature(rsaDecrypt(onionE, privKey));
+        //salt = readSalt(rsaDecrypt(onionE, privKey));
+        if(checkArrays(candBankSig, bankSig, SIGNATURE_SIZE))
+        {
+            writeUART(onionD);
+            //writeUART(salt);
+            writeUART((uint8_t*)"___Correct signature sent onion___");
+        }
+        else
+        {
+            writeUART((uint8_t*)"___Incorrect signature did not send onion___");
+        }
+
     }
 }
+
+uint8_t* readUART(){
+  uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
+  for(int i = 0; i < KEY_SIZE;){
+    uint8_t rxData = (uint8_t)UART_GetChar();
+    if(rxData)
+    {
+        result[i] = rxData;
+    }
+  }
+  return result;
+}
+
+void writeUART(uint8_t* buffer)
+{
+  for(int i = 0; i < KEY_SIZE; i++)
+  {
+    UART_PutChar((char)buffer[i]);
+  }
+}
+
+//TEST TOMORROW
+void writeMemory(int row, uint8_t* buffer){
+  uint8_t* firstHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
+  uint8_t* secondHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
+  for(uint32 i = 0; i < CY_FLASH_SIZEOF_ROW; i++){
+    firstHalf[i] = buffer[i];
+    secondHalf[i] = buffer[i+CY_FLASH_SIZEOF_ROW];
+  }
+  CySysFlashWriteRow((uint32_t)row, firstHalf);
+  CySysFlashWriteRow((uint32_t)(row+1), secondHalf);
+}
+
+//NOT TESTED YET
+uint8_t* readMemory(int row, int size){
+  uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
+  for(int i = 0; i < size; i++){
+    result[i] = (uint8_t)(CY_FLASH_BASE + (CY_FLASH_SIZEOF_ROW * row) + (i*sizeof(uint8_t)));
+  }
+  return result;
+}
+
+//Checks arrays against each other: for testing keys
+int checkArrays(uint8_t* array1, uint8_t* array2, int size){
+  for(int i = 0; i < size; i++){
+    if(array1[i] != array2[i]){
+      return 0;
+    }
+  }
+  return 1;
+}
+
+uint8_t* readData(uint8_t* buffer)
+{
+  uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
+  for(int i = 0; i < KEY_SIZE; i++){
+    result[i] = buffer[i];
+  }
+  return result;
+}
+
+uint8_t* readSignature(uint8_t* buffer){
+  uint8_t* result = malloc(SIGNATURE_SIZE*sizeof(uint8_t));
+  for(int i = KEY_SIZE; i < KEY_SIZE + SIGNATURE_SIZE; i++){
+    result[i - KEY_SIZE] = buffer[i];
+  }
+  return result;
+}
+
+//Reads the third 256 byte segment of data: salt
+uint8_t* readSalt(uint8_t* buffer){
+  uint8_t* result = malloc(SALT_SIZE*sizeof(uint8_t));
+  for(int i = KEY_SIZE + SIGNATURE_SIZE; i < KEY_SIZE + SIGNATURE_SIZE + SALT_SIZE; i++){
+    result[i - KEY_SIZE - SIGNATURE_SIZE] = buffer[i];
+  }
+  return result;
+}
+
+
+
+
+
+/* [] END OF FILE */
