@@ -67,8 +67,6 @@ def decrypt_rsa(cipher_rsa):
     return decrypted_rsa
 
 
-
-
 #any test code goes here
 
 priv_key, pub_key = generate_key()
