@@ -39,9 +39,6 @@ def decrypt_aes(encrypted_message, key):
 def generate_prime_number():
     generated_number = number.getPrime(n_length)
     return generated_number
-#any test code goes here
-prime_number = generate_prime_number()
-print(prime_number)
 
 #not sure if these imports are more or less correct than the ones above for RSA.
 #What version should we use for RSA..?
@@ -51,3 +48,9 @@ from Crypto.Cipher import PKCS51_OAEP
 def decrypt_rsa(encrypted_rsa):
     decrypted_rsa = decrypt(encrypted_rsa)
     return decrypted_rsa
+
+
+
+#any test code goes here
+prime_number = generate_prime_number()
+print(prime_number)
