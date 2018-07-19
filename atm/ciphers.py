@@ -43,33 +43,39 @@ def generate_prime_number():
 #not sure if these imports are more or less correct than the ones above for RSA.
 #What version should we use for RSA..?
 from Crypto.Cipher import PKCS1_OAEP
+import base64
 
 #generates rsa key
 def generate_key():
     #using generate() to generate key
         #first parameter can be any number that is a multiple of 256 and greater than 1024
-    priv_key = RSA.generate(2048, Random.new(), e=65537)
+    #random = Crypto.Random.new()
+    priv_key = RSA.generate(2048)
     pub_key = priv_key.publickey()
     return priv_key, pub_key
 
 #rsa encryption
 def encrypt_rsa(message, pub_key):
-    cipher_rsa = pub_key.pub_key.encrypt(self, message, Random.new())
+    #changing message into bytes
+    byte_msg = message.encode()
+    cipher_rsa = pub_key.encrypt(byte_msg, Random.new())
     return cipher_rsa
 
 #rsa decryption
 def decrypt_rsa(cipher_rsa):
-    if 0 < encrypted_rsa < self.n:
-        decrypted_rsa = priv_key.decrypt(cipher_rsa)
-        return decrypted_rsa
-    else:
-        print("Encrypted RSA is too large.")
+    decrypted_rsa = priv_key.decrypt(cipher_rsa).decode("utf-8")
+    return decrypted_rsa
+
 
 
 
 #any test code goes here
+
 priv_key, pub_key = generate_key()
-print(pub_key, priv_key)
+print("Public key: ", pub_key)
+print("Private key: ",priv_key)
 message = encrypt_rsa("Testing", pub_key)
-print(message)
+print("encrypted message: ", message)
 print(decrypt_rsa(message))
+
+#print(generate_prime_number)
