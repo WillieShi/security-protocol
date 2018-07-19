@@ -54,13 +54,13 @@ def generate_key():
 
 #rsa encryption
 def encrypt_rsa(message, pub_key):
-    cipherTextRSA = pub_key.pub_key.encrypt(self, message, Random.new())
-    return cipherTextRSA
+    cipher_rsa = pub_key.pub_key.encrypt(self, message, Random.new())
+    return cipher_rsa
 
 #rsa decryption
-def decrypt_rsa(cipherTextRSA):
+def decrypt_rsa(cipher_rsa):
     if 0 < encrypted_rsa < self.n:
-        decrypted_rsa = priv_key.decrypt(cipherTextRSA)
+        decrypted_rsa = priv_key.decrypt(cipher_rsa)
         return decrypted_rsa
     else:
         print("Encrypted RSA is too large.")
