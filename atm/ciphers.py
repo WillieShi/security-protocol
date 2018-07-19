@@ -59,7 +59,7 @@ def encrypted_key():
 #rsa decryption
 def decrypt_rsa(encrypted_rsa):
     if 0 < encrypted_rsa < self.n:
-        decrypted_rsa = decrypt(encrypted_rsa)
+        decrypted_rsa = priv_key.decrypt(encrypted_rsa)
         return decrypted_rsa
     else:
         print("Encrypted RSA is too large.")
