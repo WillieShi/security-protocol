@@ -46,6 +46,8 @@ from Crypto.Cipher import PKCS51_OAEP
 
 #generates rsa key
 def generate_key():
+    #using generate() to generate key
+        #first parameter can be any number that is a multiple of 256 and greater than 1024
     priv_key = RSA.generate(1016, Random.new(), e=65537)
     pub_key = priv_key.publickey()
     return priv_key, pub_key
