@@ -46,8 +46,11 @@ from Crypto.Cipher import PKCS51_OAEP
 
 #decryption
 def decrypt_rsa(encrypted_rsa):
-    decrypted_rsa = decrypt(encrypted_rsa)
-    return decrypted_rsa
+    if 0 < encrypted_rsa < self.n:
+        decrypted_rsa = decrypt(encrypted_rsa)
+        return decrypted_rsa
+    else:
+        print("Encrypted RSA is too large.")
 
 
 
