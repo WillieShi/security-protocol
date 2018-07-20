@@ -41,6 +41,13 @@ def generate_prime_number():
     generated_number = number.getPrime(n_length)
     return generated_number
 
+<<<<<<< HEAD
+=======
+#not sure if these imports are more or less correct than the ones above for RSA.
+#What version should we use for RSA..?
+
+
+>>>>>>> 36e05a2a344c4cd4bb22f7c09b5e612f6b58f4c1
 #generates rsa key
 def generate_key():
     #using generate() to generate key
