@@ -10,14 +10,10 @@
  * ========================================
 */
 #include "project.h"
-#include "mbedtls\rsa.h"
+
 
 #include <stdlib.h>
 
-#include "mbedtls/rsa.h"
-#include "mbedtls/pk.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/error.h"
 
 
 static uint8_t privkey[] = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789123456";
@@ -249,39 +245,8 @@ uint8_t* readSalt(uint8_t* buffer){
 }
 uint8_t* rsaDecrypt(uint8_t ct[], int size)
 {
-    mbedtls_ctr_drbg_context ctr_drbg;
-    mbedtls_ctr_drbg_init(&ctr_drbg);
-    mbedtls_pk_context pk;
-    mbedtls_pk_init( &pk );
     
-
-
-    int ret;
-
-    if ((ret=mbedtls_pk_parse_key(&pk, privkey, sizeof(privkey), NULL, 0)) != 0)
-    {
-        char buffer[100];
-        mbedtls_strerror(ret,buffer,100);
-        //printf( "parse key failed\n  ! mbedtls_pk_decrypt returned -0x%04x %s\n", -ret, buffer); //fix this earlier
-        //return ; //make a error check here
-    }
-
-    size_t olen = 0;
-    /*printf("sizeof(ct):%d\n", pk.pk_info);*/
-
-    if( ( ret = mbedtls_pk_decrypt( &pk, ct, size-1, result, &olen, sizeof(result),
-                    mbedtls_ctr_drbg_random, &ctr_drbg ) ) != 0 )
-    {
-        char buffer[100];
-        mbedtls_strerror(ret,buffer,100);
-        //printf( "decrypt failed\n  ! mbedtls_pk_decrypt returned -0x%04x %s\n", -ret,buffer );
-
-    }
-    else
-    {
-        return result;
-    }
-    return result; //add an error check
+   
     
 }
 
