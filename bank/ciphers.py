@@ -7,6 +7,7 @@ from Crypto import Random
 import os
 import base64
 import six
+from Crypto.Cipher import PKCS1_OAEP
 
 #here we define initial variables
 n_length = 2048
@@ -40,15 +41,10 @@ def generate_prime_number():
     generated_number = number.getPrime(n_length)
     return generated_number
 
-#not sure if these imports are more or less correct than the ones above for RSA.
-#What version should we use for RSA..?
-from Crypto.Cipher import PKCS1_OAEP
-import base64
-
 #generates rsa key
 def generate_key():
     #using generate() to generate key
-        #first parameter can be any number that is a multiple of 256 and greater than 1024
+    #first parameter can be any number that is a multiple of 256 and greater than 1024
     #random = Crypto.Random.new()
     priv_key = RSA.generate(2048)
     pub_key = priv_key.publickey()
@@ -74,12 +70,4 @@ def hash_message(message):
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 #any test code goes here
-
-priv_key, pub_key = generate_key()
-print("Public key: ", pub_key)
-print("Private key: ",priv_key)
-message = encrypt_rsa("Testing", pub_key)
-print("encrypted message: ", message)
-print(decrypt_rsa(message))
-
 #print(generate_prime_number)
