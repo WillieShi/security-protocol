@@ -7,6 +7,7 @@ from Crypto import Random
 import os
 import base64
 import six
+from Crypto.Cipher import PKCS1_OAEP
 
 #here we define initial variables
 n_length = 2048
@@ -42,8 +43,7 @@ def generate_prime_number():
 
 #not sure if these imports are more or less correct than the ones above for RSA.
 #What version should we use for RSA..?
-from Crypto.Cipher import PKCS1_OAEP
-import base64
+
 
 #generates rsa key
 def generate_key():
