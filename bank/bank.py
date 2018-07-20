@@ -10,17 +10,34 @@ import sys
 import serial
 import argparse
 import struct
+import cyphers
+
+ONION_SIZE = 256
 
 
 class Bank(object):
     GOOD = "O"
     BAD = "N"
     ERROR = "E"
+    transactionKey
+
 
     def __init__(self, port, baud=115200, db_path="bank.json"):
         super(Bank, self).__init__()
         self.db = db.DB(db_path=db_path)
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
+        self.transactionKey = self.generate_key_pair()
+
+    def encSend(message):
+        message = ciphers.encrypt_aes(message, transactionKey)
+        self.atm.write(message)
+
+    def encRead(length):
+        message = self.atm.read(length)
+        return ciphers.decrypt_aes(message, transactionKey)
+
+    def generate_key_pair():
+        #GABI PLEASE IMPLEMENT
 
     def start(self):
         while True:
@@ -83,21 +100,22 @@ class Bank(object):
             self.atm.write(self.BAD)
             log("Insufficient funds in account")
 
-    def check_balance(self, atm_id, card_id):
+    def check_balance(self, atm_id, card_id): #finished
         if self.db.get_atm(atm_id) is None:
             self.atm.write(self.BAD)
             log("Invalid ATM ID")
             return
 
-        balance = self.db.get_balance(str(card_id))
-        if balance is None:
+        onion = self.db.get_onion(str(card_id))
+        if onion is None:
             self.atm.write(self.BAD)
             log("Bad card ID")
         else:
             log("Valid balance check")
-            pkt = struct.pack(">36s36sI", atm_id, card_id, balance)
-            self.atm.write(self.GOOD)
-            self.atm.write(pkt)
+            self.encSend(onion)
+            innerLayer = self.encRead(ONION_SIZE)
+            ciphers.decrypt_rsa(innerLayer, self.db.get_outer_onion_public_key)
+            self.encSend(self.GOOD)
 
 
 def parse_args():
