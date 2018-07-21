@@ -149,43 +149,100 @@ uint8_t* readSignature(uint8_t* buffer);
 uint8_t* readSalt(uint8_t* buffer);
 uint8_t* rsaDecrypt(uint8_t ct[], int size);
 static int check_equals(const char *banner, const void *v1, const void *v2, size_t len);
-static void test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv);
+uint8_t* test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv, uint8_t* msg);
 int hex_to_int(char c);
 int hex_to_ascii(char c, char d);
 
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
-    //uint32_t vc_length;
-    //uint32_t hashlength;
-    //uint8_t vcbuf[vc_length];
-    //uint8_t rdata[CY_FLASH_SIZEOF_ROW];
-    
+
     //uint8_t* privKey = readMemory(0, KEY_SIZE);
     //uint8_t* bankSig = readMemory(2, SIGNATURE_SIZE);
     //int* cardNum = (int*)readMemory(4, KEY_SIZE);
-    
+   
    
     
     //int return_val;
     uint8_t db[KEY_SIZE];
+    uint8_t* cardnum;
+    uint8_t* banksig;
+    uint8_t* testbanksig;
+    uint8_t* privkey;
+    uint8_t* data;
+    uint8_t* everything;
+    uint8_t* salt;
     const char test[] = "hello world";
     
     
     UART_Start();
     EEPROM_Init((uint32)eeprom_ref);
-    /*
-    EEPROM_Write(0, privkey, KEY_SIZE);
-    writeUART((uint8_t*)"WRITE SUCCESSFUL\n");
-    EEPROM_Read(0, db, KEY_SIZE);
-    writeUART(db);
-    */
-    //writeUART((uint8_t*)"WRITE SUCCESSFUL\n");
-    test_RSA_core(&test[0], &br_rsa_i31_public, &br_rsa_i31_private);
-    //writeMemory(0 , privkey);
-    //writeUART(readMemory(0, KEY_SIZE));
     
-    /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+    //start process, recieve and write card num to mem
+    writeUART((uint8_t*) "Start card prod, give me card number\n");
+    cardnum = readUART(); //ask laslo about it dangerous since we give them things to write?
+    writeUART((uint8_t*)"num recieved\n");
+    EEPROM_Write(0, cardnum, KEY_SIZE); //write num to memory
+    EEPROM_Read(0, db, KEY_SIZE); //look to make sure its good
+    
+    //recieve and write bank sig to mem
+    writeUART((uint8_t*) "Give me the Bank signature");
+    //RSA sign #TODO
+    banksig = readUART();
+    writeUART((uint8_t*)"signature recieved\n");
+    EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
+    EEPROM_Read(KEY_SIZE, db, KEY_SIZE); //look to make sure its good
+    writeUART(db);
+    
+    //Write private key to memory
+    //TODO composing RSA keys from components given from python code
+    privkey = (uint8_t*)&RSA_SK; //does this work lol
+    EEPROM_Write(KEY_SIZE*2, privkey , KEY_SIZE);
+    writeUART((uint8_t*)"WRITE SUCCESSFUL\n");
+    EEPROM_Read(KEY_SIZE*2, db, KEY_SIZE); //look to make sure its good
+    writeUART(db);
+    
+    writeUART((uint8_t*)"Card Christening finished, dump all memory to double check\n");
+    EEPROM_Read(0, db, KEY_SIZE*4);
+    writeUART(db);
+    
+    //MAIN Rsa Protocol
+    //recieve data
+    writeUART((uint8_t*) "Send over onion protected message\n");
+    everything = readUART();
+    writeUART((uint8_t*) "Onion recieved ... Starting decrypt\n");
+    data = readData(everything);
+    
+    EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
+    everything = test_RSA_core(&test[0], &br_rsa_i31_public, &br_rsa_i31_private, everything); //still needs to be modified assume works
+    writeUART((uint8_t*) "Decryption done ... starting decomp\n");
+    
+    writeUART((uint8_t*) "data extracted\n");
+    testbanksig = readSignature(everything);
+    writeUART((uint8_t*) "sig extracted\n");
+    if(*banksig != *testbanksig)
+    {
+        writeUART((uint8_t*) "Wrong signature ... terminating application");
+        return -1;
+    }
+    salt = readSalt(everything);
+    writeUART((uint8_t*) "salt extracted\n");
+    writeUART((uint8_t*) "Decomp done\n");
+    
+    writeUART((uint8_t*) "Starting to send data ...\n");
+    writeUART(data);
+    writeUART((uint8_t*) "Starting to send decrypted salt ...\n");
+    writeUART(salt);
+    writeUART((uint8_t*) "Starting to send signature ...\n");
+    //TODO implment RSA signature
+    
+    
+    
+    
+    
+    
+    
+    
     /*
     if(checkArrays(readMemory(0, KEY_SIZE), testKey, KEY_SIZE))
       {
@@ -394,7 +451,7 @@ hextobin(unsigned char *dst, const char *src)
 
 
 
-static void test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv)
+uint8_t* test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv, uint8_t* msg)
 {
 	uint8_t t1[128], t2[128], t3[128];
     /*
@@ -446,7 +503,7 @@ static void test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private f
     writeUART((uint8_t*) num);
     //printf("%X\n", num);
     
-    
+    return msg;
     
 }
 int hex_to_ascii(char c, char d){
