@@ -17,7 +17,7 @@
 
 
 
-static uint8_t privkey[] = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789123456";
+//static uint8_t privkey[] = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789123456";
 
 const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0u};
 
@@ -149,39 +149,100 @@ uint8_t* readSignature(uint8_t* buffer);
 uint8_t* readSalt(uint8_t* buffer);
 uint8_t* rsaDecrypt(uint8_t ct[], int size);
 static int check_equals(const char *banner, const void *v1, const void *v2, size_t len);
-static void test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv);
+uint8_t* test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv, uint8_t* msg);
+int hex_to_int(char c);
+int hex_to_ascii(char c, char d);
 
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
-    //uint32_t vc_length;
-    //uint32_t hashlength;
-    //uint8_t vcbuf[vc_length];
-    //uint8_t rdata[CY_FLASH_SIZEOF_ROW];
-    
+
     //uint8_t* privKey = readMemory(0, KEY_SIZE);
     //uint8_t* bankSig = readMemory(2, SIGNATURE_SIZE);
     //int* cardNum = (int*)readMemory(4, KEY_SIZE);
-    
+   
    
     
     //int return_val;
     uint8_t db[KEY_SIZE];
+    uint8_t* cardnum;
+    uint8_t* banksig;
+    uint8_t* testbanksig;
+    uint8_t* privkey;
+    uint8_t* data;
+    uint8_t* everything;
+    uint8_t* salt;
     const char test[] = "hello world";
+    
     
     UART_Start();
     EEPROM_Init((uint32)eeprom_ref);
     
-    EEPROM_Write(0, privkey, KEY_SIZE);
-    writeUART((uint8_t*)"WRITE SUCCESSFUL\n");
-    EEPROM_Read(0, db, KEY_SIZE);
+    //start process, recieve and write card num to mem
+    writeUART((uint8_t*) "Start card prod, give me card number\n");
+    cardnum = readUART(); //ask laslo about it dangerous since we give them things to write?
+    writeUART((uint8_t*)"num recieved\n");
+    EEPROM_Write(0, cardnum, KEY_SIZE); //write num to memory
+    EEPROM_Read(0, db, KEY_SIZE); //look to make sure its good
+    
+    //recieve and write bank sig to mem
+    writeUART((uint8_t*) "Give me the Bank signature");
+    //RSA sign #TODO
+    banksig = readUART();
+    writeUART((uint8_t*)"signature recieved\n");
+    EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
+    EEPROM_Read(KEY_SIZE, db, KEY_SIZE); //look to make sure its good
     writeUART(db);
     
-    test_RSA_core(&test[0], &br_rsa_i31_public, &br_rsa_i31_private);
-    //writeMemory(0 , privkey);
-    //writeUART(readMemory(0, KEY_SIZE));
+    //Write private key to memory
+    //TODO composing RSA keys from components given from python code
+    privkey = (uint8_t*)&RSA_SK; //does this work lol
+    EEPROM_Write(KEY_SIZE*2, privkey , KEY_SIZE);
+    writeUART((uint8_t*)"WRITE SUCCESSFUL\n");
+    EEPROM_Read(KEY_SIZE*2, db, KEY_SIZE); //look to make sure its good
+    writeUART(db);
     
-    /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+    writeUART((uint8_t*)"Card Christening finished, dump all memory to double check\n");
+    EEPROM_Read(0, db, KEY_SIZE*4);
+    writeUART(db);
+    
+    //MAIN Rsa Protocol
+    //recieve data
+    writeUART((uint8_t*) "Send over onion protected message\n");
+    everything = readUART();
+    writeUART((uint8_t*) "Onion recieved ... Starting decrypt\n");
+    data = readData(everything);
+    
+    EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
+    everything = test_RSA_core(&test[0], &br_rsa_i31_public, &br_rsa_i31_private, everything); //still needs to be modified assume works
+    writeUART((uint8_t*) "Decryption done ... starting decomp\n");
+    
+    writeUART((uint8_t*) "data extracted\n");
+    testbanksig = readSignature(everything);
+    writeUART((uint8_t*) "sig extracted\n");
+    if(*banksig != *testbanksig)
+    {
+        writeUART((uint8_t*) "Wrong signature ... terminating application");
+        return -1;
+    }
+    salt = readSalt(everything);
+    writeUART((uint8_t*) "salt extracted\n");
+    writeUART((uint8_t*) "Decomp done\n");
+    
+    writeUART((uint8_t*) "Starting to send data ...\n");
+    writeUART(data);
+    writeUART((uint8_t*) "Starting to send decrypted salt ...\n");
+    writeUART(salt);
+    writeUART((uint8_t*) "Starting to send signature ...\n");
+    //TODO implment RSA signature
+    
+    
+    
+    
+    
+    
+    
+    
     /*
     if(checkArrays(readMemory(0, KEY_SIZE), testKey, KEY_SIZE))
       {
@@ -214,9 +275,6 @@ int main(void)
         writeUART((uint8_t*)"___Sending card number___");
         writeUART((uint8_t*)cardNum);
         writeUART((uint8_t*)"___Sent card number___");
-        
-       
-
         
         //Read checknum, decrypt and return with salt to ATM
         uint8_t* checkNumE = readUART();
@@ -333,12 +391,6 @@ uint8_t* readSalt(uint8_t* buffer){
   }
   return result;
 }
-uint8_t* rsaDecrypt(uint8_t ct[], int size)
-{
-    
-   
-    
-}
 
 static int check_equals(const char *banner, const void *v1, const void *v2, size_t len)
 {
@@ -399,9 +451,15 @@ hextobin(unsigned char *dst, const char *src)
 
 
 
-static void test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv)
+uint8_t* test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv, uint8_t* msg)
 {
-	unsigned char t1[128], t2[128], t3[128];
+	uint8_t t1[128], t2[128], t3[128];
+    /*
+    unsigned char t1[5], t2[5], t3[5];
+    unsigned char *t2in;
+    t2in = t1;
+    *t2 = *t2in;
+    */
 
 	//printf("Test %s: ", name);
 	//fflush(stdout);
@@ -411,23 +469,54 @@ static void test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private f
 	 */
 	hextobin(t1, "45A3DC6A106BCD3BD0E48FB579643AA3FF801E5903E80AA9B43A695A8E7F454E93FA208B69995FF7A6D5617C2FEB8E546375A664977A48931842AAE796B5A0D64393DCA35F3490FC157F5BD83B9D58C2F7926E6AE648A2BD96CAB8FCCD3D35BB11424AD47D973FF6D69CA774841AEC45DFAE99CCF79893E7047FDE6CB00AA76D");
 	hextobin(t2, "0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF003021300906052B0E03021A05000414A94A8FE5CCB19BA61C4C0873D391E987982FBBD3");
-	memcpy(t3, t1, sizeof t1);
+	
+    memcpy(t3, t1, sizeof t1);
     //t3 stores output of function
     //encrypt
 	if (!fpub(t3, sizeof t3, &RSA_PK)) {
 		//fprintf(stderr, "RSA public operation failed\n");
+        writeUART((uint8_t*)"RSA PUB OP FAILED\n");
 		exit(EXIT_FAILURE);
 	}
     //decrpyt
+    
 	check_equals("KAT RSA pub", t2, t3, sizeof t2);
 	if (!fpriv(t3, &RSA_SK)) {
 		//fprintf(stderr, "RSA private operation failed\n");
+        writeUART((uint8_t*)"RSA PRIV OP FAILED\n");
 		exit(EXIT_FAILURE);
 	}
 	check_equals("KAT RSA priv", t1, t3, sizeof t1);
+    writeUART(t3);
+    //UART_PutString((uint8_t*)"SUCESS BOIZ");
 
 	//printf("done.\n");
 	//fflush(stdout);
+    uint8_t *bin= t3;
+    uint8_t *a = bin;
+    int num = 0;
+    do {
+        int b = *a=='1'?1:0;
+        num = (num<<1)|b;
+        a++;
+    } while (*a);
+    writeUART((uint8_t*) num);
+    //printf("%X\n", num);
+    
+    return msg;
+    
+}
+int hex_to_ascii(char c, char d){
+        int high = hex_to_int(c) * 16;
+        int low = hex_to_int(d);
+        return high+low;
+}
+int hex_to_int(char c){
+        int first = c / 16 - 3;
+        int second = c % 16;
+        int result = first*10 + second;
+        if(result > 9) result--;
+        return result;
 }
 
 
