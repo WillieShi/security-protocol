@@ -4,10 +4,12 @@ from Crypto.Util import number
 import Crypto
 from Crypto.PublicKey import RSA
 from Crypto import Random
+from random import randint
 import os
 import base64
 import six
 from Crypto.Cipher import PKCS1_OAEP
+from random import randint
 
 #here we define initial variables
 n_length = 2048
@@ -66,6 +68,11 @@ def decrypt_rsa(cipher_rsa, priv_key):
     decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
 
+def random_with_N_digits(n):
+    range_start = 10**(n-1)
+    range_end = (10**n)-1
+    return randint(range_start, range_end)
+
 def hash_message(message):
     salt = bcrypt.gensalt()
     message = str(message)
@@ -73,5 +80,24 @@ def hash_message(message):
     message = message + salt
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
+
+#deffie hellman key exchange
+def deffie_hellman():
+    modulus = generate_prime_number()
+    base = generate_prime_number()
+
+    a = randint(1, 9999)
+    b = randint(1, 9999)
+
+    side1 = (base**a)% modulus
+    side2 = (base**b)% modulus
+    bob = (side1**b) % modulus
+    alice = (side2**a)%modulus
+
+    return(bob,alice)
+
 #any test code goes here
+#secret1,secret2 = deffie_hellman()
+#print("Alice's secret: ", secret1)
+#print("Bob secret: ", secret2)
 #print(generate_prime_number)

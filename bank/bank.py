@@ -11,6 +11,7 @@ import serial
 import argparse
 import struct
 import ciphers
+import random
 
 ONION_SIZE = 256
 
@@ -51,6 +52,16 @@ class Bank(object):
                 self.check_balance(atm_id, card_id)
             elif command != '':
                 self.atm.write(self.ERROR)
+
+    def verify(self, atm_id, card_id, hash):
+        if hash == self.db.get_hash(card_id_):
+            rand = ciphers.random_with_N_digits(100)
+            encSend(ciphers.encrypt_rsa(rand, self.db.get_outer_onion_public_key(card_id)))
+            return rand == encRead(LENGTH)
+        else:
+            encSend("Invalid card/pin")
+            return False
+
 
     def withdraw(self, atm_id, card_id, amount):
         if self.db.get_atm(atm_id) is None:
