@@ -9,7 +9,6 @@ import os
 import base64
 import six
 from Crypto.Cipher import PKCS1_OAEP
-from random import randint
 
 #here we define initial variables
 n_length = 2048
@@ -67,11 +66,6 @@ def encrypt_rsa(message, pub_key):
 def decrypt_rsa(cipher_rsa, priv_key):
     decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
-
-def random_with_N_digits(n):
-    range_start = 10**(n-1)
-    range_end = (10**n)-1
-    return randint(range_start, range_end)
 
 def hash_message(message):
     salt = bcrypt.gensalt()
