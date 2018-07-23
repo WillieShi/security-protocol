@@ -89,7 +89,11 @@ def deffie_hellman():
 
     return(bob,alice)
 
+<<<<<<< HEAD
 secret1,secret2 = deffie_hellman()
+=======
+secret1,secret2 =  deffie_hellman()
+>>>>>>> 1fb1e8c946e22ba77152ad6bc59888fff719237f
 print("Alice's secret: ", secret1)
 print("BOb secret: ", secret2)
 
