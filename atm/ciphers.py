@@ -4,6 +4,7 @@ from Crypto.Util import number
 import Crypto
 from Crypto.PublicKey import RSA
 from Crypto import Random
+from random import randint
 import os
 import base64
 import six
@@ -92,7 +93,7 @@ def deffie_hellman():
 
 secret1,secret2 = deffie_hellman()
 print("Alice's secret: ", secret1)
-print("BOb secret: ", secret2)
+print("Bob secret: ", secret2)
 
 
 
