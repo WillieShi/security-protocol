@@ -74,8 +74,11 @@ class Bank(object):
             self.encSend(self.GOOD)
 
         if amount > balance:
-            #todo finish!!!!
-            self.atm.write("sent stuff")
+            log("Invalid funds")
+            self.encSend("Insufficient funds")
+        else
+            self.encSend(balance-amount)
+            self.db.set_onion(ciphers.encrypt_rsa(self.db.get_outer_onion_public_key(card_id),ciphers.encrypt_rsa(self.db.get_inner_onion_public_key(card_id), balance-amount)))
 
     def check_balance(self, atm_id, card_id): #finished
         if self.db.get_atm(atm_id) is None:
