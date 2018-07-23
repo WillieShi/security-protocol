@@ -135,6 +135,7 @@ static const br_rsa_private_key RSA_SK = {
 };
 
 
+
 uint8_t result[1024*1024];
 
 const uint8_t row[CY_FLASH_SIZEOF_ROW] CY_ALIGN(CY_FLASH_SIZEOF_ROW) = {0};
@@ -314,6 +315,8 @@ int main(void)
         
     }
 }
+
+  
 
 static uint8_t* readUART(){
   uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
@@ -520,5 +523,3 @@ int hex_to_int(char c){
 }
 
 
-
-/* [] END OF FILE */
