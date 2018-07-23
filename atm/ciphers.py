@@ -84,7 +84,7 @@ def deffie_hellman():
 
     side1 = (base**a)% modulus
     side2 = (base**b)% modulus
-    bob = side1**b) % modulus
+    bob = (side1**b) % modulus
     alice = (side2**a)%modulus
 
     return(bob,alice)
