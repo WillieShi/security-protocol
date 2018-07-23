@@ -89,7 +89,7 @@ def deffie_hellman():
 
     return(bob,alice)
 
-secret1,secret2 = generate()
+secret1,secret2 = deffie_hellman()
 print("Alice's secret: ", secret1)
 print("BOb secret: ", secret2)
 
