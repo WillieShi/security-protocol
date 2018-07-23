@@ -76,19 +76,15 @@ def hash_message(message):
     return(hashlib.sha3_256(message).hexdigest())
 
 #deffie hellman key exchange
-def deffie_hellman():
-    modulus = generate_prime_number()
-    base = generate_prime_number()
-
+def deffie_atm(mod, bas):
+    #insert read (mod, bas) from bank
     a = randint(1, 9999)
-    b = randint(1, 9999)
-
-    side1 = (base**a)% modulus
-    side2 = (base**b)% modulus
-    bob = (side1**b) % modulus
-    alice = (side2**a)%modulus
-
-    return(bob,alice)
+    side1 = (bas**a) % mod
+    #insert read (side2) from bank
+    #insert write (side1) to bank
+    #final_a is the final atm side key for deffie hellman
+    final_a = (side2**a) % mod
+    return final_a
 
 #any test code goes here
 #secret1,secret2 = deffie_hellman()
