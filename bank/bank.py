@@ -10,7 +10,7 @@ import sys
 import serial
 import argparse
 import struct
-import cyphers
+import ciphers
 
 ONION_SIZE = 256
 
@@ -35,9 +35,6 @@ class Bank(object):
     def encRead(length):
         message = self.atm.read(length)
         return ciphers.decrypt_aes(message, transactionKey)
-
-    def generate_key_pair():
-        #GABI PLEASE IMPLEMENT
 
     def start(self):
         while True:
@@ -76,7 +73,7 @@ class Bank(object):
         if amount > balance:
             log("Invalid funds")
             self.encSend("Insufficient funds")
-        else
+        else:
             self.encSend(balance-amount)
             self.db.set_onion(ciphers.encrypt_rsa(self.db.get_outer_onion_public_key(card_id),ciphers.encrypt_rsa(self.db.get_inner_onion_public_key(card_id), balance-amount)))
 
@@ -120,7 +117,7 @@ def main():
     try:
         bank.start()
     except KeyboardInterrupt:
-        print "Shutting down bank..."
+        print("Shutting down bank...")
 
 
 if __name__ == "__main__":
