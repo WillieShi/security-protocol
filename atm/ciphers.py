@@ -73,5 +73,28 @@ def hash_message(message):
     message = message + salt
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
+
+#deffie hellman key exchange
+def deffie_hellman():
+    modulus = generate_prime_number()
+    base = generate_prime_number()
+
+    a = randint(1, 9999)
+    b = randint(1, 9999)
+
+    side1 = (base**a)% modulus
+    side2 = (base**b)% modulus
+    bob = side1**b) % modulus
+    alice = (side2**a)%modulus
+
+    return(bob,alice)
+
+secret1,secret2 = generate()
+print("Alice's secret: ", secret1)
+print("BOb secret: ", secret2)
+
+
+
+
 #any test code goes here
 #print(generate_prime_number)
