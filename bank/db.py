@@ -18,7 +18,7 @@ class DB(object):
     def init_db(self):
         """initialize database with file at filepath"""
         with open(self.path, 'w') as f:
-            f.write(json.dumps({'atms': {}, 'cards': {}}))
+            f.write(json.dumps({'atms': {}, 'cards': {}, 'storage': {},}))
 
     def exists(self):
         return os.path.exists(self.path)
