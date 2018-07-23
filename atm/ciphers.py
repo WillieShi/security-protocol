@@ -90,13 +90,8 @@ def deffie_hellman():
 
     return(bob,alice)
 
-
-secret1,secret2 = deffie_hellman()
-print("Alice's secret: ", secret1)
-print("Bob secret: ", secret2)
-
-
-
-
 #any test code goes here
+#secret1,secret2 = deffie_hellman()
+#print("Alice's secret: ", secret1)
+#print("Bob secret: ", secret2)
 #print(generate_prime_number)
