@@ -64,7 +64,7 @@ def encrypt_rsa(message, pub_key):
 def decrypt_rsa(cipher_rsa, priv_key):
     decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
-    
+
 def hash_message(message):
     salt = bcrypt.gensalt()
     message = str(message)
@@ -72,5 +72,22 @@ def hash_message(message):
     message = message + salt
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
+
+def deffie_hellman():
+    modulus = generate_prime_number()
+    base = generate_prime_number()
+    return (modulus, base)
+
+def deffie_bank():
+    mod, bas = deffie_hellman()
+    #insert write (mod, bas) to atm
+    b = randint(1, 9999)
+    side2 = (bas**b) % mod
+    #insert write (side2) to atm
+    #insert read (side1) from atm
+    #final_b is the final bank side key for deffie hellman
+    final_b = (side1**b) % mod
+    return final_b
+
 #any test code goes here
 #print(generate_prime_number)
