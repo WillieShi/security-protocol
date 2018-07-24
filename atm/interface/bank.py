@@ -21,9 +21,12 @@ class Bank:
     def aes_write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, key))
 
+<<<<<<< HEAD
     def aes_read(self, msg, size):
         return decrypt_aes(self.set.read(size), key)
 
+=======
+>>>>>>> 872bd96f01a2bbdcf701be1be3e198f7c2f6543e
     def aes_read(self, msg, key, size):
         return ciphers.decrypt_aes(self.set.read(size), key)
 
@@ -39,7 +42,9 @@ class Bank:
         val = structs.pack(">32s256I", "send_inner_layer", inner_layer)
         self.aes_write(val)
 
-    def send_withdraw_amount()
+    def send_withdraw_amount(self, amount):
+        val = structs.pack(">32s32I", "send_withdraw_amount", amount)
+        self.aes_write(val)
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set
