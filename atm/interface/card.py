@@ -31,18 +31,19 @@ class Card(object):
     def aes_write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, key))
 
-    def aes_read(self, msg, size):
-        return decrypt_aes(self.set.read(size), key)
-
     def aes_read(self, msg, key, size):
         return ciphers.decrypt_aes(self.set.read(size), key)
+
+    def read_random_num(self, encrypted_randnum):
+        return aes_read()
 
     def card_verify(self, random_num):
         val = structs.pack(">32s32I", "card_verify", random_num)
         self.aes_write(val)
 
-    def deliver_onion(self, encrypted_balance):
-        val = structs.pack(">32s32I", "deliver_onion", encrypted_balance)
+    #Puts the one-layer onion (still has inner RSA layer) in the AES channel to send to bank.
+    def deliver_onion(self, inner_balance):
+        val = structs.pack(">32s32I", "deliver_onion", inner_balance)
         self.aes_write(val)
 
     def _vp(self, msg, stream=logging.info):
