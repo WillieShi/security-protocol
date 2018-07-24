@@ -8,6 +8,7 @@ import os
 import base64
 import six
 from Crypto.Cipher import PKCS1_OAEP
+import secrets
 
 #here we define initial variables
 n_length = 2048
@@ -74,9 +75,9 @@ def hash_message(message):
     return(hashlib.sha3_256(message).hexdigest())
 
 def diffie_bank():
-    mod, bas = diffie_hellman()
+    mod, bas = #getting the mod and base
     #insert write (mod, bas) to atm
-    b = randint(1, 9999)
+    b = secrets.randbelow(9999)
     side2 = (bas**b) % mod
     #insert write (side2) to atm
     #insert read (side1) from atm

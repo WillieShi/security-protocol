@@ -8,9 +8,10 @@ import os
 import base64
 import six
 from Crypto.Cipher import PKCS1_OAEP
+import secrets
 
 #here we define initial variables
-n_length = 2048
+n_length = 32
 IV = 16 * '\x00'
 our_message = "testing here please"
 
@@ -79,16 +80,14 @@ def diffie_hellman():
     return (modulus, base)
 
 def diffie_bank():
-    mod, bas = diffie_hellman()
+    mod, base = diffie_hellman()
     #insert write (mod, bas) to atm
-    b = randint(1, 9999)
-    side2 = (bas**b) % mod
+    private_number = secrets.randbelow(9999)
+    side2 = (base**private_number) % mod
     #insert write (side2) to atm
     #insert read (side1) from atm
     #final_b is the final bank side key for diffie hellman
-    final_b = (side1**b) % mod
-    return final_b
+    final_bank_key = (side1**private_number) % mod
+    return final_bank_key
 
 #any test code goes here
-mod, base = diffie_hellman()
-print(mod, base)
