@@ -19,9 +19,12 @@ class Bank:
 
     def aes_write(self, msg, key):
         self.set.write(ciphers.encrypt_aes(msg, key))
-        
-    def aes_read(self, msg, key):
-        self.set.write(ciphers.encrypt_aes(msg, key))
+
+    def aes_read(self, msg, key, size):
+        return decrypt_aes(self.set.read(size), key)
+
+    def pin_verify(self, pin, card_id, key):
+        self.aes_write(ciphers.hash_message(card_id+pin), key)
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set
