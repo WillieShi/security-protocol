@@ -52,9 +52,10 @@ class Bank(object):
             if command = "pvc":
                 self.pin_verification_read()
             elif command = "pkv":
-                self.private_key_verify
             elif command = "ilw":
             elif command = "waw":
+            elif command = "rst":
+                break
             elif command != "":
                 self.atm.write(self.ERROR)
 
@@ -107,7 +108,7 @@ class Bank(object):
     def pin_verification_read(self):
         transaction_id, card_id, hash = structs.unpack(">32s32I32I", aes_read(96))
         if hash == self.db.get_hash(card_id):
-            return True
+            return card_id
         return False
 
     def private_key_verification_write(self):
@@ -152,10 +153,11 @@ def main():
     args = parse_args()
 
     bank = Bank(args.port, args.baudrate)
-    try:
-        bank.start()
-    except KeyboardInterrupt:
-        print("Shutting down bank...")
+    while True:
+        try:
+            bank.start()
+        except KeyboardInterrupt:
+            print("Shutting down bank...")
 
 
 if __name__ == "__main__":
