@@ -104,7 +104,11 @@ class Bank(object):
             self.aes_write(self.GOOD)
     """
 
-    #def pin_verification_read(self)
+    def pin_verification_read(self):
+        transaction_id, card_id, hash = structs.unpack(">32s32I32I", aes_read(96))
+        if hash == self.db.get_hash(card_id):
+            return True
+        return False
 
     def private_key_verification_write(self):
         rand_num = ciphers.random_with_N_bytes(32)
@@ -122,8 +126,8 @@ class Bank(object):
         aes_write(val)
 
     def inner_layer_read(self, card_id):
-        transaction_id, card_id = structs.unpack(">32s256")
-
+        transaction_id, enc_val = structs.unpack(">32s256I", aes_read(288))
+        return decrypt_rsa(enc_val, self.db.get_inner_onion_private_key(card_id))
 
     def balance_write(self, balance):
         val = structs.pack(">32s32I", "balance_write", balance)
