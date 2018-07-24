@@ -134,6 +134,8 @@ class Bank(object):
         val = structs.pack(">32s32I", "balance_write", balance)
         encSend(val)
 
+    
+
 
 
 
