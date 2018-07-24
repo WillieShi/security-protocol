@@ -36,9 +36,11 @@ class Card(object):
     def aes_read(self, msg, size):
         return ciphers.decrypt_aes(self.set.read(size), key)
 
+    #decrypts the random num received from bank to verify card
     def read_random_num(self, encrypted_randnum):
         return aes_read(encrypted_randnum, ">32I")
 
+    #encrypts decrypted random num w/ AES to send to bank
     def card_verify(self, random_num):
         val = structs.pack(">32s32I", "card_verify", random_num)
         self.aes_write(val)
