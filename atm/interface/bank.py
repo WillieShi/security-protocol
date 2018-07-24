@@ -21,12 +21,9 @@ class Bank:
     def aes_write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, key))
 
-<<<<<<< HEAD
     def aes_read(self, msg, size):
         return decrypt_aes(self.set.read(size), key)
 
-=======
->>>>>>> 872bd96f01a2bbdcf701be1be3e198f7c2f6543e
     def aes_read(self, msg, key, size):
         return ciphers.decrypt_aes(self.set.read(size), key)
 
