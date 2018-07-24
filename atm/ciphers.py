@@ -57,15 +57,26 @@ def generate_key():
 
 #rsa encryption
 def encrypt_rsa(message, pub_key):
-    #changing message into bytes
+    #applies RSA Padding
+    rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
+    encrypted_rsa = rsa_pub_cipher.encrypt(message)
+    return encrypted_rsa
+    '''
     byte_msg = message.encode()
     encrypted_rsa = pub_key.encrypt(byte_msg, Random.new())
     return encrypted_rsa
+    '''
 
 #rsa decryption
-def decrypt_rsa(cipher_rsa, priv_key):
+def decrypt_rsa(encrypted_rsa, priv_key):
+    #applies RSA Padding
+    rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
+    decrypted_rsa = rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
+    return decrypted_rsa
+    '''
     decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
+    '''
 
 def hash_message(message):
     salt = bcrypt.gensalt()
