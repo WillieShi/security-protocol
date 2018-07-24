@@ -29,14 +29,14 @@ class Bank:
         self.aes_write(val)
 
     def private_key_verify(self, random_num):
-        val = " " + structs.pack(">32s32I", "private_key_verify", random_num)
+        val = "pkv" + structs.pack(">32s32I", "private_key_verify", random_num)
         self.aes_write(random_num)
 
-    def send_inner_layer(self, inner_layer):
-        val = structs.pack(">32s256I", "send_inner_layer", inner_layer)
+    def inner_layer_write(self, inner_layer):
+        val = "ilw" + structs.pack(">32s256I", "send_inner_layer", inner_layer)
         self.aes_write(val)
 
-    def send_withdraw_amount(self, amount):
+    def withdraw_amount_write(self, amount):
         val = structs.pack(">32s32I", "send_withdraw_amount", amount)
         self.aes_write(val)
 
