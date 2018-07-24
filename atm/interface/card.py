@@ -45,14 +45,14 @@ class Card(object):
     def card_verify(self, random_num):
         val = structs.pack(">32s32I", "card_verify", random_num)
         self.aes_write(val)
-
+        #removes AES encryption from the onion to make the RSA decryptable
     def onion_read():
         transaction_id, onion = structs.unpack(">32s512I", aes_read(544))
         return onion
 
     #Puts the one-layer onion (still has inner RSA layer) in the AES channel to send to bank.
     def onion_write(self, inner_balance):
-        val = structs.pack(">32s32I", "deliver_onion", inner_balance)
+        val = structs.pack(">32s32I", "onion_write", inner_balance)
         self.aes_write(val)
 
     def _vp(self, msg, stream=logging.info):
