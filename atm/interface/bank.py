@@ -25,11 +25,11 @@ class Bank:
         return ciphers.decrypt_aes(self.set.read(size), key)
 
     def pin_verify(self, pin, card_id):
-        val = structs.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
+        val = "pvc" + structs.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
         self.aes_write(val)
 
     def private_key_verify(self, random_num):
-        val = structs.pack(">32s32I", "private_key_verify", random_num)
+        val = " " + structs.pack(">32s32I", "private_key_verify", random_num)
         self.aes_write(random_num)
 
     def send_inner_layer(self, inner_layer):
