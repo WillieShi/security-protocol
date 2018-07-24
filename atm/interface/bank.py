@@ -12,7 +12,7 @@ class Bank:
     Args:
         port (serial.Serial): Port to connect to
     """
-    key
+    uptime_key
 
     def __init__(self, port, verbose=False):
         self.ser = serial.Serial(port)
@@ -22,9 +22,6 @@ class Bank:
         self.set.write(ciphers.encrypt_aes(msg, key))
 
     def aes_read(self, msg, size):
-        return decrypt_aes(self.set.read(size), key)
-
-    def aes_read(self, msg, key, size):
         return ciphers.decrypt_aes(self.set.read(size), key)
 
     def pin_verify(self, pin, card_id):
