@@ -44,7 +44,8 @@ def generate_prime_number():
 
 #not sure if these imports are more or less correct than the ones above for RSA.
 #What version should we use for RSA..?
-
+#private_key = private.exportKey(format='DER')
+#public_key = private.publickey().exportKey(format='DER')
 
 #generates rsa key
 def generate_key():
@@ -73,10 +74,8 @@ def decrypt_rsa(encrypted_rsa, priv_key):
     rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
     decrypted_rsa = rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
-    '''
     decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
-    '''
 
 def hash_message(message):
     salt = bcrypt.gensalt()
@@ -98,7 +97,3 @@ def deffie_atm(mod, bas):
     return final_a
 
 #any test code goes here
-#secret1,secret2 = deffie_hellman()
-#print("Alice's secret: ", secret1)
-#print("Bob secret: ", secret2)
-#print(generate_prime_number)
