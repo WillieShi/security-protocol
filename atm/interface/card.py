@@ -24,6 +24,8 @@ class Card(object):
     WITHDRAW = 2
     CHANGE_PIN = 3
 
+    uptime_key
+
     def __init__(self, port=None, verbose=False, baudrate=115200, timeout=2):
         self.ser = serial.Serial(port, baudrate, timeout=timeout)
         self.verbose = verbose
@@ -31,11 +33,11 @@ class Card(object):
     def aes_write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, key))
 
-    def aes_read(self, msg, key, size):
+    def aes_read(self, msg, size):
         return ciphers.decrypt_aes(self.set.read(size), key)
 
     def read_random_num(self, encrypted_randnum):
-        return aes_read()
+        return aes_read(encrypted_randnum, ">32I")
 
     def card_verify(self, random_num):
         val = structs.pack(">32s32I", "card_verify", random_num)
