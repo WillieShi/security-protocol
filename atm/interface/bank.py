@@ -3,8 +3,8 @@
 import logging
 import struct
 import serial
-import ciphers
-
+import ciphers.py
+#may or may not need .py
 
 class Bank:
     """Interface for communicating with the bank
@@ -12,16 +12,36 @@ class Bank:
     Args:
         port (serial.Serial): Port to connect to
     """
+    key
 
     def __init__(self, port, verbose=False):
         self.ser = serial.Serial(port)
         self.verbose = verbose
 
-    def aes_write(self, msg, key):
+    def aes_write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, key))
-        
-    def aes_read(self, msg, key):
-        self.set.write(ciphers.encrypt_aes(msg, key))
+
+<<<<<<< HEAD
+    def aes_read(self, msg, size):
+        return decrypt_aes(self.set.read(size), key)
+=======
+    def aes_read(self, msg, key, size):
+        return ciphers.decrypt_aes(self.set.read(size), key)
+>>>>>>> 481f7c5ffe77d6ac9b6a5408a71d4e26a9ec34e7
+
+    def pin_verify(self, pin, card_id):
+        val = structs.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
+        self.aes_write(val)
+
+    def private_key_verify(self, random_num):
+        val = structs.pack(">32s32I", "private_key_verify", random_num)
+        self.aes_write(random_num)
+
+    def send_inner_layer(self, inner_layer):
+        val = structs.pack(">32s256I", "send_inner_layer", inner_layer)
+        self.aes_write(val)
+
+    def send_withdraw_amount()
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set
