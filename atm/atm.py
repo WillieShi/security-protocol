@@ -38,6 +38,10 @@ class ATM(cmd.Cmd, object):
         self.bills = cfg["bills"]
         self.update()
 
+    def card_verify(self, random_num):
+        val = structs.pack(">32s32I", "card_verify", random_num)
+        self.aes_write(val)
+
     def _vp(self, msg, log=logging.debug):
         print "here"
         if self.verbose:
