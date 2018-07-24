@@ -3,8 +3,8 @@
 import logging
 import struct
 import serial
-import ciphers
-
+import ciphers.py
+#may or may not need .py
 
 class Bank:
     """Interface for communicating with the bank
@@ -19,7 +19,7 @@ class Bank:
 
     def aes_write(self, msg, key):
         self.set.write(ciphers.encrypt_aes(msg, key))
-        
+
     def aes_read(self, msg, key):
         self.set.write(ciphers.encrypt_aes(msg, key))
 
