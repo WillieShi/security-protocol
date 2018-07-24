@@ -24,20 +24,19 @@
 uint8 getValidByte()
 {
     uint8 retval = 0u;
-    while(UART_SpiUartGetRxBufferSize() < 1); // wait for byte
-    retval = UART_UartGetByte();
+    while(UART_GetRxBufferSize() < 1); // wait for byte
+    retval = UART_GetByte();
     return retval;
 }
-
 
 int pushMessage(const uint8 data[], uint8 size)
 {
     int i;
 
-    UART_UartPutChar(size);
+    UART_PutChar(size);
     
     for (i = 0; i < size; i++) {
-        UART_UartPutChar(data[i]);   
+        UART_PutChar(data[i]);   
     }
     
     return RECV_OK;

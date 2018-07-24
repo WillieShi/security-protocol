@@ -4,12 +4,11 @@ from Crypto.Util import number
 import Crypto
 from Crypto.PublicKey import RSA
 from Crypto import Random
-from random import randint
 import os
 import base64
 import six
 from Crypto.Cipher import PKCS1_OAEP
-from random import randint
+import secrets
 
 #here we define initial variables
 n_length = 2048
@@ -46,9 +45,8 @@ def generate_prime_number():
 #not sure if these imports are more or less correct than the ones above for RSA.
 #What version should we use for RSA..?
 
-
 #generates rsa key
-def generate_key():
+def generate_rsa_key():
     #using generate() to generate key
     #first parameter can be any number that is a multiple of 256 and greater than 1024
     #random = Crypto.Random.new()
@@ -58,20 +56,26 @@ def generate_key():
 
 #rsa encryption
 def encrypt_rsa(message, pub_key):
-    #changing message into bytes
+    #adds padding
+    rsa_pubcipher = PKCS1_OAEP.new(pub_key)
+    byte_msg = message.encode()
+    encrypted_rsa = rsa_pubcipher.encrypt(byte_msg)
+    return encrypted_rsa
+    '''
     byte_msg = message.encode()
     encrypted_rsa = pub_key.encrypt(byte_msg, Random.new())
     return encrypted_rsa
+    '''
 
 #rsa decryption
-def decrypt_rsa(cipher_rsa, priv_key):
+def decrypt_rsa(encrypted_rsa, priv_key):
+    rsa_privcipher = PKCS1_OAEP.new(priv_key)
+    decrypted_rsa = rsa_privcipher.decrypt(encrypted_rsa).decode("utf-8")
+    return decrypted_rsa
+    '''
     decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
-
-def random_with_N_digits(n):
-    range_start = 10**(n-1)
-    range_end = (10**n)-1
-    return randint(range_start, range_end)
+    '''
 
 def hash_message(message):
     salt = bcrypt.gensalt()
@@ -81,23 +85,26 @@ def hash_message(message):
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
-#deffie hellman key exchange
-def deffie_hellman():
-    modulus = generate_prime_number()
-    base = generate_prime_number()
-
-    a = randint(1, 9999)
-    b = randint(1, 9999)
-
-    side1 = (base**a)% modulus
-    side2 = (base**b)% modulus
-    bob = (side1**b) % modulus
-    alice = (side2**a)%modulus
-
-    return(bob,alice)
+def diffie_bank():
+    mod, bas = #getting the mod and base
+    #insert write (mod, bas) to atm
+    b = secrets.randbelow(9999)
+    side2 = (bas**b) % mod
+    #insert write (side2) to atm
+    #insert read (side1) from atm
+    #final_b is the final bank side key for diffie hellman
+    final_b = (side1**b) % mod
+    return final_b
 
 #any test code goes here
-#secret1,secret2 = deffie_hellman()
-#print("Alice's secret: ", secret1)
-#print("Bob secret: ", secret2)
-#print(generate_prime_number)
+<<<<<<< HEAD
+mod, base = diffie_hellman()
+print(mod, base)
+=======
+priv, pub = generate_rsa_key()
+testing = "Works"
+encrypted = encrypt_rsa(testing, pub)
+print(encrypted)
+decrypted = decrypt_rsa(encrypted, priv)
+print(decrypted)
+>>>>>>> atm_protocol
