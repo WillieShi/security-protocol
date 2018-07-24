@@ -203,7 +203,7 @@ int main(void)
     UART_Start();
     init();
     EEPROM_Init((uint32)eeprom_ref);
-    
+    /*
     //start process, recieve and write card num to mem
     writeUART((uint8_t*) "Start card prod, give me card number\n");
     cardnum = readUART(); //ask laslo about it dangerous since we give them things to write?
@@ -233,6 +233,9 @@ int main(void)
     writeUART(db);
     
     //MAIN Rsa Protocol
+    //Recieve Transaction code
+    writeUART((uint8_t*) "Give me the verification code\n");
+    
     //recieve data
     writeUART((uint8_t*) "Send over onion protected message\n");
     everything = readUART();
@@ -262,81 +265,15 @@ int main(void)
     writeUART((uint8_t*) "Starting to send signature ...\n");
     //TODO implment RSA signature
     
-    
-    
-    
-    
-    
-    
-    
-    /*
-    if(checkArrays(readMemory(0, KEY_SIZE), testKey, KEY_SIZE))
-      {
-        writeUART((uint8_t*)"Successful read/write of key");
-      }
-    else
-    {
-        writeUART((uint8_t*)"Unsuccessful read/write of key");
-    }
-    writeUART((uint8_t*)"Waiting for 3*256 byte input");
-
-    uint8_t* read = readUART();
-    writeUART((uint8_t*)"Writing first value");
-    writeUART(readData(read));
-    writeUART((uint8_t*)"Writing first value");
-    writeUART(readSignature(read));
-    writeUART((uint8_t*)"Writing first value");
-    writeUART(readSalt(read));
+   
     */
-    
     for(;;)
     {
         //UART_PutString("Test String\n");
         
         /* Place your application code here. */
         //UART_PutString("Test String \n");
-        //TODO Card checking ATM identity
-        //code for sending hash
-        /*
-        writeUART((uint8_t*)"___Sending card number___");
-        writeUART((uint8_t*)cardNum);
-        writeUART((uint8_t*)"___Sent card number___");
         
-        //Read checknum, decrypt and return with salt to ATM
-        uint8_t* checkNumE = readUART();
-        writeUART((uint8_t*)"___Received checkNum___");
-        uint8_t* checkNumD = readData(rsaDecrypt(checkNumE, sizeof(checkNumE, sizeof(checkNumE))));
-        uint8_t* candBankSig = readSignature(rsaDecrypt(checkNumE, sizeof(checkNumE)));
-        uint8_t* salt = readSalt(rsaDecrypt(checkNumE, sizeof(checkNumE)));
-        if(checkArrays(candBankSig, bankSig, SIGNATURE_SIZE))
-        {
-            writeUART(checkNumD);
-            writeUART(salt);
-            writeUART((uint8_t*)"___Correct signature sent checknum___");
-        }
-        else
-        {
-            writeUART((uint8_t*)"___Incorrect signature did not send checknum___");
-        }
- 
-        
-        //Read onion, decrypt, and send back inner layer with salt back to ATM
-        uint8_t* onionE = readUART();
-        writeUART((uint8_t*)"___Received onion___");
-        uint8_t* onionD = readData(rsaDecrypt(onionE, sizeof(onionE)));
-        candBankSig = readSignature(rsaDecrypt(onionE, sizeof(onionE)));
-        //salt = readSalt(rsaDecrypt(onionE, privKey));
-        if(checkArrays(candBankSig, bankSig, SIGNATURE_SIZE))
-        {
-            writeUART(onionD);
-            //writeUART(salt);
-            writeUART((uint8_t*)"___Correct signature sent onion___");
-        }
-        else
-        {
-            writeUART((uint8_t*)"___Incorrect signature did not send onion___");
-        }
-        */
         
     }
 }
@@ -439,179 +376,51 @@ static int check_equals(const char *banner, const void *v1, const void *v2, size
 	}
 	//fprintf(stderr, "\n");
 	//exit(EXIT_FAILURE);
-    return 0;
+    return -1;
 }
 
-static size_t
-hextobin(unsigned char *dst, const char *src)
+uint8_t* RSA_decrypt(br_rsa_private fpriv, char msg[256])
 {
-	size_t num;
-	unsigned acc;
-	int z;
-
-	num = 0;
-	z = 0;
-	acc = 0;
-	while (*src != 0) {
-		int c = *src ++;
-		if (c >= '0' && c <= '9') {
-			c -= '0';
-		} else if (c >= 'A' && c <= 'F') {
-			c -= ('A' - 10);
-		} else if (c >= 'a' && c <= 'f') {
-			c -= ('a' - 10);
-		} else {
-			continue;
-		}
-		if (z) {
-			*dst ++ = (acc << 4) + c;
-			num ++;
-		} else {
-			acc = c;
-		}
-		z = !z;
-	}
-	return num;
-}
-
-
-
-
-
-
-uint8_t* test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv, uint8_t* msg)
-{
-	uint8_t t1[128], t2[128], t3[128];
-    /*
-    unsigned char t1[5], t2[5], t3[5];
-    unsigned char *t2in;
-    t2in = t1;
-    *t2 = *t2in;
-    */
-
-	//printf("Test %s: ", name);
-	//fflush(stdout);
-
-	/*
-	 * A KAT test (computed with OpenSSL).
-	 */
-	hextobin(t1, "45A3DC6A106BCD3BD0E48FB579643AA3FF801E5903E80AA9B43A695A8E7F454E93FA208B69995FF7A6D5617C2FEB8E546375A664977A48931842AAE796B5A0D64393DCA35F3490FC157F5BD83B9D58C2F7926E6AE648A2BD96CAB8FCCD3D35BB11424AD47D973FF6D69CA774841AEC45DFAE99CCF79893E7047FDE6CB00AA76D");
-	hextobin(t2, "0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF003021300906052B0E03021A05000414A94A8FE5CCB19BA61C4C0873D391E987982FBBD3");
-	
-    memcpy(t3, t1, sizeof t1);
-    //t3 stores output of function
-    //encrypt
-	if (!fpub(t3, sizeof t3, &RSA_PK)) {
-		//fprintf(stderr, "RSA public operation failed\n");
-        writeUART((uint8_t*)"RSA PUB OP FAILED\n");
-		exit(EXIT_FAILURE);
-	}
-    //decrpyt
+    uint8_t ret[256];
+    memcpy(ret, msg, 256);
     
-	check_equals("KAT RSA pub", t2, t3, sizeof t2);
-	if (!fpriv(t3, &RSA_SK)) {
+    //decrypt
+    if (!fpriv(ret, &RSA_SK)) 
+    {
 		//fprintf(stderr, "RSA private operation failed\n");
         writeUART((uint8_t*)"RSA PRIV OP FAILED\n");
 		exit(EXIT_FAILURE);
 	}
-	check_equals("KAT RSA priv", t1, t3, sizeof t1);
-    writeUART(t3);
-    //UART_PutString((uint8_t*)"SUCESS BOIZ");
-
-	//printf("done.\n");
-	//fflush(stdout);
-    uint8_t *bin= t3;
-    uint8_t *a = bin;
-    int num = 0;
-    do {
-        int b = *a=='1'?1:0;
-        num = (num<<1)|b;
-        a++;
-    } while (*a);
-    writeUART((uint8_t*) num);
-    //printf("%X\n", num);
     
-    return msg;
+    return ret;    
     
 }
-int hex_to_ascii(char c, char d){
-        int high = hex_to_int(c) * 16;
-        int low = hex_to_int(d);
-        return high+low;
-}
-int hex_to_int(char c){
-        int first = c / 16 - 3;
-        int second = c % 16;
-        int result = first*10 + second;
-        if(result > 9) result--;
-        return result;
-}
 
-
-static void test_RSA_sign(const char *name, br_rsa_private fpriv,
-	br_rsa_pkcs1_sign fsign, br_rsa_pkcs1_vrfy fvrfy)
+//returns 1 if verified, returns 0 if not
+int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, int sizept)
 {
-	unsigned char t1[128], t2[128];
-	unsigned char hv[20], tmp[20];
+    unsigned char t1[256];
+	unsigned char hv[256], tmp[256];
 	br_sha1_context hc;
 	size_t u;
-
-	//printf("Test %s: ", name);
-	//fflush(stdout);
-
-	/*
-	 * Verify the KAT test (computed with OpenSSL).
-	 */
-	hextobin(t1, "45A3DC6A106BCD3BD0E48FB579643AA3FF801E5903E80AA9B43A695A8E7F454E93FA208B69995FF7A6D5617C2FEB8E546375A664977A48931842AAE796B5A0D64393DCA35F3490FC157F5BD83B9D58C2F7926E6AE648A2BD96CAB8FCCD3D35BB11424AD47D973FF6D69CA774841AEC45DFAE99CCF79893E7047FDE6CB00AA76D");
-	br_sha1_init(&hc);
-	br_sha1_update(&hc, "test", 4);
+    
+    u = 256;
+    memcpy(t1, buf, u);
+    br_sha1_init(&hc);
+	br_sha1_update(&hc, pt, sizept);
 	br_sha1_out(&hc, hv);
 	if (!fvrfy(t1, sizeof t1, SHA1_OID, sizeof tmp, &RSA_PK, tmp)) {
 		//fprintf(stderr, "Signature verification failed\n");
-		exit(EXIT_FAILURE);
+		return 0;
 	}
-	check_equals("Extracted hash value", hv, tmp, sizeof tmp);
-
-	/*
-	 * Regenerate the signature. This should yield the same value as
-	 * the KAT test, since PKCS#1 v1.5 signatures are deterministic
-	 * (except the usual detail about hash function parameter
-	 * encoding, but OpenSSL uses the same convention as BearSSL).
-	 */
-	if (!fsign(SHA1_OID, hv, 20, &RSA_SK, t2)) {
-		//fprintf(stderr, "Signature generation failed\n");
-		exit(EXIT_FAILURE);
-	}
-	check_equals("Regenerated signature", t1, t2, sizeof t1);
-
-	/*
-	 * Use the raw private core to generate fake signatures, where
-	 * one byte of the padded hash value is altered. They should all be
-	 * rejected.
-	 */
-	hextobin(t2, "0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF003021300906052B0E03021A05000414A94A8FE5CCB19BA61C4C0873D391E987982FBBD3");
-	for (u = 0; u < (sizeof t2) - 20; u ++) {
-		memcpy(t1, t2, sizeof t2);
-		t1[u] ^= 0x01;
-		if (!fpriv(t1, &RSA_SK)) {
-            /*
-			fprintf(stderr, "RSA private key operation failed\n");
-			exit(EXIT_FAILURE);
-            */
-		}
-		if (fvrfy(t1, sizeof t1, SHA1_OID, sizeof tmp, &RSA_PK, tmp)) {
-			/*
-            fprintf(stderr,
-				"Signature verification should have failed\n");
-			exit(EXIT_FAILURE);
-            */
-		}
-		//printf(".");
-		//fflush(stdout);
-	}
-
-	//printf(" done.\n");
-	//fflush(stdout);
+	int i = check_equals("Extracted hash value", hv, tmp, sizeof tmp);
+    if(i == -1)
+    {
+        return 0;
+    }
+    return 1;
+        
+    
 }
 
 void mark_provisioned()
@@ -640,84 +449,6 @@ void provision()
     pullMessage(message);
     write_uuid(message);
     pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
-}
-
-static void
-test_RSA_signatures(void)
-{
-	uint32_t n[40], e[2], p[20], q[20], dp[20], dq[20], iq[20], x[40];
-	unsigned char hv[20], sig[128];
-	unsigned char ref[128], tmp[128];
-	br_sha1_context hc;
-
-	printf("Test RSA signatures: ");
-	//fflush(stdout);
-
-	/*
-	 * Decode RSA key elements.
-	 */
-	br_int_decode(n, sizeof n / sizeof n[0], RSA_N, sizeof RSA_N);
-	br_int_decode(e, sizeof e / sizeof e[0], RSA_E, sizeof RSA_E);
-	br_int_decode(p, sizeof p / sizeof p[0], RSA_P, sizeof RSA_P);
-	br_int_decode(q, sizeof q / sizeof q[0], RSA_Q, sizeof RSA_Q);
-	br_int_decode(dp, sizeof dp / sizeof dp[0], RSA_DP, sizeof RSA_DP);
-	br_int_decode(dq, sizeof dq / sizeof dq[0], RSA_DQ, sizeof RSA_DQ);
-	br_int_decode(iq, sizeof iq / sizeof iq[0], RSA_IQ, sizeof RSA_IQ);
-
-	/*
-	 * Decode reference signature (computed with OpenSSL).
-	 */
-	hextobin(ref, "45A3DC6A106BCD3BD0E48FB579643AA3FF801E5903E80AA9B43A695A8E7F454E93FA208B69995FF7A6D5617C2FEB8E546375A664977A48931842AAE796B5A0D64393DCA35F3490FC157F5BD83B9D58C2F7926E6AE648A2BD96CAB8FCCD3D35BB11424AD47D973FF6D69CA774841AEC45DFAE99CCF79893E7047FDE6CB00AA76D");
-
-	/*
-	 * Recompute signature. Since PKCS#1 v1.5 signatures are
-	 * deterministic, we should get the same as the reference signature.
-	 */
-	br_sha1_init(&hc);
-	br_sha1_update(&hc, "test", 4);
-	br_sha1_out(&hc, hv);
-	if (!br_rsa_sign(sig, sizeof sig, p, q, dp, dq, iq, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig generate failed\n");
-		exit(EXIT_FAILURE);
-	}
-	check_equals("KAT RSA-sign 1", sig, ref, sizeof sig);
-
-	/*
-	 * Verify signature.
-	 */
-	if (!br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig verify failed\n");
-		exit(EXIT_FAILURE);
-	}
-	hv[5] ^= 0x01;
-	if (br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig verify should have failed\n");
-		exit(EXIT_FAILURE);
-	}
-	hv[5] ^= 0x01;
-
-	/*
-	 * Generate a signature with the alternate encoding (no NULL) and
-	 * verify it.
-	 */
-	hextobin(tmp, "0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00301F300706052B0E03021A0414A94A8FE5CCB19BA61C4C0873D391E987982FBBD3");
-	br_int_decode(x, sizeof x / sizeof x[0], tmp, sizeof tmp);
-	x[0] = n[0];
-	b_rsa_private_core(x, p, q, dp, dq, iq);
-	br_int_encode(sig, sizeof sig, x);
-	if (!br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig verify (alt) failed\n");
-		exit(EXIT_FAILURE);
-	}
-	hv[5] ^= 0x01;
-	if (br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig verify (alt) should have failed\n");
-		exit(EXIT_FAILURE);
-	}
-	hv[5] ^= 0x01;
-
-	//printf("done.\n");
-	//fflush(stdout);
 }
 
 void init()
