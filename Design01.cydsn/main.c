@@ -23,10 +23,11 @@
 
 const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0u};
 
-#define SIGNATURE_SIZE 25                                                                                   
+#define SIGNATURE_SIZE 256                                                                                   
 #define KEY_SIZE 256
 #define SALT_SIZE 256
 #define ENCRYPTION_NUMBER_SIZE 64;
+#define DOFF 36;
 
 //Ben's crappy variable
 #define PIN_LEN 8
@@ -168,42 +169,37 @@ int checkArrays(uint8_t* array1, uint8_t* array2, int size);
 uint8_t* readData(uint8_t* buffer);
 uint8_t* readSignature(uint8_t* buffer);
 uint8_t* readSalt(uint8_t* buffer);
-uint8_t* rsaDecrypt(uint8_t ct[], int size);
 static int check_equals(const char *banner, const void *v1, const void *v2, size_t len);
-uint8_t* test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv, uint8_t* msg);
-int hex_to_int(char c);
-int hex_to_ascii(char c, char d);
 void mark_provisioned();
 void provision();
 static void test_RSA_sign(const char *name, br_rsa_private fpriv,
 	br_rsa_pkcs1_sign fsign, br_rsa_pkcs1_vrfy fvrfy);
 void init();
+unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size);
+unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size);
+int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, int sizept);
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
 
-    //uint8_t* privKey = readMemory(0, KEY_SIZE);
-    //uint8_t* bankSig = readMemory(2, SIGNATURE_SIZE);
-    //int* cardNum = (int*)readMemory(4, KEY_SIZE);
-   
-   
-    
-    //int return_val;
     uint8_t db[KEY_SIZE];
     uint8_t* cardnum;
+    uint8_t* verif;
     uint8_t* banksig;
     uint8_t* testbanksig;
+    uint8_t* testbanksigver;
     uint8_t* privkey;
     uint8_t* data;
     uint8_t* everything;
     uint8_t* salt;
+    uint8_t* pt;
     const char test[] = "hello world";
     
     
     UART_Start();
     init();
     EEPROM_Init((uint32)eeprom_ref);
-    /*
+    
     //start process, recieve and write card num to mem
     writeUART((uint8_t*) "Start card prod, give me card number\n");
     cardnum = readUART(); //ask laslo about it dangerous since we give them things to write?
@@ -213,7 +209,7 @@ int main(void)
     
     //recieve and write bank sig to mem
     writeUART((uint8_t*) "Give me the Bank signature");
-    //RSA sign #TODO
+    //RSA sign #TODO !MIGHT JUST BE THE PUBLIC KEY COME BACK TO THIS
     banksig = readUART();
     writeUART((uint8_t*)"signature recieved\n");
     EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
@@ -230,52 +226,62 @@ int main(void)
     
     writeUART((uint8_t*)"Card Christening finished, dump all memory to double check\n");
     EEPROM_Read(0, db, KEY_SIZE*4);
-    writeUART(db);
+    writeUART(db); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
     
     //MAIN Rsa Protocol
     //Recieve Transaction code
+    writeUART((uint8_t*) "Give me signature\n");
+    testbanksigver = readUART();
     writeUART((uint8_t*) "Give me the verification code\n");
+    verif = readUART();
+    writeUART((uint8_t*) "Decrypting ...\n");
+    verif = RSA_decrypt256(&br_rsa_i31_private, (char*) verif,(uint8_t) KEY_SIZE );
+    //NEED TO DEBUG RSA VER
+    if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksigver,verif, KEY_SIZE) == -1)
+    {
+        writeUART((uint8_t*) "Signature wrong, terminating program\n");
+        return -1;
+    }
+    writeUART((uint8_t*) "Signature verified...\n");
+    writeUART((uint8_t*) "Sending be ready\n");
+    writeUART(verif);
     
     //recieve data
     writeUART((uint8_t*) "Send over onion protected message\n");
     everything = readUART();
     writeUART((uint8_t*) "Onion recieved ... Starting decrypt\n");
-    data = readData(everything);
     
     EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
-    everything = test_RSA_core(&test[0], &br_rsa_i31_public, &br_rsa_i31_private, everything); //still needs to be modified assume works
+    //should get 256 bytes
+    everything = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) everything, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
     writeUART((uint8_t*) "Decryption done ... starting decomp\n");
     
+    data = readData(everything);
     writeUART((uint8_t*) "data extracted\n");
+    
     testbanksig = readSignature(everything);
     writeUART((uint8_t*) "sig extracted\n");
-    if(*banksig != *testbanksig)
-    {
-        writeUART((uint8_t*) "Wrong signature ... terminating application");
-        return -1;
-    }
+    
     salt = readSalt(everything);
     writeUART((uint8_t*) "salt extracted\n");
+    
     writeUART((uint8_t*) "Decomp done\n");
+    
+    //Verify signature
+    memcpy(pt, everything, KEY_SIZE*3);
+    if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksigver, pt , KEY_SIZE*3) == -1)
+    {
+        writeUART((uint8_t*) "Signature wrong, terminating program\n");
+        return -1;
+    }
+    writeUART((uint8_t*) "Signature verified...\n");
+    
     
     writeUART((uint8_t*) "Starting to send data ...\n");
     writeUART(data);
     writeUART((uint8_t*) "Starting to send decrypted salt ...\n");
     writeUART(salt);
     writeUART((uint8_t*) "Starting to send signature ...\n");
-    //TODO implment RSA signature
-    
-   
-    */
-    for(;;)
-    {
-        //UART_PutString("Test String\n");
-        
-        /* Place your application code here. */
-        //UART_PutString("Test String \n");
-        
-        
-    }
 }
 
   
@@ -313,21 +319,26 @@ static void writeMemory(int row, uint8_t* buffer){
 }
 
 //NOT TESTED YET
-static uint8_t* readMemory(int row, int size){
-  uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
-  for(int i = 0; i < size; i++){
-    result[i] = (uint8_t)(CY_FLASH_BASE + (CY_FLASH_SIZEOF_ROW * row) + (i*sizeof(uint8_t)));
-  }
-  return result;
+static uint8_t* readMemory(int row, int size)
+{
+    uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
+    for(int i = 0; i < size; i++)
+    {
+        result[i] = (uint8_t)(CY_FLASH_BASE + (CY_FLASH_SIZEOF_ROW * row) + (i*sizeof(uint8_t)));
+    }
+    return result;
 }
 
 //Checks arrays against each other: for testing keys
-int checkArrays(uint8_t* array1, uint8_t* array2, int size){
-  for(int i = 0; i < size; i++){
-    if(array1[i] != array2[i]){
-      return 0;
+int checkArrays(uint8_t* array1, uint8_t* array2, int size)
+{
+  for(int i = 0; i < size; i++)
+    {
+        if(array1[i] != array2[i])
+        {
+        return 0;
+        }
     }
-  }
   return 1;
 }
 
@@ -340,21 +351,31 @@ uint8_t* readData(uint8_t* buffer)
   return result;
 }
 
-uint8_t* readSignature(uint8_t* buffer){
-  uint8_t* result = malloc(SIGNATURE_SIZE*sizeof(uint8_t));
-  for(int i = KEY_SIZE; i < KEY_SIZE + SIGNATURE_SIZE; i++){
-    result[i - KEY_SIZE] = buffer[i];
-  }
-  return result;
+uint8_t* readSalt(uint8_t* buffer)
+{
+    uint8_t* result = malloc(SIGNATURE_SIZE*sizeof(uint8_t));
+    int x = 0;
+    //512 to 768
+    for(int i = KEY_SIZE*2; i < KEY_SIZE*2 + SALT_SIZE; i++)
+    {
+        result[x] = buffer[i];
+        x++;
+    }
+    return result;
 }
 
 //Reads the third 256 byte segment of data: salt
-uint8_t* readSalt(uint8_t* buffer){
-  uint8_t* result = malloc(SALT_SIZE*sizeof(uint8_t));
-  for(int i = KEY_SIZE + SIGNATURE_SIZE; i < KEY_SIZE + SIGNATURE_SIZE + SALT_SIZE; i++){
-    result[i - KEY_SIZE - SIGNATURE_SIZE] = buffer[i];
-  }
-  return result;
+uint8_t* readSignature(uint8_t* buffer)
+{
+    uint8_t* result = malloc(SALT_SIZE*sizeof(uint8_t));
+    int x = 0;
+    //768 to 1024
+    for(int i = KEY_SIZE*2 + SALT_SIZE; i < KEY_SIZE*2 + SIGNATURE_SIZE + SALT_SIZE; i++)
+    {
+        result[x] = buffer[i];
+        x++;
+    }
+    return result;
 }
 
 static int check_equals(const char *banner, const void *v1, const void *v2, size_t len)
@@ -379,33 +400,63 @@ static int check_equals(const char *banner, const void *v1, const void *v2, size
     return -1;
 }
 
-uint8_t* RSA_decrypt(br_rsa_private fpriv, char msg[256])
+unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size)
 {
-    uint8_t ret[256];
-    memcpy(ret, msg, 256);
+    unsigned char tmp[256];
+    unsigned char tmp2[256];
+    unsigned char ret[256];
+   
+    memcpy(tmp, msg, size/2);
+    memcpy(tmp2, msg+256, size/2);
     
-    //decrypt
-    if (!fpriv(ret, &RSA_SK)) 
+    //decrypt first
+    if (!fpriv(tmp, &RSA_SK)) 
     {
 		//fprintf(stderr, "RSA private operation failed\n");
         writeUART((uint8_t*)"RSA PRIV OP FAILED\n");
 		exit(EXIT_FAILURE);
 	}
     
+    //decrypted second
+    if (!fpriv(tmp2, &RSA_SK)) 
+    {
+		//fprintf(stderr, "RSA private operation failed\n");
+        writeUART((uint8_t*)"RSA PRIV OP FAILED\n");
+		exit(EXIT_FAILURE);
+	}
+    
+    memcpy(ret, tmp, KEY_SIZE);
+    memcpy(ret+128, tmp2, KEY_SIZE);
+   
+
     return ret;    
     
 }
 
+unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size)
+{
+    unsigned char tmp[256];
+    memcpy(tmp, msg, size);
+    
+    //decrypt first
+    if (!fpriv(tmp, &RSA_SK)) 
+    {
+		//fprintf(stderr, "RSA private operation failed\n");
+        writeUART((uint8_t*)"RSA PRIV OP FAILED\n");
+		exit(EXIT_FAILURE);
+	}
+    
+    return tmp; 
+    
+}
 //returns 1 if verified, returns 0 if not
 int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, int sizept)
 {
     unsigned char t1[256];
 	unsigned char hv[256], tmp[256];
 	br_sha1_context hc;
-	size_t u;
     
-    u = 256;
-    memcpy(t1, buf, u);
+    memcpy(t1, buf, SIGNATURE_SIZE);
     br_sha1_init(&hc);
 	br_sha1_update(&hc, pt, sizept);
 	br_sha1_out(&hc, hv);
