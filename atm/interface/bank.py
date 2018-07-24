@@ -45,8 +45,11 @@ class Bank:
         self.aes_write(val)
 
     def withdraw_amount_write(self, amount):
-        val = structs.pack(">32s32I", "send_withdraw_amount", amount)
+        val = "waw" + structs.pack(">32s32I", "send_withdraw_amount", amount)
         self.aes_write(val)
+
+    def reset(self):
+        self.aes_write("rst")
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set
