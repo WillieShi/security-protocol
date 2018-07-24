@@ -46,7 +46,7 @@ def generate_prime_number():
 #What version should we use for RSA..?
 
 #generates rsa key
-def generate_key():
+def generate_rsa_key():
     #using generate() to generate key
     #first parameter can be any number that is a multiple of 256 and greater than 1024
     #random = Crypto.Random.new()
@@ -56,15 +56,26 @@ def generate_key():
 
 #rsa encryption
 def encrypt_rsa(message, pub_key):
-    #changing message into bytes
+    #adds padding
+    rsa_pubcipher = PKCS1_OAEP.new(pub_key)
+    byte_msg = message.encode()
+    encrypted_rsa = rsa_pubcipher.encrypt(byte_msg)
+    return encrypted_rsa
+    '''
     byte_msg = message.encode()
     encrypted_rsa = pub_key.encrypt(byte_msg, Random.new())
     return encrypted_rsa
+    '''
 
 #rsa decryption
-def decrypt_rsa(cipher_rsa, priv_key):
+def decrypt_rsa(encrypted_rsa, priv_key):
+    rsa_privcipher = PKCS1_OAEP.new(priv_key)
+    decrypted_rsa = rsa_privcipher.decrypt(encrypted_rsa).decode("utf-8")
+    return decrypted_rsa
+    '''
     decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
+    '''
 
 def hash_message(message):
     salt = bcrypt.gensalt()
@@ -86,5 +97,14 @@ def diffie_bank():
     return final_b
 
 #any test code goes here
+<<<<<<< HEAD
 mod, base = diffie_hellman()
 print(mod, base)
+=======
+priv, pub = generate_rsa_key()
+testing = "Works"
+encrypted = encrypt_rsa(testing, pub)
+print(encrypted)
+decrypted = decrypt_rsa(encrypted, priv)
+print(decrypted)
+>>>>>>> atm_protocol
