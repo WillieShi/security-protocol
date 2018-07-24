@@ -30,11 +30,11 @@ class Bank(object):
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
         self.transactionKey = self.generate_key_pair()
 
-    def encSend(message):
+    def aes_write(message):
         message = ciphers.encrypt_aes(message, transactionKey)
         self.atm.write(message)
 
-    def encRead(length):
+    def aes_read(length):
         if self.db.get_atm(atm_id) is None:
             self.atm.write(self.BAD)
             log("Invalid ATM ID")
@@ -58,14 +58,6 @@ class Bank(object):
             elif command != '':
                 self.atm.write(self.ERROR)
 
-    def verify(self, atm_id, card_id, hash):
-        if hash == self.db.get_hash(card_id_):
-            rand = ciphers.random_with_N_digits(100)
-            encSend(ciphers.encrypt_rsa(rand, self.db.get_outer_onion_public_key(card_id)))
-            return rand == encRead(LENGTH)
-        else:
-            encSend("Invalid card/pin")
-            return False
 
     """
     def withdraw(self, atm_id, card_id, amount): #deprecated
@@ -81,16 +73,16 @@ class Bank(object):
             log("Bad card ID")
         else:
             log("Valid balance check")
-            self.encSend(onion)
-            innerLayer = self.encRead(ONION_SIZE)
+            self.aes_write(onion)
+            innerLayer = self.aes_read(ONION_SIZE)
             balance = ciphers.decrypt_rsa(innerLayer, self.db.get_outer_onion_public_key)
-            self.encSend(self.GOOD)
+            self.aes_write(self.GOOD)
 
         if amount > balance:
             log("Invalid funds")
-            self.encSend("Insufficient funds")
+            self.aes_write("Insufficient funds")
         else:
-            self.encSend(balance-amount)
+            self.aes_write(balance-amount)
             self.db.set_onion(ciphers.encrypt_rsa(self.db.get_outer_onion_public_key(card_id),ciphers.encrypt_rsa(self.db.get_inner_onion_public_key(card_id), balance-amount)))
 
 
@@ -106,39 +98,36 @@ class Bank(object):
             log("Bad card ID")
         else:
             log("Valid balance check")
-            self.encSend(onion)
-            innerLayer = self.encRead(ONION_SIZE)
+            self.aes_write(onion)
+            innerLayer = self.aes_read(ONION_SIZE)
             balance = ciphers.decrypt_rsa(innerLayer, self.db.get_outer_onion_public_key)
-            self.encSend(self.GOOD)
+            self.aes_write(self.GOOD)
     """
+
+    #def pin_verification_read(self)
 
     def private_key_verification_write(self):
         rand_num = ciphers.random_with_N_bytes(32)
-        encSend(structs.pack(">32s256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id))))
+        aes_write(structs.pack(">32s256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id))))
         return rand_num
 
     def private_key_verification_read(self, rand_num):
-        transaction_id, cand_rand_num = structs.unpack(">32s32I")
+        transaction_id, cand_rand_num = structs.unpack(">32s32I", aes_read(64))
         if rand_num == cand_rand_num:
             return True
         return False
 
     def outer_layer_write(self, card_id):
         val = structs.pack(">32s512I", "outer_layer_write", self.db.get_onion(card_id))
-        encSend(val)
+        aes_write(val)
 
     def inner_layer_read(self, card_id):
-        transaction_id, card_id = structs
+        transaction_id, card_id = structs.unpack(">32s256")
+
 
     def balance_write(self, balance):
         val = structs.pack(">32s32I", "balance_write", balance)
-        encSend(val)
-
-    
-
-
-
-
+        aes_write(val)
 
 def parse_args():
     parser = argparse.ArgumentParser()
