@@ -10,7 +10,7 @@
  * ========================================
 */
 #include "project.h"
-
+#include "usbserialprotocol.h"
 
 #include <stdlib.h>
 #include "bearssl_rsa.h"

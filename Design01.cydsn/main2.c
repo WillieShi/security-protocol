@@ -55,7 +55,7 @@ void provision()
     pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
 }
 
-int main (void)
+int main2 (void)
 {
     CyGlobalIntEnable;      /* Enable global interrupts */
     

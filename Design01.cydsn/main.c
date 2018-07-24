@@ -14,6 +14,8 @@
 
 #include <stdlib.h>
 #include "bearssl_rsa.h"
+#include "bearssl_hash.h"
+#include "usbserialprotocol.h"
 
 
 
@@ -26,6 +28,21 @@ const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0
 #define SALT_SIZE 256
 #define ENCRYPTION_NUMBER_SIZE 64;
 
+//Ben's crappy variable
+#define PIN_LEN 8
+#define UUID_LEN 36
+#define PINCHG_SUC "SUCCESS"
+#define PROV_MSG "P"
+#define RECV_OK "K"
+#define PIN_OK "OK"
+#define PIN_BAD "BAD"
+#define CHANGE_PIN '3'
+
+#define PIN ((uint8*)(CY_FLASH_BASE + 0x8000))
+#define UUID ((uint8*)(CY_FLASH_BASE + 0x8080))
+#define PROVISIONED ((uint8*)(CY_FLASH_BASE + 0x8100))
+#define write_pin(p) CySysFlashWriteRow(256, p);
+#define write_uuid(u) CySysFlashWriteRow(257, u);
 
 
 static const unsigned char RSA_N[] = {
@@ -134,6 +151,9 @@ static const br_rsa_private_key RSA_SK = {
 	(void *)RSA_IQ, sizeof RSA_IQ
 };
 
+static const unsigned char SHA1_OID[] = {
+	0x05, 0x2B, 0x0E, 0x03, 0x02, 0x1A
+};
 
 
 uint8_t result[1024*1024];
@@ -153,7 +173,11 @@ static int check_equals(const char *banner, const void *v1, const void *v2, size
 uint8_t* test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv, uint8_t* msg);
 int hex_to_int(char c);
 int hex_to_ascii(char c, char d);
-
+void mark_provisioned();
+void provision();
+static void test_RSA_sign(const char *name, br_rsa_private fpriv,
+	br_rsa_pkcs1_sign fsign, br_rsa_pkcs1_vrfy fvrfy);
+void init();
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -177,6 +201,7 @@ int main(void)
     
     
     UART_Start();
+    init();
     EEPROM_Init((uint32)eeprom_ref);
     
     //start process, recieve and write card num to mem
@@ -520,6 +545,223 @@ int hex_to_int(char c){
         int result = first*10 + second;
         if(result > 9) result--;
         return result;
+}
+
+
+static void test_RSA_sign(const char *name, br_rsa_private fpriv,
+	br_rsa_pkcs1_sign fsign, br_rsa_pkcs1_vrfy fvrfy)
+{
+	unsigned char t1[128], t2[128];
+	unsigned char hv[20], tmp[20];
+	br_sha1_context hc;
+	size_t u;
+
+	//printf("Test %s: ", name);
+	//fflush(stdout);
+
+	/*
+	 * Verify the KAT test (computed with OpenSSL).
+	 */
+	hextobin(t1, "45A3DC6A106BCD3BD0E48FB579643AA3FF801E5903E80AA9B43A695A8E7F454E93FA208B69995FF7A6D5617C2FEB8E546375A664977A48931842AAE796B5A0D64393DCA35F3490FC157F5BD83B9D58C2F7926E6AE648A2BD96CAB8FCCD3D35BB11424AD47D973FF6D69CA774841AEC45DFAE99CCF79893E7047FDE6CB00AA76D");
+	br_sha1_init(&hc);
+	br_sha1_update(&hc, "test", 4);
+	br_sha1_out(&hc, hv);
+	if (!fvrfy(t1, sizeof t1, SHA1_OID, sizeof tmp, &RSA_PK, tmp)) {
+		//fprintf(stderr, "Signature verification failed\n");
+		exit(EXIT_FAILURE);
+	}
+	check_equals("Extracted hash value", hv, tmp, sizeof tmp);
+
+	/*
+	 * Regenerate the signature. This should yield the same value as
+	 * the KAT test, since PKCS#1 v1.5 signatures are deterministic
+	 * (except the usual detail about hash function parameter
+	 * encoding, but OpenSSL uses the same convention as BearSSL).
+	 */
+	if (!fsign(SHA1_OID, hv, 20, &RSA_SK, t2)) {
+		//fprintf(stderr, "Signature generation failed\n");
+		exit(EXIT_FAILURE);
+	}
+	check_equals("Regenerated signature", t1, t2, sizeof t1);
+
+	/*
+	 * Use the raw private core to generate fake signatures, where
+	 * one byte of the padded hash value is altered. They should all be
+	 * rejected.
+	 */
+	hextobin(t2, "0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF003021300906052B0E03021A05000414A94A8FE5CCB19BA61C4C0873D391E987982FBBD3");
+	for (u = 0; u < (sizeof t2) - 20; u ++) {
+		memcpy(t1, t2, sizeof t2);
+		t1[u] ^= 0x01;
+		if (!fpriv(t1, &RSA_SK)) {
+            /*
+			fprintf(stderr, "RSA private key operation failed\n");
+			exit(EXIT_FAILURE);
+            */
+		}
+		if (fvrfy(t1, sizeof t1, SHA1_OID, sizeof tmp, &RSA_PK, tmp)) {
+			/*
+            fprintf(stderr,
+				"Signature verification should have failed\n");
+			exit(EXIT_FAILURE);
+            */
+		}
+		//printf(".");
+		//fflush(stdout);
+	}
+
+	//printf(" done.\n");
+	//fflush(stdout);
+}
+
+void mark_provisioned()
+{
+    uint8 row[128];
+    *row = 1;
+    CySysFlashWriteRow(258, row);
+}
+
+// provisions card (should only ever be called once)
+void provision()
+{
+    uint8 message[128];
+    
+    // synchronize with bank
+    syncConnection(SYNC_PROV);
+ 
+    pushMessage((uint8*)PROV_MSG, (uint8)strlen(PROV_MSG));
+        
+    // set PIN
+    pullMessage(message);
+    write_pin(message);
+    pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
+    
+    // set account number
+    pullMessage(message);
+    write_uuid(message);
+    pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
+}
+
+static void
+test_RSA_signatures(void)
+{
+	uint32_t n[40], e[2], p[20], q[20], dp[20], dq[20], iq[20], x[40];
+	unsigned char hv[20], sig[128];
+	unsigned char ref[128], tmp[128];
+	br_sha1_context hc;
+
+	printf("Test RSA signatures: ");
+	//fflush(stdout);
+
+	/*
+	 * Decode RSA key elements.
+	 */
+	br_int_decode(n, sizeof n / sizeof n[0], RSA_N, sizeof RSA_N);
+	br_int_decode(e, sizeof e / sizeof e[0], RSA_E, sizeof RSA_E);
+	br_int_decode(p, sizeof p / sizeof p[0], RSA_P, sizeof RSA_P);
+	br_int_decode(q, sizeof q / sizeof q[0], RSA_Q, sizeof RSA_Q);
+	br_int_decode(dp, sizeof dp / sizeof dp[0], RSA_DP, sizeof RSA_DP);
+	br_int_decode(dq, sizeof dq / sizeof dq[0], RSA_DQ, sizeof RSA_DQ);
+	br_int_decode(iq, sizeof iq / sizeof iq[0], RSA_IQ, sizeof RSA_IQ);
+
+	/*
+	 * Decode reference signature (computed with OpenSSL).
+	 */
+	hextobin(ref, "45A3DC6A106BCD3BD0E48FB579643AA3FF801E5903E80AA9B43A695A8E7F454E93FA208B69995FF7A6D5617C2FEB8E546375A664977A48931842AAE796B5A0D64393DCA35F3490FC157F5BD83B9D58C2F7926E6AE648A2BD96CAB8FCCD3D35BB11424AD47D973FF6D69CA774841AEC45DFAE99CCF79893E7047FDE6CB00AA76D");
+
+	/*
+	 * Recompute signature. Since PKCS#1 v1.5 signatures are
+	 * deterministic, we should get the same as the reference signature.
+	 */
+	br_sha1_init(&hc);
+	br_sha1_update(&hc, "test", 4);
+	br_sha1_out(&hc, hv);
+	if (!br_rsa_sign(sig, sizeof sig, p, q, dp, dq, iq, br_sha1_ID, hv)) {
+		//fprintf(stderr, "RSA-1024/SHA-1 sig generate failed\n");
+		exit(EXIT_FAILURE);
+	}
+	check_equals("KAT RSA-sign 1", sig, ref, sizeof sig);
+
+	/*
+	 * Verify signature.
+	 */
+	if (!br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
+		//fprintf(stderr, "RSA-1024/SHA-1 sig verify failed\n");
+		exit(EXIT_FAILURE);
+	}
+	hv[5] ^= 0x01;
+	if (br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
+		//fprintf(stderr, "RSA-1024/SHA-1 sig verify should have failed\n");
+		exit(EXIT_FAILURE);
+	}
+	hv[5] ^= 0x01;
+
+	/*
+	 * Generate a signature with the alternate encoding (no NULL) and
+	 * verify it.
+	 */
+	hextobin(tmp, "0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00301F300706052B0E03021A0414A94A8FE5CCB19BA61C4C0873D391E987982FBBD3");
+	br_int_decode(x, sizeof x / sizeof x[0], tmp, sizeof tmp);
+	x[0] = n[0];
+	b_rsa_private_core(x, p, q, dp, dq, iq);
+	br_int_encode(sig, sizeof sig, x);
+	if (!br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
+		//fprintf(stderr, "RSA-1024/SHA-1 sig verify (alt) failed\n");
+		exit(EXIT_FAILURE);
+	}
+	hv[5] ^= 0x01;
+	if (br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
+		//fprintf(stderr, "RSA-1024/SHA-1 sig verify (alt) should have failed\n");
+		exit(EXIT_FAILURE);
+	}
+	hv[5] ^= 0x01;
+
+	//printf("done.\n");
+	//fflush(stdout);
+}
+
+void init()
+{
+    /* Declare vairables here */
+    uint8 message[128];
+    
+    //while(1) UART_UartPutString("HELLO WORLD!\r\n");
+    // Provision card if on first boot
+    if (*PROVISIONED == 0x00) {
+        provision();
+        mark_provisioned();
+    }
+    
+    // Go into infinite loop
+    while (1) {
+        /* Place your application code here. */
+        
+        // syncronize communication with bank
+        syncConnection(SYNC_NORM);
+        
+        // receive pin number from ATM
+        pullMessage(message);
+        
+        if (strncmp((char*)message, (char*)PIN, PIN_LEN)) {
+            pushMessage((uint8*)PIN_BAD, strlen(PIN_BAD));
+        } else {
+            pushMessage((uint8*)PIN_OK, strlen(PIN_OK));
+            
+            // get command
+            pullMessage(message);
+            pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
+            
+            // change PIN or broadcast UUID
+            if(message[0] == CHANGE_PIN)
+            {
+                pullMessage(message);
+                write_pin(message);
+                pushMessage((uint8*)PINCHG_SUC, strlen(PINCHG_SUC));
+            } else {
+                pushMessage(UUID, UUID_LEN);   
+            }
+        }
+    }
 }
 
 
