@@ -4,7 +4,6 @@ from Crypto.Util import number
 import Crypto
 from Crypto.PublicKey import RSA
 from Crypto import Random
-from random import randint
 import os
 import base64
 import six
@@ -45,7 +44,6 @@ def generate_prime_number():
 #not sure if these imports are more or less correct than the ones above for RSA.
 #What version should we use for RSA..?
 
-
 #generates rsa key
 def generate_key():
     #using generate() to generate key
@@ -75,19 +73,17 @@ def hash_message(message):
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
-#deffie hellman key exchange
-def deffie_atm(mod, bas):
-    #insert read (mod, bas) from bank
-    a = randint(1, 9999)
-    side1 = (bas**a) % mod
-    #insert read (side2) from bank
-    #insert write (side1) to bank
-    #final_a is the final atm side key for deffie hellman
-    final_a = (side2**a) % mod
-    return final_a
+def diffie_bank():
+    mod, bas = diffie_hellman()
+    #insert write (mod, bas) to atm
+    b = randint(1, 9999)
+    side2 = (bas**b) % mod
+    #insert write (side2) to atm
+    #insert read (side1) from atm
+    #final_b is the final bank side key for diffie hellman
+    final_b = (side1**b) % mod
+    return final_b
 
 #any test code goes here
-#secret1,secret2 = deffie_hellman()
-#print("Alice's secret: ", secret1)
-#print("Bob secret: ", secret2)
-#print(generate_prime_number)
+mod, base = diffie_hellman()
+print(mod, base)
