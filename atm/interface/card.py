@@ -38,15 +38,20 @@ class Card(object):
 
     #decrypts the random num received from bank to verify card
     def read_random_num(self, encrypted_randnum):
-        return aes_read(encrypted_randnum, ">32I")
+        transaction_id, random_num = structs.unpack(">32s32I", aes_read(64))
+        return random_num
 
     #encrypts decrypted random num w/ AES to send to bank
     def card_verify(self, random_num):
         val = structs.pack(">32s32I", "card_verify", random_num)
         self.aes_write(val)
 
+    def onion_read():
+        transaction_id, onion = structs.unpack(">32s512I", aes_read(544))
+        return onion
+
     #Puts the one-layer onion (still has inner RSA layer) in the AES channel to send to bank.
-    def deliver_onion(self, inner_balance):
+    def onion_write(self, inner_balance):
         val = structs.pack(">32s32I", "deliver_onion", inner_balance)
         self.aes_write(val)
 
