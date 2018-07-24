@@ -38,7 +38,7 @@ class Card(object):
 
     #decrypts the random num received from bank to verify card
     def read_random_num(self, encrypted_randnum):
-        return aes_read(encrypted_randnum, ">32I")
+        return 
 
     #encrypts decrypted random num w/ AES to send to bank
     def card_verify(self, random_num):
