@@ -49,8 +49,13 @@ class Bank(object):
     def start(self):
         while True:
             command = self.atm.read(3)
-            if command = ""
-            elif command != '':
+            if command = "pvc":
+                self.pin_verification_read()
+            elif command = "pkv":
+                self.private_key_verify
+            elif command = "ilw":
+            elif command = "waw":
+            elif command != "":
                 self.atm.write(self.ERROR)
 
 
