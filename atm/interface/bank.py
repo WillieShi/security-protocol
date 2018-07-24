@@ -3,6 +3,7 @@
 import logging
 import struct
 import serial
+import ciphers
 
 
 class Bank:
@@ -15,6 +16,12 @@ class Bank:
     def __init__(self, port, verbose=False):
         self.ser = serial.Serial(port)
         self.verbose = verbose
+
+    def aes_write(self, msg, key):
+        self.set.write(ciphers.encrypt_aes(msg, key))
+        
+    def aes_read(self, msg, key):
+        self.set.write(ciphers.encrypt_aes(msg, key))
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set
