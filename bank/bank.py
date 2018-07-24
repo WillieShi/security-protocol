@@ -23,6 +23,7 @@ class Bank(object):
     transactionKey
 
 
+
     def __init__(self, port, baud=115200, db_path="bank.json"):
         super(Bank, self).__init__()
         self.db = db.DB(db_path=db_path)
@@ -34,6 +35,10 @@ class Bank(object):
         self.atm.write(message)
 
     def encRead(length):
+        if self.db.get_atm(atm_id) is None:
+            self.atm.write(self.BAD)
+            log("Invalid ATM ID")
+            return
         message = self.atm.read(length)
         return ciphers.decrypt_aes(message, transactionKey)
 
@@ -62,8 +67,8 @@ class Bank(object):
             encSend("Invalid card/pin")
             return False
 
-
-    def withdraw(self, atm_id, card_id, amount):
+    """
+    def withdraw(self, atm_id, card_id, amount): #deprecated
         if self.db.get_atm(atm_id) is None:
             self.atm.write(self.BAD)
             log("Invalid ATM ID")
@@ -88,7 +93,8 @@ class Bank(object):
             self.encSend(balance-amount)
             self.db.set_onion(ciphers.encrypt_rsa(self.db.get_outer_onion_public_key(card_id),ciphers.encrypt_rsa(self.db.get_inner_onion_public_key(card_id), balance-amount)))
 
-    def check_balance(self, atm_id, card_id): #finished
+
+    def check_balance(self, atm_id, card_id): #deprecated
         if self.db.get_atm(atm_id) is None:
             self.atm.write(self.BAD)
             log("Invalid ATM ID")
@@ -104,6 +110,32 @@ class Bank(object):
             innerLayer = self.encRead(ONION_SIZE)
             balance = ciphers.decrypt_rsa(innerLayer, self.db.get_outer_onion_public_key)
             self.encSend(self.GOOD)
+    """
+
+    def private_key_verification_write(self):
+        rand_num = ciphers.random_with_N_bytes(32)
+        encSend(structs.pack(">32s256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id))))
+        return rand_num
+
+    def private_key_verification_read(self, rand_num):
+        transaction_id, cand_rand_num = structs.unpack(">32s32I")
+        if rand_num == cand_rand_num:
+            return True
+        return False
+
+    def outer_layer_write(self, card_id):
+        val = structs.pack(">32s512I", "outer_layer_write", self.db.get_onion(card_id))
+        encSend(val)
+
+    def inner_layer_read(self, card_id):
+        transaction_id, card_id = structs
+
+    def balance_write(self, balance):
+        val = structs.pack(">32s32I", "balance_write", balance)
+        encSend(val)
+
+
+
 
 
 def parse_args():
