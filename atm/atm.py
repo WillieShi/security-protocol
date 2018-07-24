@@ -5,6 +5,7 @@ from interface import card
 import os
 import json
 import argparse
+import ciphers
 
 log = logging.getLogger('')
 log.setLevel(logging.DEBUG)
@@ -37,10 +38,6 @@ class ATM(cmd.Cmd, object):
         self.dispensed = int(cfg["dispensed"])
         self.bills = cfg["bills"]
         self.update()
-
-    def card_verify(self, random_num):
-        val = structs.pack(">32s32I", "card_verify", random_num)
-        self.aes_write(val)
 
     def _vp(self, msg, log=logging.debug):
         print "here"
