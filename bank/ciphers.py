@@ -73,21 +73,22 @@ def hash_message(message):
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
-def deffie_hellman():
+def diffie_hellman():
     modulus = generate_prime_number()
     base = generate_prime_number()
     return (modulus, base)
 
-def deffie_bank():
-    mod, bas = deffie_hellman()
+def diffie_bank():
+    mod, bas = diffie_hellman()
     #insert write (mod, bas) to atm
     b = randint(1, 9999)
     side2 = (bas**b) % mod
     #insert write (side2) to atm
     #insert read (side1) from atm
-    #final_b is the final bank side key for deffie hellman
+    #final_b is the final bank side key for diffie hellman
     final_b = (side1**b) % mod
     return final_b
 
 #any test code goes here
-#print(generate_prime_number)
+mod, base = diffie_hellman()
+print(mod, base)
