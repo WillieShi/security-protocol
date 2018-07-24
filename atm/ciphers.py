@@ -63,7 +63,7 @@ def encrypt_rsa(message, pub_key):
 
 #rsa decryption
 def decrypt_rsa(cipher_rsa, priv_key):
-    decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
+    decrypted_rsa = priv_key.decrypt(cipher_rsa).decode("utf-8")
     return decrypted_rsa
 
 def hash_message(message):
@@ -75,7 +75,7 @@ def hash_message(message):
     return(hashlib.sha3_256(message).hexdigest())
 
 def diffie_bank():
-    mod, bas = #getting the mod and base
+    mod, bas = "getting the mod and base"
     #insert write (mod, bas) to atm
     b = secrets.randbelow(9999)
     side2 = (bas**b) % mod
@@ -86,5 +86,3 @@ def diffie_bank():
     return final_b
 
 #any test code goes here
-mod, base = diffie_hellman()
-print(mod, base)

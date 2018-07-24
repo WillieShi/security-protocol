@@ -63,7 +63,7 @@ def encrypt_rsa(message, pub_key):
 
 #rsa decryption
 def decrypt_rsa(cipher_rsa, priv_key):
-    decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
+    decrypted_rsa = priv_key.decrypt(cipher_rsa).decode("utf-8")
     return decrypted_rsa
 
 def hash_message(message):
