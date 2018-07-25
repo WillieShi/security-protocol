@@ -5,6 +5,8 @@ from interface import card
 import os
 import json
 import argparse
+import time
+
 
 log = logging.getLogger('')
 log.setLevel(logging.DEBUG)
@@ -184,6 +186,17 @@ class ATM(cmd.Cmd, object):
         else:
             print "PIN change failed!"
 
+    def timer():
+    now = time.localtime(time.time())
+    return now[5]
+    run = raw_input("Start? > ")
+    while run == "start":
+        minutes = 0
+        current_sec = timer()
+        #print current_sec
+        if current_sec == 59:
+            mins = minutes + 1
+            print ">>>>>>>>>>>>>>>>>>>>>", mins
 
 def parse_args():
     parser = argparse.ArgumentParser()
