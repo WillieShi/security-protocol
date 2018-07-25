@@ -162,8 +162,6 @@ uint8_t result[1024*1024];
 const uint8_t row[CY_FLASH_SIZEOF_ROW] CY_ALIGN(CY_FLASH_SIZEOF_ROW) = {0};
 static uint8_t* readUART();
 static void writeUART(uint8_t* buffer);
-static void writeMemory(int row, uint8_t* buffer);
-static uint8_t* readMemory(int row,  int size);
 int checkArrays(uint8_t* array1, uint8_t* array2, int size);
 uint8_t* readData(uint8_t* buffer);
 uint8_t* readSignature(uint8_t* buffer);
@@ -171,8 +169,6 @@ uint8_t* readSalt(uint8_t* buffer);
 static int check_equals(const void *v1, const void *v2, size_t len);
 void mark_provisioned();
 void provision();
-static void test_RSA_sign(const char *name, br_rsa_private fpriv,
-	br_rsa_pkcs1_sign fsign, br_rsa_pkcs1_vrfy fvrfy);
 void init();
 unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size);
 unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size);
@@ -192,8 +188,6 @@ int main(void)
     uint8_t* everything;
     uint8_t* salt;
     uint8_t* pt;
-    const char test[] = "hello world";
-    
     
     UART_Start();
     init();
@@ -276,7 +270,7 @@ int main(void)
     
     //Verify signature
     memcpy(pt, everything, KEY_SIZE*3);
-    if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksigver, pt , KEY_SIZE*3) == -1)
+    if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksig, pt , KEY_SIZE*3) == -1)
     {
         writeUART((uint8_t*) "Signature wrong, terminating program\n");
         return -1;
@@ -314,6 +308,7 @@ static void writeUART(uint8_t* buffer)
 }
 
 //TEST TOMORROW
+/*
 static void writeMemory(int row, uint8_t* buffer){
   uint8_t* firstHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
   uint8_t* secondHalf = malloc(CY_FLASH_SIZEOF_ROW*sizeof(uint8_t));
@@ -324,8 +319,10 @@ static void writeMemory(int row, uint8_t* buffer){
   CySysFlashWriteRow((uint32_t)row, firstHalf);
   CySysFlashWriteRow((uint32_t)(row+1), secondHalf);
 }
+*/
 
 //NOT TESTED YET
+/*
 static uint8_t* readMemory(int row, int size)
 {
     uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
@@ -335,6 +332,7 @@ static uint8_t* readMemory(int row, int size)
     }
     return result;
 }
+*/
 
 //Checks arrays against each other: for testing keys
 int checkArrays(uint8_t* array1, uint8_t* array2, int size)
@@ -387,20 +385,9 @@ uint8_t* readSignature(uint8_t* buffer)
 
 static int check_equals(const void *v1, const void *v2, size_t len)
 {
-	size_t u;
-	const unsigned char *b;
-
+    
 	if (memcmp(v1, v2, len) == 0) {
 		return 1;
-	}
-	//fprintf(stderr, "\n%s failed\n", banner);
-	//fprintf(stderr, "v1: ");
-	for (u = 0, b = v1; u < len; u ++) {
-		//fprintf(stderr, "%02X", b[u]);
-	}
-	//fprintf(stderr, "\nv2: ");
-	for (u = 0, b = v2; u < len; u ++) {
-		//fprintf(stderr, "%02X", b[u]);
 	}
 	//fprintf(stderr, "\n");
 	//exit(EXIT_FAILURE);
