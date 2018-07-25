@@ -16,9 +16,9 @@ IV = 16 * '\x00'
 our_message = "testing here please"
 
 #here we define AES functions
-def pad(unpadded_message):
-    unpadded_message += (((32 - len(unpadded_message)) % 32 * '{'))
-    return unpadded_message
+def pad(unpadded_message, pad_length):
+    padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
+    return padded_message
 
 def create_aes_key():
     #this takes 32 random bytes to make our key
@@ -31,10 +31,10 @@ def encrypt_aes(message, key):
     cipher_text = encrypt_cipher.encrypt(message)
     return cipher_text
 
-def decrypt_aes(encrypted_message, key):
+def decrypt_aes(message, key):
     decrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
     #the decode thing stops the result from being b'decrypted_message'
-    plain_text = decrypt_cipher.decrypt(encrypted_message).decode("utf-8")
+    plain_text = decrypt_cipher.decrypt(message).decode("utf-8")
     return plain_text
 
 #here we define RSA functions

@@ -1,4 +1,12 @@
-"""Backend of ATM interface for xmlrpc"""
+"""Backend of ATM interface for xmlrpc
+Key
+pvc = pin_verify()
+pkv = private_key_verify()
+ilw = inner_layer_write()
+bbb = check_balance()
+www = withdraw()
+
+"""
 
 import logging
 import struct

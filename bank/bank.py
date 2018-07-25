@@ -2,6 +2,9 @@
 This module implements a bank server interface
 
 Key
+pvc = pin_verification_read()
+ilw = inner_layer_write()
+waw = withdraw_balance_modify(withdraw_amount_read(withdraw_amount))
 
 
 """
@@ -24,7 +27,7 @@ class Bank(object):
     GOOD = "O"
     BAD = "N"
     ERROR = "E"
-    transactionKey
+    uptime_Key
 
 
 
@@ -48,12 +51,15 @@ class Bank(object):
 
     def start(self):
         while True:
+            card_id
             command = self.atm.read(3)
             if command = "pvc":
-                self.pin_verification_read()
+                card_id = self.pin_verification_read()
             elif command = "pkv":
             elif command = "ilw":
+                self.inner_layer_write(card_id)
             elif command = "waw":
+                self.withdraw_balance_modify(withdraw_amount_read(withdraw_amount))
             elif command = "rst":
                 break
             elif command != "":
@@ -129,6 +135,17 @@ class Bank(object):
     def inner_layer_read(self, card_id):
         transaction_id, enc_val = structs.unpack(">32s256I", aes_read(288))
         return decrypt_rsa(enc_val, self.db.get_inner_onion_private_key(card_id))
+
+    def withdraw_amount_read(self, withdraw_amount):
+        transaction_id, withdraw_amount = structs.unpack(">32s32I", aes_read(64))
+        return withdraw_amount
+
+    def withdraw_balance_modify(self, balance, withdraw_amount):
+        if(balance - withdraw_amount >= 0):
+            new_balance = balance - withdraw_amount
+            return new_balance
+        else:
+            return "Bad, try again" #fix this later, error system
 
     def balance_write(self, balance):
         val = structs.pack(">32s32I", "balance_write", balance)
