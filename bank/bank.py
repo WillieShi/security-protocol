@@ -3,6 +3,7 @@ This module implements a bank server interface
 
 Key
 pvc = pin_verification_read()
+pkv = private_key_verification_read
 ilw = inner_layer_write()
 waw = withdraw_balance_modify(withdraw_amount_read(withdraw_amount))
 
@@ -56,10 +57,13 @@ class Bank(object):
             if command = "pvc":
                 card_id = self.pin_verification_read()
             elif command = "pkv":
+                self.private_key_verification_read(rand_num)
             elif command = "ilw":
                 self.inner_layer_write(card_id)
             elif command = "waw":
                 self.withdraw_balance_modify(withdraw_amount_read(withdraw_amount))
+            elif command = "bbb"
+                self.
             elif command = "rst":
                 break
             elif command != "":
@@ -121,6 +125,7 @@ class Bank(object):
         rand_num = ciphers.random_with_N_bytes(32)
         aes_write(structs.pack(">32s256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id))))
         return rand_num
+        #aes_write may cause problems due to no "self." appended to the beginning.
 
     def private_key_verification_read(self, rand_num):
         transaction_id, cand_rand_num = structs.unpack(">32s32I", aes_read(64))

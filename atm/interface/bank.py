@@ -36,6 +36,11 @@ class Bank:
         val = "pvc" + structs.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
         self.aes_write(val)
 
+    def private_key_verify_read():
+        transaction_id, random_num = structs.unpack(">32s32I", aes_read(64))
+        return random_num
+
+    #private_key_verify() sends the random_num the card decrypted back to bank
     def private_key_verify(self, random_num):
         val = "pkv" + structs.pack(">32s32I", "private_key_verify", random_num)
         self.aes_write(random_num)
@@ -73,7 +78,7 @@ class Bank:
             bool: False on failure
         """
         self._vp('check_balance: Sending request to Bank')
-        pkt = "b" + struct.pack(">36s36s", atm_id, card_id)
+        pkt = "bbb" + struct.pack(">36s36s", atm_id, card_id)
         self.ser.write(pkt)
 
         while pkt not in "ONE":
