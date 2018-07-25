@@ -1,7 +1,7 @@
 import logging
 import sys
 import cmd
-from interface import card
+from interface import card, bank
 import os
 import json
 import argparse
@@ -130,12 +130,8 @@ class ATM(cmd.Cmd, object):
             # request UUID from HSM if card accepts PIN
             if card_id:
                 self._vp('withdraw: Requesting hsm_id from hsm')
-                self.bank.request_read_balance()
-
-
-
-
-                if self.bank.withdraw(self.uuid, card_id, amount):
+                self.check_balance()
+                if self.bank.withdraw_amount_write(amount):
                     with open(self.billfile, "w") as f:
                         self._vp('withdraw: Dispensing bills...')
                         for i in range(self.dispensed, self.dispensed + amount):
@@ -144,6 +140,7 @@ class ATM(cmd.Cmd, object):
                             self.bills[i] = "-DISPENSED BILL-"
                             self.dispensed += 1
                     self.update()
+                    self.check_balance()
                     return True
             else:
                 self._vp('withdraw failed')
