@@ -160,7 +160,7 @@ static const unsigned char SHA1_OID[] = {
 uint8_t result[1024*1024];
 
 const uint8_t row[CY_FLASH_SIZEOF_ROW] CY_ALIGN(CY_FLASH_SIZEOF_ROW) = {0};
-static uint8_t* readUART();
+static uint8_t* readUART(uint8_t size);
 static void writeUART(uint8_t* buffer);
 int checkArrays(uint8_t* array1, uint8_t* array2, int size);
 uint8_t* readData(uint8_t* buffer);
@@ -195,7 +195,7 @@ int main(void)
     
     //start process, recieve and write card num to mem
     writeUART((uint8_t*) "Start card prod, give me card number\n");
-    cardnum = readUART(); //ask laslo about it dangerous since we give them things to write?
+    cardnum = readUART(20); //ask laslo about it dangerous since we give them things to write?
     writeUART(cardnum);
     if(sizeof(cardnum) > 20)
     {
@@ -212,7 +212,7 @@ int main(void)
     //recieve and write bank sig to mem
     writeUART((uint8_t*) "Give me the Bank signature");
     //RSA sign #TODO !MIGHT JUST BE THE PUBLIC KEY COME BACK TO THIS
-    banksig = readUART();
+    banksig = readUART((uint8_t) KEY_SIZE);
     writeUART((uint8_t*)"signature recieved\n");
     EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
     EEPROM_Read(KEY_SIZE, db, KEY_SIZE); //look to make sure its good
@@ -233,9 +233,9 @@ int main(void)
     //MAIN Rsa Protocol
     //Recieve Transaction code
     writeUART((uint8_t*) "Give me signature\n");
-    testbanksigver = readUART();
+    testbanksigver = readUART((uint8_t)SIGNATURE_SIZE);
     writeUART((uint8_t*) "Give me the verification code\n");
-    verif = readUART();
+    verif = readUART((uint8_t)SIGNATURE_SIZE);
     writeUART((uint8_t*) "Decrypting ...\n");
     verif = RSA_decrypt256(&br_rsa_i31_private, (char*) verif,(uint8_t) KEY_SIZE );
     //NEED TO DEBUG RSA VER
@@ -250,7 +250,7 @@ int main(void)
     
     //recieve data
     writeUART((uint8_t*) "Send over onion protected message\n");
-    everything = readUART();
+    everything = readUART((uint8_t)KEY_SIZE*4);
     writeUART((uint8_t*) "Onion recieved ... Starting decrypt\n");
     
     EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
@@ -288,10 +288,11 @@ int main(void)
 
   
 
-static uint8_t* readUART(){
-  uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
-  for(int i = 0; i < KEY_SIZE;){
-    uint8_t rxData = (uint8_t)UART_GetChar();
+static uint8_t* readUART(uint8_t size)
+{
+  uint8_t* result = malloc(size*sizeof(uint8_t));
+  for(int i = 0; i < size;){
+    uint8_t rxData = (uint8_t)getValidByte();
     if(rxData)
     {
         result[i] = rxData;
