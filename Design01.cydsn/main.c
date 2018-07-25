@@ -39,11 +39,11 @@ const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0
 #define PIN_BAD "BAD"
 #define CHANGE_PIN '3'
 
-#define PIN ((uint8*)(CY_FLASH_BASE + 0x8000))
-#define UUID ((uint8*)(CY_FLASH_BASE + 0x8080))
-#define PROVISIONED ((uint8*)(CY_FLASH_BASE + 0x8100))
-#define write_pin(p) CySysFlashWriteRow(256, p);
-#define write_uuid(u) CySysFlashWriteRow(257, u);
+#define PIN ((uint8*)(CY_FLASH_BASE + 0x6400))
+#define UUID ((uint8*)(CY_FLASH_BASE + 0x6480))
+#define PROVISIONED ((uint8*)(CY_FLASH_BASE + 0x6500))
+#define write_pin(p) CySysFlashWriteRow(200, p);
+#define write_uuid(u) CySysFlashWriteRow(201, u);
 
 
 static const unsigned char RSA_N[] = {
@@ -190,12 +190,13 @@ int main(void)
     uint8_t* pt;
     
     UART_Start();
-    init();
+    //init();
     EEPROM_Init((uint32)eeprom_ref);
     
     //start process, recieve and write card num to mem
     writeUART((uint8_t*) "Start card prod, give me card number\n");
     cardnum = readUART(); //ask laslo about it dangerous since we give them things to write?
+    writeUART(cardnum);
     if(sizeof(cardnum) > 20)
     {
         writeUART((uint8_t*)"Nice try bucko, papa john taught me all the tricks, git outta here\n");
@@ -473,7 +474,7 @@ void mark_provisioned()
 {
     uint8 row[128];
     *row = 1;
-    CySysFlashWriteRow(258, row);
+    CySysFlashWriteRow(202, row);
 }
 
 // provisions card (should only ever be called once)
