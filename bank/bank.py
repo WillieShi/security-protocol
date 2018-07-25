@@ -55,25 +55,25 @@ class Bank(object):
             balance
             rand_num
             command = self.atm.read(3)
-            if command = "pvc":
+            if command == "pvc":
                 card_id = self.pin_verification_read(card_id)
                 if card_id == False:
                     self.send_verification_result(false)
-            elif command = "pkw":
+            elif command == "pkw":
                 verified = self.private_key_verification_read(rand_num, card_id)
                 send_verification_result(verified)
-            elif command = "pkv":
+            elif command == "pkv":
                 rand_num = self.private_key_verify_write()
-            elif command = "ilw" and verified:
+            elif command == "ilw" and verified:
                 balance = self.inner_layer_read(card_id)
                 self.balance_write(balance)
-            elif command = "waw" and verified:
+            elif command == "waw" and verified:
                 self.withdraw_balance_modify(balance, self.withdraw_amount_read())
-            elif command = "rrb" and verified:
+            elif command == "rrb" and verified:
                 self.outer_layer_write(card_id)
-            elif command = "pnr" and verified:
+            elif command == "pnr" and verified:
                 self.pin_change(card_id)
-            elif command = "rst":
+            elif command == "rst":
                 break
             elif command != "":
                 self.atm.write(self.ERROR)
