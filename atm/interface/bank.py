@@ -65,6 +65,10 @@ class Bank:
         val = "pnr" + structs.pack(">32s32I", "pin_reset", "pin")
         self.aes_write(val)
 
+    def balance_read(self):
+        transaction_id, balance = structs.unpack(">32s32I")
+        return balance
+
     def reset(self):
         self.aes_write("rst")
 

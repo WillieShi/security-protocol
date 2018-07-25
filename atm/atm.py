@@ -81,7 +81,7 @@ class ATM(cmd.Cmd, object):
                 self.card.onion_write(outer_layer)
                 inner_layer = self.card.onion_read()
                 self.bank.inner_layer_write(inner_layer)
-                return
+                return self.balance_read()
             self._vp('check_balance failed')
             return False
         except card.NotProvisioned:
