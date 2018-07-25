@@ -6,7 +6,7 @@ Data standards
 ### UART transaction items
 Item 0: ___ Beginning of transaction message ___ (String)
 
-Item 1: 256 byte data (uint8_t)
+Item 1: 2 byte data (uint8_t)
 
 Item 2: 256 byte signature (uint8_t)
 
@@ -35,11 +35,11 @@ Salts: 256 bytes
 1 256 byte variable per row
 
 ### Card storage layout
-Row 0: Private Key
+Row 0: Card number
 
-Row 1: Bank signature
+Row 1: Bank signature (Bank's Public Key)
 
-Row 2: Card number
+Row 2: Private Key
 
 ### Method descriptions
 
