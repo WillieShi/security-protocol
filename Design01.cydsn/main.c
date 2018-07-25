@@ -23,10 +23,11 @@
 
 const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0u};
 
-#define SIGNATURE_SIZE 25                                                                                   
+#define SIGNATURE_SIZE 256                                                                                   
 #define KEY_SIZE 256
 #define SALT_SIZE 256
 #define ENCRYPTION_NUMBER_SIZE 64;
+#define DOFF 36;
 
 //Ben's crappy variable
 #define PIN_LEN 8
@@ -168,35 +169,30 @@ int checkArrays(uint8_t* array1, uint8_t* array2, int size);
 uint8_t* readData(uint8_t* buffer);
 uint8_t* readSignature(uint8_t* buffer);
 uint8_t* readSalt(uint8_t* buffer);
-uint8_t* rsaDecrypt(uint8_t ct[], int size);
 static int check_equals(const char *banner, const void *v1, const void *v2, size_t len);
-uint8_t* test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv, uint8_t* msg);
-int hex_to_int(char c);
-int hex_to_ascii(char c, char d);
 void mark_provisioned();
 void provision();
 static void test_RSA_sign(const char *name, br_rsa_private fpriv,
 	br_rsa_pkcs1_sign fsign, br_rsa_pkcs1_vrfy fvrfy);
 void init();
+unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size);
+unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size);
+int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, int sizept);
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
 
-    //uint8_t* privKey = readMemory(0, KEY_SIZE);
-    //uint8_t* bankSig = readMemory(2, SIGNATURE_SIZE);
-    //int* cardNum = (int*)readMemory(4, KEY_SIZE);
-   
-   
-    
-    //int return_val;
     uint8_t db[KEY_SIZE];
     uint8_t* cardnum;
+    uint8_t* verif;
     uint8_t* banksig;
     uint8_t* testbanksig;
+    uint8_t* testbanksigver;
     uint8_t* privkey;
     uint8_t* data;
     uint8_t* everything;
     uint8_t* salt;
+    uint8_t* pt;
     const char test[] = "hello world";
     
     
@@ -213,7 +209,7 @@ int main(void)
     
     //recieve and write bank sig to mem
     writeUART((uint8_t*) "Give me the Bank signature");
-    //RSA sign #TODO
+    //RSA sign #TODO !MIGHT JUST BE THE PUBLIC KEY COME BACK TO THIS
     banksig = readUART();
     writeUART((uint8_t*)"signature recieved\n");
     EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
@@ -230,115 +226,62 @@ int main(void)
     
     writeUART((uint8_t*)"Card Christening finished, dump all memory to double check\n");
     EEPROM_Read(0, db, KEY_SIZE*4);
-    writeUART(db);
+    writeUART(db); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
     
     //MAIN Rsa Protocol
+    //Recieve Transaction code
+    writeUART((uint8_t*) "Give me signature\n");
+    testbanksigver = readUART();
+    writeUART((uint8_t*) "Give me the verification code\n");
+    verif = readUART();
+    writeUART((uint8_t*) "Decrypting ...\n");
+    verif = RSA_decrypt256(&br_rsa_i31_private, (char*) verif,(uint8_t) KEY_SIZE );
+    //NEED TO DEBUG RSA VER
+    if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksigver,verif, KEY_SIZE) == -1)
+    {
+        writeUART((uint8_t*) "Signature wrong, terminating program\n");
+        return -1;
+    }
+    writeUART((uint8_t*) "Signature verified...\n");
+    writeUART((uint8_t*) "Sending be ready\n");
+    writeUART(verif);
+    
     //recieve data
     writeUART((uint8_t*) "Send over onion protected message\n");
     everything = readUART();
     writeUART((uint8_t*) "Onion recieved ... Starting decrypt\n");
-    data = readData(everything);
     
     EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
-    everything = test_RSA_core(&test[0], &br_rsa_i31_public, &br_rsa_i31_private, everything); //still needs to be modified assume works
+    //should get 256 bytes
+    everything = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) everything, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
     writeUART((uint8_t*) "Decryption done ... starting decomp\n");
     
+    data = readData(everything);
     writeUART((uint8_t*) "data extracted\n");
+    
     testbanksig = readSignature(everything);
     writeUART((uint8_t*) "sig extracted\n");
-    if(*banksig != *testbanksig)
-    {
-        writeUART((uint8_t*) "Wrong signature ... terminating application");
-        return -1;
-    }
+    
     salt = readSalt(everything);
     writeUART((uint8_t*) "salt extracted\n");
+    
     writeUART((uint8_t*) "Decomp done\n");
+    
+    //Verify signature
+    memcpy(pt, everything, KEY_SIZE*3);
+    if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksigver, pt , KEY_SIZE*3) == -1)
+    {
+        writeUART((uint8_t*) "Signature wrong, terminating program\n");
+        return -1;
+    }
+    writeUART((uint8_t*) "Signature verified...\n");
+    
     
     writeUART((uint8_t*) "Starting to send data ...\n");
     writeUART(data);
     writeUART((uint8_t*) "Starting to send decrypted salt ...\n");
     writeUART(salt);
     writeUART((uint8_t*) "Starting to send signature ...\n");
-    //TODO implment RSA signature
-    
-    
-    
-    
-    
-    
-    
-    
-    /*
-    if(checkArrays(readMemory(0, KEY_SIZE), testKey, KEY_SIZE))
-      {
-        writeUART((uint8_t*)"Successful read/write of key");
-      }
-    else
-    {
-        writeUART((uint8_t*)"Unsuccessful read/write of key");
-    }
-    writeUART((uint8_t*)"Waiting for 3*256 byte input");
-
-    uint8_t* read = readUART();
-    writeUART((uint8_t*)"Writing first value");
-    writeUART(readData(read));
-    writeUART((uint8_t*)"Writing first value");
-    writeUART(readSignature(read));
-    writeUART((uint8_t*)"Writing first value");
-    writeUART(readSalt(read));
-    */
-    
-    for(;;)
-    {
-        //UART_PutString("Test String\n");
-        
-        /* Place your application code here. */
-        //UART_PutString("Test String \n");
-        //TODO Card checking ATM identity
-        //code for sending hash
-        /*
-        writeUART((uint8_t*)"___Sending card number___");
-        writeUART((uint8_t*)cardNum);
-        writeUART((uint8_t*)"___Sent card number___");
-        
-        //Read checknum, decrypt and return with salt to ATM
-        uint8_t* checkNumE = readUART();
-        writeUART((uint8_t*)"___Received checkNum___");
-        uint8_t* checkNumD = readData(rsaDecrypt(checkNumE, sizeof(checkNumE, sizeof(checkNumE))));
-        uint8_t* candBankSig = readSignature(rsaDecrypt(checkNumE, sizeof(checkNumE)));
-        uint8_t* salt = readSalt(rsaDecrypt(checkNumE, sizeof(checkNumE)));
-        if(checkArrays(candBankSig, bankSig, SIGNATURE_SIZE))
-        {
-            writeUART(checkNumD);
-            writeUART(salt);
-            writeUART((uint8_t*)"___Correct signature sent checknum___");
-        }
-        else
-        {
-            writeUART((uint8_t*)"___Incorrect signature did not send checknum___");
-        }
- 
-        
-        //Read onion, decrypt, and send back inner layer with salt back to ATM
-        uint8_t* onionE = readUART();
-        writeUART((uint8_t*)"___Received onion___");
-        uint8_t* onionD = readData(rsaDecrypt(onionE, sizeof(onionE)));
-        candBankSig = readSignature(rsaDecrypt(onionE, sizeof(onionE)));
-        //salt = readSalt(rsaDecrypt(onionE, privKey));
-        if(checkArrays(candBankSig, bankSig, SIGNATURE_SIZE))
-        {
-            writeUART(onionD);
-            //writeUART(salt);
-            writeUART((uint8_t*)"___Correct signature sent onion___");
-        }
-        else
-        {
-            writeUART((uint8_t*)"___Incorrect signature did not send onion___");
-        }
-        */
-        
-    }
 }
 
   
@@ -376,21 +319,26 @@ static void writeMemory(int row, uint8_t* buffer){
 }
 
 //NOT TESTED YET
-static uint8_t* readMemory(int row, int size){
-  uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
-  for(int i = 0; i < size; i++){
-    result[i] = (uint8_t)(CY_FLASH_BASE + (CY_FLASH_SIZEOF_ROW * row) + (i*sizeof(uint8_t)));
-  }
-  return result;
+static uint8_t* readMemory(int row, int size)
+{
+    uint8_t* result = malloc(CY_FLASH_SIZEOF_ROW * sizeof(uint8_t));
+    for(int i = 0; i < size; i++)
+    {
+        result[i] = (uint8_t)(CY_FLASH_BASE + (CY_FLASH_SIZEOF_ROW * row) + (i*sizeof(uint8_t)));
+    }
+    return result;
 }
 
 //Checks arrays against each other: for testing keys
-int checkArrays(uint8_t* array1, uint8_t* array2, int size){
-  for(int i = 0; i < size; i++){
-    if(array1[i] != array2[i]){
-      return 0;
+int checkArrays(uint8_t* array1, uint8_t* array2, int size)
+{
+  for(int i = 0; i < size; i++)
+    {
+        if(array1[i] != array2[i])
+        {
+        return 0;
+        }
     }
-  }
   return 1;
 }
 
@@ -403,21 +351,31 @@ uint8_t* readData(uint8_t* buffer)
   return result;
 }
 
-uint8_t* readSignature(uint8_t* buffer){
-  uint8_t* result = malloc(SIGNATURE_SIZE*sizeof(uint8_t));
-  for(int i = KEY_SIZE; i < KEY_SIZE + SIGNATURE_SIZE; i++){
-    result[i - KEY_SIZE] = buffer[i];
-  }
-  return result;
+uint8_t* readSalt(uint8_t* buffer)
+{
+    uint8_t* result = malloc(SIGNATURE_SIZE*sizeof(uint8_t));
+    int x = 0;
+    //512 to 768
+    for(int i = KEY_SIZE*2; i < KEY_SIZE*2 + SALT_SIZE; i++)
+    {
+        result[x] = buffer[i];
+        x++;
+    }
+    return result;
 }
 
 //Reads the third 256 byte segment of data: salt
-uint8_t* readSalt(uint8_t* buffer){
-  uint8_t* result = malloc(SALT_SIZE*sizeof(uint8_t));
-  for(int i = KEY_SIZE + SIGNATURE_SIZE; i < KEY_SIZE + SIGNATURE_SIZE + SALT_SIZE; i++){
-    result[i - KEY_SIZE - SIGNATURE_SIZE] = buffer[i];
-  }
-  return result;
+uint8_t* readSignature(uint8_t* buffer)
+{
+    uint8_t* result = malloc(SALT_SIZE*sizeof(uint8_t));
+    int x = 0;
+    //768 to 1024
+    for(int i = KEY_SIZE*2 + SALT_SIZE; i < KEY_SIZE*2 + SIGNATURE_SIZE + SALT_SIZE; i++)
+    {
+        result[x] = buffer[i];
+        x++;
+    }
+    return result;
 }
 
 static int check_equals(const char *banner, const void *v1, const void *v2, size_t len)
@@ -439,179 +397,81 @@ static int check_equals(const char *banner, const void *v1, const void *v2, size
 	}
 	//fprintf(stderr, "\n");
 	//exit(EXIT_FAILURE);
-    return 0;
+    return -1;
 }
 
-static size_t
-hextobin(unsigned char *dst, const char *src)
+unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size)
 {
-	size_t num;
-	unsigned acc;
-	int z;
-
-	num = 0;
-	z = 0;
-	acc = 0;
-	while (*src != 0) {
-		int c = *src ++;
-		if (c >= '0' && c <= '9') {
-			c -= '0';
-		} else if (c >= 'A' && c <= 'F') {
-			c -= ('A' - 10);
-		} else if (c >= 'a' && c <= 'f') {
-			c -= ('a' - 10);
-		} else {
-			continue;
-		}
-		if (z) {
-			*dst ++ = (acc << 4) + c;
-			num ++;
-		} else {
-			acc = c;
-		}
-		z = !z;
-	}
-	return num;
-}
-
-
-
-
-
-
-uint8_t* test_RSA_core(const char *name, br_rsa_public fpub, br_rsa_private fpriv, uint8_t* msg)
-{
-	uint8_t t1[128], t2[128], t3[128];
-    /*
-    unsigned char t1[5], t2[5], t3[5];
-    unsigned char *t2in;
-    t2in = t1;
-    *t2 = *t2in;
-    */
-
-	//printf("Test %s: ", name);
-	//fflush(stdout);
-
-	/*
-	 * A KAT test (computed with OpenSSL).
-	 */
-	hextobin(t1, "45A3DC6A106BCD3BD0E48FB579643AA3FF801E5903E80AA9B43A695A8E7F454E93FA208B69995FF7A6D5617C2FEB8E546375A664977A48931842AAE796B5A0D64393DCA35F3490FC157F5BD83B9D58C2F7926E6AE648A2BD96CAB8FCCD3D35BB11424AD47D973FF6D69CA774841AEC45DFAE99CCF79893E7047FDE6CB00AA76D");
-	hextobin(t2, "0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF003021300906052B0E03021A05000414A94A8FE5CCB19BA61C4C0873D391E987982FBBD3");
-	
-    memcpy(t3, t1, sizeof t1);
-    //t3 stores output of function
-    //encrypt
-	if (!fpub(t3, sizeof t3, &RSA_PK)) {
-		//fprintf(stderr, "RSA public operation failed\n");
-        writeUART((uint8_t*)"RSA PUB OP FAILED\n");
-		exit(EXIT_FAILURE);
-	}
-    //decrpyt
+    unsigned char tmp[256];
+    unsigned char tmp2[256];
+    unsigned char ret[256];
+   
+    memcpy(tmp, msg, size/2);
+    memcpy(tmp2, msg+256, size/2);
     
-	check_equals("KAT RSA pub", t2, t3, sizeof t2);
-	if (!fpriv(t3, &RSA_SK)) {
+    //decrypt first
+    if (!fpriv(tmp, &RSA_SK)) 
+    {
 		//fprintf(stderr, "RSA private operation failed\n");
         writeUART((uint8_t*)"RSA PRIV OP FAILED\n");
 		exit(EXIT_FAILURE);
 	}
-	check_equals("KAT RSA priv", t1, t3, sizeof t1);
-    writeUART(t3);
-    //UART_PutString((uint8_t*)"SUCESS BOIZ");
-
-	//printf("done.\n");
-	//fflush(stdout);
-    uint8_t *bin= t3;
-    uint8_t *a = bin;
-    int num = 0;
-    do {
-        int b = *a=='1'?1:0;
-        num = (num<<1)|b;
-        a++;
-    } while (*a);
-    writeUART((uint8_t*) num);
-    //printf("%X\n", num);
     
-    return msg;
+    //decrypted second
+    if (!fpriv(tmp2, &RSA_SK)) 
+    {
+		//fprintf(stderr, "RSA private operation failed\n");
+        writeUART((uint8_t*)"RSA PRIV OP FAILED\n");
+		exit(EXIT_FAILURE);
+	}
+    
+    memcpy(ret, tmp, KEY_SIZE);
+    memcpy(ret+128, tmp2, KEY_SIZE);
+   
+
+    return ret;    
     
 }
-int hex_to_ascii(char c, char d){
-        int high = hex_to_int(c) * 16;
-        int low = hex_to_int(d);
-        return high+low;
-}
-int hex_to_int(char c){
-        int first = c / 16 - 3;
-        int second = c % 16;
-        int result = first*10 + second;
-        if(result > 9) result--;
-        return result;
-}
 
-
-static void test_RSA_sign(const char *name, br_rsa_private fpriv,
-	br_rsa_pkcs1_sign fsign, br_rsa_pkcs1_vrfy fvrfy)
+unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size)
 {
-	unsigned char t1[128], t2[128];
-	unsigned char hv[20], tmp[20];
+    unsigned char tmp[256];
+    memcpy(tmp, msg, size);
+    
+    //decrypt first
+    if (!fpriv(tmp, &RSA_SK)) 
+    {
+		//fprintf(stderr, "RSA private operation failed\n");
+        writeUART((uint8_t*)"RSA PRIV OP FAILED\n");
+		exit(EXIT_FAILURE);
+	}
+    
+    return tmp; 
+    
+}
+//returns 1 if verified, returns 0 if not
+int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, int sizept)
+{
+    unsigned char t1[256];
+	unsigned char hv[256], tmp[256];
 	br_sha1_context hc;
-	size_t u;
-
-	//printf("Test %s: ", name);
-	//fflush(stdout);
-
-	/*
-	 * Verify the KAT test (computed with OpenSSL).
-	 */
-	hextobin(t1, "45A3DC6A106BCD3BD0E48FB579643AA3FF801E5903E80AA9B43A695A8E7F454E93FA208B69995FF7A6D5617C2FEB8E546375A664977A48931842AAE796B5A0D64393DCA35F3490FC157F5BD83B9D58C2F7926E6AE648A2BD96CAB8FCCD3D35BB11424AD47D973FF6D69CA774841AEC45DFAE99CCF79893E7047FDE6CB00AA76D");
-	br_sha1_init(&hc);
-	br_sha1_update(&hc, "test", 4);
+    
+    memcpy(t1, buf, SIGNATURE_SIZE);
+    br_sha1_init(&hc);
+	br_sha1_update(&hc, pt, sizept);
 	br_sha1_out(&hc, hv);
 	if (!fvrfy(t1, sizeof t1, SHA1_OID, sizeof tmp, &RSA_PK, tmp)) {
 		//fprintf(stderr, "Signature verification failed\n");
-		exit(EXIT_FAILURE);
+		return 0;
 	}
-	check_equals("Extracted hash value", hv, tmp, sizeof tmp);
-
-	/*
-	 * Regenerate the signature. This should yield the same value as
-	 * the KAT test, since PKCS#1 v1.5 signatures are deterministic
-	 * (except the usual detail about hash function parameter
-	 * encoding, but OpenSSL uses the same convention as BearSSL).
-	 */
-	if (!fsign(SHA1_OID, hv, 20, &RSA_SK, t2)) {
-		//fprintf(stderr, "Signature generation failed\n");
-		exit(EXIT_FAILURE);
-	}
-	check_equals("Regenerated signature", t1, t2, sizeof t1);
-
-	/*
-	 * Use the raw private core to generate fake signatures, where
-	 * one byte of the padded hash value is altered. They should all be
-	 * rejected.
-	 */
-	hextobin(t2, "0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF003021300906052B0E03021A05000414A94A8FE5CCB19BA61C4C0873D391E987982FBBD3");
-	for (u = 0; u < (sizeof t2) - 20; u ++) {
-		memcpy(t1, t2, sizeof t2);
-		t1[u] ^= 0x01;
-		if (!fpriv(t1, &RSA_SK)) {
-            /*
-			fprintf(stderr, "RSA private key operation failed\n");
-			exit(EXIT_FAILURE);
-            */
-		}
-		if (fvrfy(t1, sizeof t1, SHA1_OID, sizeof tmp, &RSA_PK, tmp)) {
-			/*
-            fprintf(stderr,
-				"Signature verification should have failed\n");
-			exit(EXIT_FAILURE);
-            */
-		}
-		//printf(".");
-		//fflush(stdout);
-	}
-
-	//printf(" done.\n");
-	//fflush(stdout);
+	int i = check_equals("Extracted hash value", hv, tmp, sizeof tmp);
+    if(i == -1)
+    {
+        return 0;
+    }
+    return 1;
+        
+    
 }
 
 void mark_provisioned()
@@ -640,84 +500,6 @@ void provision()
     pullMessage(message);
     write_uuid(message);
     pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
-}
-
-static void
-test_RSA_signatures(void)
-{
-	uint32_t n[40], e[2], p[20], q[20], dp[20], dq[20], iq[20], x[40];
-	unsigned char hv[20], sig[128];
-	unsigned char ref[128], tmp[128];
-	br_sha1_context hc;
-
-	printf("Test RSA signatures: ");
-	//fflush(stdout);
-
-	/*
-	 * Decode RSA key elements.
-	 */
-	br_int_decode(n, sizeof n / sizeof n[0], RSA_N, sizeof RSA_N);
-	br_int_decode(e, sizeof e / sizeof e[0], RSA_E, sizeof RSA_E);
-	br_int_decode(p, sizeof p / sizeof p[0], RSA_P, sizeof RSA_P);
-	br_int_decode(q, sizeof q / sizeof q[0], RSA_Q, sizeof RSA_Q);
-	br_int_decode(dp, sizeof dp / sizeof dp[0], RSA_DP, sizeof RSA_DP);
-	br_int_decode(dq, sizeof dq / sizeof dq[0], RSA_DQ, sizeof RSA_DQ);
-	br_int_decode(iq, sizeof iq / sizeof iq[0], RSA_IQ, sizeof RSA_IQ);
-
-	/*
-	 * Decode reference signature (computed with OpenSSL).
-	 */
-	hextobin(ref, "45A3DC6A106BCD3BD0E48FB579643AA3FF801E5903E80AA9B43A695A8E7F454E93FA208B69995FF7A6D5617C2FEB8E546375A664977A48931842AAE796B5A0D64393DCA35F3490FC157F5BD83B9D58C2F7926E6AE648A2BD96CAB8FCCD3D35BB11424AD47D973FF6D69CA774841AEC45DFAE99CCF79893E7047FDE6CB00AA76D");
-
-	/*
-	 * Recompute signature. Since PKCS#1 v1.5 signatures are
-	 * deterministic, we should get the same as the reference signature.
-	 */
-	br_sha1_init(&hc);
-	br_sha1_update(&hc, "test", 4);
-	br_sha1_out(&hc, hv);
-	if (!br_rsa_sign(sig, sizeof sig, p, q, dp, dq, iq, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig generate failed\n");
-		exit(EXIT_FAILURE);
-	}
-	check_equals("KAT RSA-sign 1", sig, ref, sizeof sig);
-
-	/*
-	 * Verify signature.
-	 */
-	if (!br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig verify failed\n");
-		exit(EXIT_FAILURE);
-	}
-	hv[5] ^= 0x01;
-	if (br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig verify should have failed\n");
-		exit(EXIT_FAILURE);
-	}
-	hv[5] ^= 0x01;
-
-	/*
-	 * Generate a signature with the alternate encoding (no NULL) and
-	 * verify it.
-	 */
-	hextobin(tmp, "0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00301F300706052B0E03021A0414A94A8FE5CCB19BA61C4C0873D391E987982FBBD3");
-	br_int_decode(x, sizeof x / sizeof x[0], tmp, sizeof tmp);
-	x[0] = n[0];
-	b_rsa_private_core(x, p, q, dp, dq, iq);
-	br_int_encode(sig, sizeof sig, x);
-	if (!br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig verify (alt) failed\n");
-		exit(EXIT_FAILURE);
-	}
-	hv[5] ^= 0x01;
-	if (br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv)) {
-		//fprintf(stderr, "RSA-1024/SHA-1 sig verify (alt) should have failed\n");
-		exit(EXIT_FAILURE);
-	}
-	hv[5] ^= 0x01;
-
-	//printf("done.\n");
-	//fflush(stdout);
 }
 
 void init()
