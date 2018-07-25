@@ -30,10 +30,10 @@ def encrypt_aes(message, key):
     cipher_text = encrypt_cipher.encrypt(message)
     return cipher_text
 
-def decrypt_aes(encrypted_message, key):
+def decrypt_aes(message, key):
     decrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
     #the decode thing stops the result from being b'decrypted_message'
-    plain_text = decrypt_cipher.decrypt(encrypted_message).decode("utf-8")
+    plain_text = decrypt_cipher.decrypt(message).decode("utf-8")
     return plain_text
 
 #here we define RSA functions

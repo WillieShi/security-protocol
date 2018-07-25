@@ -53,6 +53,10 @@ class Bank:
         val = "waw" + structs.pack(">32s32I", "send_withdraw_amount", amount)
         self.aes_write(val)
 
+    def request_read_balance(self):
+        val = "rrb" + structs.pack(">32s", "request_read_balance")
+        self.aes_write(val)
+
     def reset(self):
         self.aes_write("rst")
 
