@@ -53,13 +53,20 @@ class Bank(object):
             card_id
             verified = False
             balance
+            rand_num
             command = self.atm.read(3)
             if command = "pvc":
                 card_id = self.pin_verification_read(card_id)
-            elif command = "pkv":
+                if card_id == False:
+                    self.send_verification_result(false)
+            elif command = "pkw":
                 verified = self.private_key_verification_read(rand_num, card_id)
+                send_verification_result(verified)
+            elif command = "pkv":
+                rand_num = self.private_key_verify_write()
             elif command = "ilw" and verified:
                 balance = self.inner_layer_read(card_id)
+                self.balance_write(balance)
             elif command = "waw" and verified:
                 self.withdraw_balance_modify(balance, self.withdraw_amount_read())
             elif command = "rrb" and verified:
@@ -70,6 +77,9 @@ class Bank(object):
                 break
             elif command != "":
                 self.atm.write(self.ERROR)
+
+    def send_verification_result(self, good):
+        aes_write(structs.pack(">32s?", "send_verification_result", good))
 
     def pin_change(self, card_id):
         transaction_id, pin = structs.unpack(">32s32I", aes_read(64))

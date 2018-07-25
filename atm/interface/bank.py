@@ -32,17 +32,23 @@ class Bank:
     def aes_read(self, msg, size):
         return ciphers.decrypt_aes(self.set.read(size), key)
 
+    def private_key_verify(self, card_id):
+        aes_write("pkv" + structs.pack(">32s32I", "private_key_verify", card_id))
+
+
     def pin_verify(self, pin, card_id):
         val = "pvc" + structs.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
         self.aes_write(val)
+        transaction_id, result = structs.unpack(">32s?", self.aes_read(33))
+        return result
 
-    def private_key_verify_read():
-        transaction_id, random_num = structs.unpack(">32s32I", aes_read(64))
+    def private_key_verify_read(self):
+        transaction_id, random_num = structs.unpack(">32s256I", self.aes_read(288))
         return random_num
 
     #private_key_verify() sends the random_num the card decrypted back to bank
-    def private_key_verify(self, random_num):
-        val = "pkv" + structs.pack(">32s32I", "private_key_verify", random_num)
+    def private_key_verify_write(self, random_num):
+        val = "pkw" + structs.pack(">32s32I", "private_key_verify_write", random_num)
         self.aes_write(random_num)
 
     def inner_layer_write(self, inner_layer):

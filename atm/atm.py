@@ -58,7 +58,18 @@ class ATM(cmd.Cmd, object):
             f.write(json.dumps({"uuid": self.uuid.encode("hex"), "dispensed": self.dispensed,
                                 "bills": self.bills}))
 
-    def check_balance(self, pin):
+    def verify(self, pin):
+        if self.pin_verify(pin, self.card.card_id_read()):
+            self._vp("verified pin")
+        self.bank.private_key_verify(card_id)
+        self.card.card_verify_write(private_key_verify_read())
+        if self.bank.private_key_verify_write(self.card.read_random_num()):
+            self._vp("verified private key")
+
+
+
+
+    def check_balance(self):
         """Tries to check the balance of the account associated with the
         connected ATM card
 
@@ -72,7 +83,6 @@ class ATM(cmd.Cmd, object):
         print "Here"
         try:
             self._vp('check_balance: Requesting card_id using inputted pin')
-            card_id = self.card.check_balance(pin)
 
             # get balance from bank if card accepted PIN
             if card_id:
