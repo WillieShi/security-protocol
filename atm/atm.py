@@ -100,15 +100,7 @@ class ATM(cmd.Cmd, object):
             bool: True on successful PIN change
             bool: False on failure
         """
-        try:
-            self._vp('change_pin: Sending PIN change request to card')
-            if self.card.change_pin(old_pin, new_pin):
-                return True
-            self._vp('change_pin failed')
-            return False
-        except card.NotProvisioned:
-            self._vp('ATM card has not been provisioned!')
-            return False
+        self.bank.pin_reset(new_pin)
 
     def withdraw(self, pin, amount):
         """Tries to withdraw money from the account associated with the

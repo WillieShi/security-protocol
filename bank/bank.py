@@ -7,7 +7,7 @@ pkv = private_key_verification_read
 ilw = inner_layer_write()
 waw = withdraw_balance_modify(withdraw_amount_read(withdraw_amount))
 rrb = request_read_balance()
-
+pnr = pin_reset()
 """
 
 import uuid
@@ -55,21 +55,27 @@ class Bank(object):
             balance
             command = self.atm.read(3)
             if command = "pvc":
-                card_id = self.pin_verification_read()
+                card_id = self.pin_verification_read(card_id)
             elif command = "pkv":
-                verified = self.private_key_verification_read(rand_num)
-            elif command = "ilw":
+                verified = self.private_key_verification_read(rand_num, card_id)
+            elif command = "ilw" and verified:
                 balance = self.inner_layer_read(card_id)
-            elif command = "waw":
+            elif command = "waw" and verified:
                 self.withdraw_balance_modify(balance, self.withdraw_amount_read())
-            elif command = "rrb"
+            elif command = "rrb" and verified:
                 self.outer_layer_write(card_id)
+            elif command = "pnr" and verified:
+                self.pin_change(card_id)
             elif command = "rst":
                 break
             elif command != "":
                 self.atm.write(self.ERROR)
 
-    def pin_verification_read(self):
+    def pin_change(self, card_id):
+        transaction_id, pin = structs.unpack(">32s32I", aes_read(64))
+        self.db.set_hash(card_id, ciphers.hash_message(card_id + pin))
+
+    def pin_verification_read(self, card_id):
         transaction_id, card_id, hash = structs.unpack(">32s32I32I", aes_read(96))
         if hash == self.db.get_hash(card_id):
             return card_id
@@ -81,7 +87,7 @@ class Bank(object):
         return rand_num
         #aes_write may cause problems due to no "self." appended to the beginning.
 
-    def private_key_verification_read(self, rand_num):
+    def private_key_verification_read(self, rand_num, card_id):
         transaction_id, cand_rand_num = structs.unpack(">32s32I", aes_read(64))
         if rand_num == cand_rand_num:
             return True
@@ -102,6 +108,7 @@ class Bank(object):
     def withdraw_balance_modify(self, balance, withdraw_amount):
         if(balance - withdraw_amount >= 0):
             new_balance = balance - withdraw_amount
+            self.db.set_onion(encrypt_rsa(encrypt_rsa(new_balance, self.db.get_inner_onion_public_key(card_id)), self.db.get_outer_onion_public_key(card_id)))
             return new_balance
         else:
             return "Bad, try again" #fix this later, error system
