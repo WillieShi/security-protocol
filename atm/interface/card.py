@@ -24,36 +24,42 @@ class Card(object):
     WITHDRAW = 2
     CHANGE_PIN = 3
 
-    uptime_key
 
     def __init__(self, port=None, verbose=False, baudrate=115200, timeout=2):
         self.ser = serial.Serial(port, baudrate, timeout=timeout)
         self.verbose = verbose
 
-    def aes_write(self, msg):
+    def write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, key))
 
-    def aes_read(self, msg, size):
+    def read(self, msg, size):
         return ciphers.decrypt_aes(self.set.read(size), key)
+
+    def card_id_read(self):
+        transaction_id, card_id = structs.unpack(">32s32I", read(64))
+        return card_id
 
     #decrypts the random num received from bank to verify card
     def read_random_num(self, encrypted_randnum):
-        transaction_id, random_num = structs.unpack(">32s32I", aes_read(64))
+        transaction_id, random_num = structs.unpack(">32s32I", read(64))
         return random_num
 
     #encrypts decrypted random num w/ AES to send to bank
-    def card_verify(self, random_num):
-        val = structs.pack(">32s32I", "card_verify", random_num)
-        self.aes_write(val)
+    def card_verify_write(self, random_num):
+        val = structs.pack(">32s256I", "card_verify_write", random_num)
+        self.write(val)
         #removes AES encryption from the onion to make the RSA decryptable
-    def onion_read():
-        transaction_id, onion = structs.unpack(">32s512I", aes_read(544))
+
+    def onion_read(self):
+        transaction_id, onion = structs.unpack(">32s256I", read(288))
         return onion
 
     #Puts the one-layer onion (still has inner RSA layer) in the AES channel to send to bank.
-    def onion_write(self, inner_balance):
-        val = structs.pack(">32s32I", "onion_write", inner_balance)
-        self.aes_write(val)
+    def onion_write(self, outer_layer):
+        val = structs.pack(">32s512I", "onion_write", outer_layer)
+        self.write(val)
+
+
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set

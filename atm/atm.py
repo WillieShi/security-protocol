@@ -123,11 +123,16 @@ class ATM(cmd.Cmd, object):
         """
         try:
             self._vp('withdraw: Requesting card_id from card')
-            card_id = self.card.withdraw(pin)
+            card_id = self.card.card_id_read()
 
             # request UUID from HSM if card accepts PIN
             if card_id:
                 self._vp('withdraw: Requesting hsm_id from hsm')
+                self.bank.request_read_balance()
+
+
+
+
                 if self.bank.withdraw(self.uuid, card_id, amount):
                     with open(self.billfile, "w") as f:
                         self._vp('withdraw: Dispensing bills...')
