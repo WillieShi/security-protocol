@@ -21,8 +21,6 @@ import struct
 import ciphers
 import random
 
-ONION_SIZE = 256
-
 
 class Bank(object):
     GOOD = "O"
@@ -53,67 +51,23 @@ class Bank(object):
     def start(self):
         while True:
             card_id
+            verified = False
+            balance
             command = self.atm.read(3)
             if command = "pvc":
                 card_id = self.pin_verification_read()
             elif command = "pkv":
-                self.private_key_verification_read(rand_num)
+                verified = self.private_key_verification_read(rand_num)
             elif command = "ilw":
-                self.inner_layer_write(card_id)
+                balance = self.inner_layer_read(card_id)
             elif command = "waw":
-                self.withdraw_balance_modify(withdraw_amount_read(withdraw_amount))
+                self.withdraw_balance_modify(balance, self.withdraw_amount_read())
             elif command = "rrb"
-                self.
+                self.outer_layer_write(card_id)
             elif command = "rst":
                 break
             elif command != "":
                 self.atm.write(self.ERROR)
-
-
-    """
-    def withdraw(self, atm_id, card_id, amount): #deprecated
-        if self.db.get_atm(atm_id) is None:
-            self.atm.write(self.BAD)
-            log("Invalid ATM ID")
-            return
-
-        balance = 0
-        onion = self.db.get_onion(str(card_id))
-        if onion is None:
-            self.atm.write(self.BAD)
-            log("Bad card ID")
-        else:
-            log("Valid balance check")
-            self.aes_write(onion)
-            innerLayer = self.aes_read(ONION_SIZE)
-            balance = ciphers.decrypt_rsa(innerLayer, self.db.get_outer_onion_public_key)
-            self.aes_write(self.GOOD)
-
-        if amount > balance:
-            log("Invalid funds")
-            self.aes_write("Insufficient funds")
-        else:
-            self.aes_write(balance-amount)
-            self.db.set_onion(ciphers.encrypt_rsa(self.db.get_outer_onion_public_key(card_id),ciphers.encrypt_rsa(self.db.get_inner_onion_public_key(card_id), balance-amount)))
-
-
-    def check_balance(self, atm_id, card_id): #deprecated
-        if self.db.get_atm(atm_id) is None:
-            self.atm.write(self.BAD)
-            log("Invalid ATM ID")
-            return
-
-        onion = self.db.get_onion(str(card_id))
-        if onion is None:
-            self.atm.write(self.BAD)
-            log("Bad card ID")
-        else:
-            log("Valid balance check")
-            self.aes_write(onion)
-            innerLayer = self.aes_read(ONION_SIZE)
-            balance = ciphers.decrypt_rsa(innerLayer, self.db.get_outer_onion_public_key)
-            self.aes_write(self.GOOD)
-    """
 
     def pin_verification_read(self):
         transaction_id, card_id, hash = structs.unpack(">32s32I32I", aes_read(96))
@@ -141,7 +95,7 @@ class Bank(object):
         transaction_id, enc_val = structs.unpack(">32s256I", aes_read(288))
         return decrypt_rsa(enc_val, self.db.get_inner_onion_private_key(card_id))
 
-    def withdraw_amount_read(self, withdraw_amount):
+    def withdraw_amount_read(self):
         transaction_id, withdraw_amount = structs.unpack(">32s32I", aes_read(64))
         return withdraw_amount
 
