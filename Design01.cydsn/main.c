@@ -160,7 +160,6 @@ static const unsigned char SHA1_OID[] = {
 uint8_t result[1024*1024];
 
 const uint8_t row[CY_FLASH_SIZEOF_ROW] CY_ALIGN(CY_FLASH_SIZEOF_ROW) = {0};
-static size_t;
 static uint8_t* readUART();
 static void writeUART(uint8_t* buffer);
 static void writeMemory(int row, uint8_t* buffer);
@@ -169,7 +168,7 @@ int checkArrays(uint8_t* array1, uint8_t* array2, int size);
 uint8_t* readData(uint8_t* buffer);
 uint8_t* readSignature(uint8_t* buffer);
 uint8_t* readSalt(uint8_t* buffer);
-static int check_equals(const char *banner, const void *v1, const void *v2, size_t len);
+static int check_equals(const void *v1, const void *v2, size_t len);
 void mark_provisioned();
 void provision();
 static void test_RSA_sign(const char *name, br_rsa_private fpriv,
@@ -203,7 +202,15 @@ int main(void)
     //start process, recieve and write card num to mem
     writeUART((uint8_t*) "Start card prod, give me card number\n");
     cardnum = readUART(); //ask laslo about it dangerous since we give them things to write?
-    writeUART((uint8_t*)"num recieved\n");
+    if(sizeof(cardnum) > 20)
+    {
+        writeUART((uint8_t*)"Nice try bucko, papa john taught me all the tricks, git outta here\n");
+        return -1;
+    }
+    else
+    {
+        writeUART((uint8_t*)"num recieved\n");
+    }
     EEPROM_Write(0, cardnum, KEY_SIZE); //write num to memory
     EEPROM_Read(0, db, KEY_SIZE); //look to make sure its good
     
@@ -378,7 +385,7 @@ uint8_t* readSignature(uint8_t* buffer)
     return result;
 }
 
-static int check_equals(const char *banner, const void *v1, const void *v2, size_t len)
+static int check_equals(const void *v1, const void *v2, size_t len)
 {
 	size_t u;
 	const unsigned char *b;
@@ -404,7 +411,7 @@ unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size)
 {
     unsigned char tmp[256];
     unsigned char tmp2[256];
-    unsigned char ret[256];
+    unsigned char* ret = malloc(size*sizeof(unsigned char));
    
     memcpy(tmp, msg, size/2);
     memcpy(tmp2, msg+256, size/2);
@@ -435,7 +442,8 @@ unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size)
 
 unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size)
 {
-    unsigned char tmp[256];
+    //unsigned char tmp[256];
+    unsigned char* tmp = malloc(size*sizeof(unsigned char));
     memcpy(tmp, msg, size);
     
     //decrypt first
@@ -464,7 +472,7 @@ int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, 
 		//fprintf(stderr, "Signature verification failed\n");
 		return 0;
 	}
-	int i = check_equals("Extracted hash value", hv, tmp, sizeof tmp);
+	int i = check_equals( hv, tmp, sizeof tmp);
     if(i == -1)
     {
         return 0;
