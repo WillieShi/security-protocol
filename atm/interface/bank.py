@@ -49,6 +49,10 @@ class Bank:
         val = "ilw" + structs.pack(">32s256I", "send_inner_layer", inner_layer)
         self.aes_write(val)
 
+    def outer_layer_read(self):
+        transaction_id, outer_layer = structs.unpack(">32s512I")
+        return outer_layer
+
     def withdraw_amount_write(self, amount):
         val = "waw" + structs.pack(">32s32I", "send_withdraw_amount", amount)
         self.aes_write(val)

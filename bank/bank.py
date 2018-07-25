@@ -6,7 +6,7 @@ pvc = pin_verification_read()
 pkv = private_key_verification_read
 ilw = inner_layer_write()
 waw = withdraw_balance_modify(withdraw_amount_read(withdraw_amount))
-
+rrb = request_read_balance()
 
 """
 
@@ -62,7 +62,7 @@ class Bank(object):
                 self.inner_layer_write(card_id)
             elif command = "waw":
                 self.withdraw_balance_modify(withdraw_amount_read(withdraw_amount))
-            elif command = "bbb"
+            elif command = "rrb"
                 self.
             elif command = "rst":
                 break
