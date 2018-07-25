@@ -1,10 +1,11 @@
 import logging
 import sys
 import cmd
-from interface import card
+from interface import card, bank
 import os
 import json
 import argparse
+import ciphers
 
 log = logging.getLogger('')
 log.setLevel(logging.DEBUG)
@@ -57,7 +58,18 @@ class ATM(cmd.Cmd, object):
             f.write(json.dumps({"uuid": self.uuid.encode("hex"), "dispensed": self.dispensed,
                                 "bills": self.bills}))
 
-    def check_balance(self, pin):
+    def verify(self, pin):
+        if self.pin_verify(pin, self.card.card_id_read()):
+            self._vp("verified pin")
+        self.bank.private_key_verify(card_id)
+        self.card.card_verify_write(private_key_verify_read())
+        if self.bank.private_key_verify_write(self.card.read_random_num()):
+            self._vp("verified private key")
+
+
+
+
+    def check_balance(self):
         """Tries to check the balance of the account associated with the
         connected ATM card
 
@@ -71,14 +83,15 @@ class ATM(cmd.Cmd, object):
         print "Here"
         try:
             self._vp('check_balance: Requesting card_id using inputted pin')
-            card_id = self.card.check_balance(pin)
 
             # get balance from bank if card accepted PIN
             if card_id:
                 self._vp('check_balance: Requesting balance from Bank')
-                res = self.bank.check_balance(self.uuid, card_id)
-                if res:
-                    return res
+                outer_layer = self.bank.outer_layer_read()
+                self.card.onion_write(outer_layer)
+                inner_layer = self.card.onion_read()
+                self.bank.inner_layer_write(inner_layer)
+                return self.balance_read()
             self._vp('check_balance failed')
             return False
         except card.NotProvisioned:
@@ -97,15 +110,7 @@ class ATM(cmd.Cmd, object):
             bool: True on successful PIN change
             bool: False on failure
         """
-        try:
-            self._vp('change_pin: Sending PIN change request to card')
-            if self.card.change_pin(old_pin, new_pin):
-                return True
-            self._vp('change_pin failed')
-            return False
-        except card.NotProvisioned:
-            self._vp('ATM card has not been provisioned!')
-            return False
+        self.bank.pin_reset(new_pin)
 
     def withdraw(self, pin, amount):
         """Tries to withdraw money from the account associated with the
@@ -122,12 +127,13 @@ class ATM(cmd.Cmd, object):
         """
         try:
             self._vp('withdraw: Requesting card_id from card')
-            card_id = self.card.withdraw(pin)
+            card_id = self.card.card_id_read()
 
             # request UUID from HSM if card accepts PIN
             if card_id:
                 self._vp('withdraw: Requesting hsm_id from hsm')
-                if self.bank.withdraw(self.uuid, card_id, amount):
+                self.check_balance()
+                if self.bank.withdraw_amount_write(amount):
                     with open(self.billfile, "w") as f:
                         self._vp('withdraw: Dispensing bills...')
                         for i in range(self.dispensed, self.dispensed + amount):
@@ -136,6 +142,7 @@ class ATM(cmd.Cmd, object):
                             self.bills[i] = "-DISPENSED BILL-"
                             self.dispensed += 1
                     self.update()
+                    self.check_balance()
                     return True
             else:
                 self._vp('withdraw failed')

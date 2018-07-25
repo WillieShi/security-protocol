@@ -1,5 +1,13 @@
 """ Bank Server
 This module implements a bank server interface
+
+Key
+pvc = pin_verification_read()
+pkv = private_key_verification_read
+ilw = inner_layer_write()
+waw = withdraw_balance_modify(withdraw_amount_read(withdraw_amount))
+rrb = request_read_balance()
+pnr = pin_reset()
 """
 
 import uuid
@@ -13,14 +21,13 @@ import struct
 import ciphers
 import random
 
-ONION_SIZE = 256
-
 
 class Bank(object):
     GOOD = "O"
     BAD = "N"
     ERROR = "E"
-    transactionKey
+    uptime_Key
+
 
 
     def __init__(self, port, baud=115200, db_path="bank.json"):
@@ -29,82 +36,96 @@ class Bank(object):
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
         self.transactionKey = self.generate_key_pair()
 
-    def encSend(message):
+    def aes_write(message):
         message = ciphers.encrypt_aes(message, transactionKey)
         self.atm.write(message)
 
-    def encRead(length):
+    def aes_read(length):
+        if self.db.get_atm(atm_id) is None:
+            self.atm.write(self.BAD)
+            log("Invalid ATM ID")
+            return
         message = self.atm.read(length)
         return ciphers.decrypt_aes(message, transactionKey)
 
     def start(self):
         while True:
-            command = self.atm.read()
-            if command == 'w':
-                log("Withdrawing")
-                pkt = self.atm.read(76)
-                atm_id, card_id, amount = struct.unpack(">36s36sI", pkt)
-                self.withdraw(atm_id, card_id, amount)
-            elif command == 'b':
-                log("Checking balance")
-                pkt = self.atm.read(72)
-                atm_id, card_id = struct.unpack(">36s36s", pkt)
-                self.check_balance(atm_id, card_id)
-            elif command != '':
+            card_id
+            verified = False
+            balance
+            rand_num
+            command = self.atm.read(3)
+            if command = "pvc":
+                card_id = self.pin_verification_read(card_id)
+                if card_id == False:
+                    self.send_verification_result(false)
+            elif command = "pkw":
+                verified = self.private_key_verification_read(rand_num, card_id)
+                send_verification_result(verified)
+            elif command = "pkv":
+                rand_num = self.private_key_verify_write()
+            elif command = "ilw" and verified:
+                balance = self.inner_layer_read(card_id)
+                self.balance_write(balance)
+            elif command = "waw" and verified:
+                self.withdraw_balance_modify(balance, self.withdraw_amount_read())
+            elif command = "rrb" and verified:
+                self.outer_layer_write(card_id)
+            elif command = "pnr" and verified:
+                self.pin_change(card_id)
+            elif command = "rst":
+                break
+            elif command != "":
                 self.atm.write(self.ERROR)
 
-    def verify(self, atm_id, card_id, hash):
-        if hash == self.db.get_hash(card_id_):
-            rand = ciphers.random_with_N_digits(100)
-            encSend(ciphers.encrypt_rsa(rand, self.db.get_outer_onion_public_key(card_id)))
-            return rand == encRead(LENGTH)
+    def send_verification_result(self, good):
+        aes_write(structs.pack(">32s?", "send_verification_result", good))
+
+    def pin_change(self, card_id):
+        transaction_id, pin = structs.unpack(">32s32I", aes_read(64))
+        self.db.set_hash(card_id, ciphers.hash_message(card_id + pin))
+
+    def pin_verification_read(self, card_id):
+        transaction_id, card_id, hash = structs.unpack(">32s32I32I", aes_read(96))
+        if hash == self.db.get_hash(card_id):
+            return card_id
+        return False
+
+    def private_key_verification_write(self):
+        rand_num = ciphers.random_with_N_bytes(32)
+        aes_write(structs.pack(">32s256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id))))
+        return rand_num
+        #aes_write may cause problems due to no "self." appended to the beginning.
+
+    def private_key_verification_read(self, rand_num, card_id):
+        transaction_id, cand_rand_num = structs.unpack(">32s32I", aes_read(64))
+        if rand_num == cand_rand_num:
+            return True
+        return False
+
+    def outer_layer_write(self, card_id):
+        val = structs.pack(">32s512I", "outer_layer_write", self.db.get_onion(card_id))
+        aes_write(val)
+
+    def inner_layer_read(self, card_id):
+        transaction_id, enc_val = structs.unpack(">32s256I", aes_read(288))
+        return decrypt_rsa(enc_val, self.db.get_inner_onion_private_key(card_id))
+
+    def withdraw_amount_read(self):
+        transaction_id, withdraw_amount = structs.unpack(">32s32I", aes_read(64))
+        return withdraw_amount
+
+    def withdraw_balance_modify(self, balance, withdraw_amount):
+        if(balance - withdraw_amount >= 0):
+            new_balance = balance - withdraw_amount
+            self.db.set_onion(encrypt_rsa(encrypt_rsa(new_balance, self.db.get_inner_onion_public_key(card_id)), self.db.get_outer_onion_public_key(card_id)))
+            return new_balance
         else:
-            encSend("Invalid card/pin")
-            return False
+            return "Bad, try again" #fix this later, error system
 
-
-    def withdraw(self, atm_id, card_id, amount):
-        if self.db.get_atm(atm_id) is None:
-            self.atm.write(self.BAD)
-            log("Invalid ATM ID")
-            return
-
-        balance = 0
-        onion = self.db.get_onion(str(card_id))
-        if onion is None:
-            self.atm.write(self.BAD)
-            log("Bad card ID")
-        else:
-            log("Valid balance check")
-            self.encSend(onion)
-            innerLayer = self.encRead(ONION_SIZE)
-            balance = ciphers.decrypt_rsa(innerLayer, self.db.get_outer_onion_public_key)
-            self.encSend(self.GOOD)
-
-        if amount > balance:
-            log("Invalid funds")
-            self.encSend("Insufficient funds")
-        else:
-            self.encSend(balance-amount)
-            self.db.set_onion(ciphers.encrypt_rsa(self.db.get_outer_onion_public_key(card_id),ciphers.encrypt_rsa(self.db.get_inner_onion_public_key(card_id), balance-amount)))
-
-    def check_balance(self, atm_id, card_id): #finished
-        if self.db.get_atm(atm_id) is None:
-            self.atm.write(self.BAD)
-            log("Invalid ATM ID")
-            return
-
-        onion = self.db.get_onion(str(card_id))
-        if onion is None:
-            self.atm.write(self.BAD)
-            log("Bad card ID")
-        else:
-            log("Valid balance check")
-            self.encSend(onion)
-            innerLayer = self.encRead(ONION_SIZE)
-            balance = ciphers.decrypt_rsa(innerLayer, self.db.get_outer_onion_public_key)
-            self.encSend(self.GOOD)
-
+    def balance_write(self, balance):
+        val = structs.pack(">32s32I", "balance_write", balance)
+        aes_write(val)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -125,10 +146,11 @@ def main():
     args = parse_args()
 
     bank = Bank(args.port, args.baudrate)
-    try:
-        bank.start()
-    except KeyboardInterrupt:
-        print("Shutting down bank...")
+    while True:
+        try:
+            bank.start()
+        except KeyboardInterrupt:
+            print("Shutting down bank...")
 
 
 if __name__ == "__main__":
