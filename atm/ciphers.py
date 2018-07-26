@@ -69,8 +69,14 @@ def encrypt_rsa(message, pub_key):
     '''
 
 #rsa decryption
+def decrypt_rsa(encrypted_rsa, priv_key):
+    #applies RSA Padding
+    rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
+    decrypted_rsa = rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
-
+    decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
+    return decrypted_rsa
+    
 def hash_message(message):
     salt = bcrypt.gensalt()
     message = str(message)
