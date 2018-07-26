@@ -39,11 +39,11 @@ const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0
 #define PIN_BAD "BAD"
 #define CHANGE_PIN '3'
 
-#define PIN ((uint8*)(CY_FLASH_BASE + 0x8000))
-#define UUID ((uint8*)(CY_FLASH_BASE + 0x8080))
-#define PROVISIONED ((uint8*)(CY_FLASH_BASE + 0x8100))
-#define write_pin(p) CySysFlashWriteRow(256, p);
-#define write_uuid(u) CySysFlashWriteRow(257, u);
+#define PIN ((uint8*)(CY_FLASH_BASE + 0x6400))
+#define UUID ((uint8*)(CY_FLASH_BASE + 0x6480))
+#define PROVISIONED ((uint8*)(CY_FLASH_BASE + 0x6500))
+#define write_pin(p) CySysFlashWriteRow(200, p);
+#define write_uuid(u) CySysFlashWriteRow(201, u);
 
 
 static const unsigned char RSA_N[] = {
@@ -160,7 +160,7 @@ static const unsigned char SHA1_OID[] = {
 uint8_t result[1024*1024];
 
 const uint8_t row[CY_FLASH_SIZEOF_ROW] CY_ALIGN(CY_FLASH_SIZEOF_ROW) = {0};
-static uint8_t* readUART();
+static uint8_t* readUART(uint8_t size);
 static void writeUART(uint8_t* buffer);
 int checkArrays(uint8_t* array1, uint8_t* array2, int size);
 uint8_t* readData(uint8_t* buffer);
@@ -190,12 +190,13 @@ int main(void)
     uint8_t* pt;
     
     UART_Start();
-    init();
+    //init();
     EEPROM_Init((uint32)eeprom_ref);
     
     //start process, recieve and write card num to mem
     writeUART((uint8_t*) "Start card prod, give me card number\n");
-    cardnum = readUART(); //ask laslo about it dangerous since we give them things to write?
+    cardnum = readUART(20); //ask laslo about it dangerous since we give them things to write?
+    writeUART(cardnum);
     if(sizeof(cardnum) > 20)
     {
         writeUART((uint8_t*)"Nice try bucko, papa john taught me all the tricks, git outta here\n");
@@ -211,7 +212,7 @@ int main(void)
     //recieve and write bank sig to mem
     writeUART((uint8_t*) "Give me the Bank signature");
     //RSA sign #TODO !MIGHT JUST BE THE PUBLIC KEY COME BACK TO THIS
-    banksig = readUART();
+    banksig = readUART((uint8_t) KEY_SIZE);
     writeUART((uint8_t*)"signature recieved\n");
     EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
     EEPROM_Read(KEY_SIZE, db, KEY_SIZE); //look to make sure its good
@@ -232,9 +233,9 @@ int main(void)
     //MAIN Rsa Protocol
     //Recieve Transaction code
     writeUART((uint8_t*) "Give me signature\n");
-    testbanksigver = readUART();
+    testbanksigver = readUART((uint8_t)SIGNATURE_SIZE);
     writeUART((uint8_t*) "Give me the verification code\n");
-    verif = readUART();
+    verif = readUART((uint8_t)SIGNATURE_SIZE);
     writeUART((uint8_t*) "Decrypting ...\n");
     verif = RSA_decrypt256(&br_rsa_i31_private, (char*) verif,(uint8_t) KEY_SIZE );
     //NEED TO DEBUG RSA VER
@@ -249,7 +250,7 @@ int main(void)
     
     //recieve data
     writeUART((uint8_t*) "Send over onion protected message\n");
-    everything = readUART();
+    everything = readUART((uint8_t)KEY_SIZE*4);
     writeUART((uint8_t*) "Onion recieved ... Starting decrypt\n");
     
     EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
@@ -287,10 +288,11 @@ int main(void)
 
   
 
-static uint8_t* readUART(){
-  uint8_t* result = malloc(KEY_SIZE*sizeof(uint8_t));
-  for(int i = 0; i < KEY_SIZE;){
-    uint8_t rxData = (uint8_t)UART_GetChar();
+static uint8_t* readUART(uint8_t size)
+{
+  uint8_t* result = malloc(size*sizeof(uint8_t));
+  for(int i = 0; i < size;){
+    uint8_t rxData = (uint8_t)getValidByte();
     if(rxData)
     {
         result[i] = rxData;
@@ -473,7 +475,7 @@ void mark_provisioned()
 {
     uint8 row[128];
     *row = 1;
-    CySysFlashWriteRow(258, row);
+    CySysFlashWriteRow(202, row);
 }
 
 // provisions card (should only ever be called once)

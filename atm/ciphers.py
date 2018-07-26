@@ -12,7 +12,6 @@ import secrets
 
 #here we define initial variables
 n_length = 2048
-IV = 16 * '\x00'
 our_message = "testing here please"
 
 #here we define AES functions
@@ -27,7 +26,10 @@ def create_aes_key():
 
 def encrypt_aes(message, key):
     #key has to be 16 bytes long
-    encrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
+    message = pad(message)
+    global IV
+    IV = get_random_bytes(16)
+    encrypt_cipher = AES.new(key, AES.MODE_CBC, IV = IV)
     cipher_text = encrypt_cipher.encrypt(message)
     return cipher_text
 
