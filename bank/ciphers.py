@@ -9,6 +9,8 @@ import base64
 import six
 from Crypto.Cipher import PKCS1_OAEP
 import secrets
+from Crypto.Signature import pkcs1_15
+from hashlib import sha1
 
 #here we define initial variables
 n_length = 32
@@ -55,6 +57,9 @@ def generate_key():
     private = RSA.generate(2048)
     public = private.publickey()
     return private, public
+def rsa_signature(message, private_key):
+    rsa_private_key =
+    key = RSA.import_key()
 
 #rsa encryption
 def encrypt_rsa(message, pub_key):
