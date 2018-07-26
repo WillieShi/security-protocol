@@ -10,14 +10,18 @@ n_length = 2048
 our_message = "testing here please"
 
 # here we define AES functions
+
+
 def pad(unpadded_message, pad_length):
     padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
     return padded_message
+
 
 def create_aes_key():
     # this takes 32 random bytes to make our key
     new_key = get_random_bytes(32)
     return new_key
+
 
 def encrypt_aes(message, key):
     # key has to be 16 bytes long
@@ -64,7 +68,16 @@ def encrypt_rsa(message, pub_key):
     '''
 
 # rsa decryption
+
+
+def decrypt_rsa(encrypted_rsa, priv_key):
+    # applies RSA Padding
+    rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
+    decrypted_rsa = rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
+    decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
+    return decrypted_rsa
+
 
 def hash_message(message):
     salt = bcrypt.gensalt()
@@ -74,15 +87,16 @@ def hash_message(message):
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
+
 def diffie_bank():
     mod, bas = "getting the mod and base"
-    #insert write (mod, bas) to atm
+    # insert write (mod, bas) to atm
     b = secrets.randbelow(9999)
     side2 = (bas**b) % mod
-    #insert write (side2) to atm
-    #insert read (side1) from atm
-    #final_b is the final bank side key for diffie hellman
+    # insert write (side2) to atm
+    # insert read (side1) from atm
+    # final_b is the final bank side key for diffie hellman
     final_b = (side1**b) % mod
     return final_b
 
-#any test code goes here
+# any test code goes here

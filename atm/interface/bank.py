@@ -12,7 +12,8 @@ import logging
 import struct
 import serial
 import ciphers.py
-#may or may not need .py
+# may or may not need .py
+
 
 class Bank:
     """Interface for communicating with the bank
@@ -20,59 +21,58 @@ class Bank:
     Args:
         port (serial.Serial): Port to connect to
     """
-    uptime_key
+    uptime_key = 0
 
     def __init__(self, port, verbose=False):
         self.ser = serial.Serial(port)
         self.verbose = verbose
 
     def aes_write(self, msg):
-        self.set.write(ciphers.encrypt_aes(msg, key))
+        self.set.write(ciphers.encrypt_aes(msg, self.uptime_key))
 
     def aes_read(self, msg, size):
-        return ciphers.decrypt_aes(self.set.read(size), key)
+        return ciphers.decrypt_aes(self.set.read(size), self.uptime_key)
 
     def private_key_verify(self, card_id):
-        aes_write("pkv" + structs.pack(">32s32I", "private_key_verify", card_id))
-
+        self.aes_write("pkv" + struct.pack(">32s32I", "private_key_verify", card_id))
 
     def pin_verify(self, pin, card_id):
-        val = "pvc" + structs.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
+        val = "pvc" + struct.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
         self.aes_write(val)
-        transaction_id, result = structs.unpack(">32s?", self.aes_read(33))
+        transaction_id, result = struct.unpack(">32s?", self.aes_read(33))
         return result
 
     def private_key_verify_read(self):
-        transaction_id, random_num = structs.unpack(">32s256I", self.aes_read(288))
+        transaction_id, random_num = struct.unpack(">32s256I", self.aes_read(288))
         return random_num
 
-    #private_key_verify() sends the random_num the card decrypted back to bank
+    # private_key_verify() sends the random_num the card decrypted back to bank
     def private_key_verify_write(self, random_num):
-        val = "pkw" + structs.pack(">32s32I", "private_key_verify_write", random_num)
-        self.aes_write(random_num)
+        val = "pkw" + struct.pack(">32s32I", "private_key_verify_write", random_num)
+        self.aes_write(val)
 
     def inner_layer_write(self, inner_layer):
-        val = "ilw" + structs.pack(">32s256I", "send_inner_layer", inner_layer)
+        val = "ilw" + struct.pack(">32s256I", "send_inner_layer", inner_layer)
         self.aes_write(val)
 
     def outer_layer_read(self):
-        transaction_id, outer_layer = structs.unpack(">32s512I")
+        transaction_id, outer_layer = struct.unpack(">32s512I")
         return outer_layer
 
     def withdraw_amount_write(self, amount):
-        val = "waw" + structs.pack(">32s32I", "send_withdraw_amount", amount)
+        val = "waw" + struct.pack(">32s32I", "send_withdraw_amount", amount)
         self.aes_write(val)
 
     def request_read_balance(self):
-        val = "rrb" + structs.pack(">32s", "request_read_balance")
+        val = "rrb" + struct.pack(">32s", "request_read_balance")
         self.aes_write(val)
 
     def pin_reset(self, pin):
-        val = "pnr" + structs.pack(">32s32I", "pin_reset", "pin")
+        val = "pnr" + struct.pack(">32s32I", "pin_reset", "pin")
         self.aes_write(val)
 
     def balance_read(self):
-        transaction_id, balance = structs.unpack(">32s32I")
+        transaction_id, balance = struct.unpack(">32s32I")
         return balance
 
     def reset(self):
