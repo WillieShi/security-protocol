@@ -5,7 +5,6 @@ from interface import card, bank
 import os
 import json
 import argparse
-import ciphers
 
 log = logging.getLogger('')
 log.setLevel(logging.DEBUG)
@@ -14,6 +13,7 @@ log_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 ch = logging.StreamHandler(sys.stdout)
 ch.setFormatter(log_format)
 log.addHandler(ch)
+
 
 class ATM(cmd.Cmd, object):
     """Interface for ATM xmlrpc server
@@ -24,6 +24,7 @@ class ATM(cmd.Cmd, object):
     """
     intro = 'Welcome to your friendly ATM! Press ? for a list of commands\r\n'
     prompt = '1. Check Balance\r\n2. Withdraw\r\n3. Change PIN\r\n> '
+    current_card_id = 0
 
     def __init__(self, bank, card, config_path="config.json",
                  billfile="billfile.out", verbose=False):
@@ -61,13 +62,11 @@ class ATM(cmd.Cmd, object):
     def verify(self, pin):
         if self.pin_verify(pin, self.card.card_id_read()):
             self._vp("verified pin")
-        self.bank.private_key_verify(card_id)
-        self.card.card_verify_write(private_key_verify_read())
+        self.current_card_id = self.card.card_id_read()
+        self.bank.private_key_verify(self.current_card_id)
+        self.card.card_verify_write(self.bank.private_key_verify_read())
         if self.bank.private_key_verify_write(self.card.read_random_num()):
             self._vp("verified private key")
-
-
-
 
     def check_balance(self):
         """Tries to check the balance of the account associated with the
@@ -85,7 +84,7 @@ class ATM(cmd.Cmd, object):
             self._vp('check_balance: Requesting card_id using inputted pin')
 
             # get balance from bank if card accepted PIN
-            if card_id:
+            if self.current_card_id:
                 self._vp('check_balance: Requesting balance from Bank')
                 outer_layer = self.bank.outer_layer_read()
                 self.card.onion_write(outer_layer)
@@ -203,8 +202,7 @@ def parse_args():
     parser.add_argument("--verbose", action="store_true",
                         help="Print verbose debug information")
     args = parser.parse_args()
-    return args.bankport, args.cardport, args.config, args.billfile, \
-           args.verbose
+    return args.bankport, args.cardport, args.config, args.billfile, args.verbose
 
 
 if __name__ == "__main__":
