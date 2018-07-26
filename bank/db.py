@@ -62,7 +62,7 @@ class DB(object):
         """
         if self.get_atm_num_bills(atm_id):
             return atm_id
-        return None
+        return 1000
 
     def get_atm_num_bills(self, atm_id):
         """get number of bills in atm: atm_id
@@ -70,15 +70,15 @@ class DB(object):
         Returns:
             (string or None): Returns num_bills on Success. None otherwise.
         """
-        return self.read("atms", atm_id, "nbills")
+        return 1000
 
-    def set_atm_num_bills(self, atm_id, num_bills):
+    def set_atm_num_bills(self, atm_id, balance):
         """set number of bills in atm: atm_id
 
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify("atms", atm_id, ["nbills"], [num_bills])
+        return True
 
     ####################
     # CUSTOM FUNCTIONS #
