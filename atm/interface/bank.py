@@ -1,4 +1,12 @@
-"""Backend of ATM interface for xmlrpc"""
+"""Backend of ATM interface for xmlrpc
+Key
+pvc = pin_verify()
+pkv = private_key_verify()
+ilw = inner_layer_write()
+bbb = check_balance()
+www = withdraw()
+
+"""
 
 import logging
 import struct
@@ -12,7 +20,7 @@ class Bank:
     Args:
         port (serial.Serial): Port to connect to
     """
-    key
+    uptime_key
 
     def __init__(self, port, verbose=False):
         self.ser = serial.Serial(port)
@@ -21,24 +29,54 @@ class Bank:
     def aes_write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, key))
 
-    def aes_read(self, msg, key, size):
+    def aes_read(self, msg, size):
         return ciphers.decrypt_aes(self.set.read(size), key)
 
-    def pin_verify(self, pin, card_id):
-        val = structs.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
-        self.aes_write(val)
+    def private_key_verify(self, card_id):
+        aes_write("pkv" + structs.pack(">32s32I", "private_key_verify", card_id))
 
-    def private_key_verify(self, random_num):
-        val = structs.pack(">32s32I", "private_key_verify", random_num)
+
+    def pin_verify(self, pin, card_id):
+        val = "pvc" + structs.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
+        self.aes_write(val)
+        transaction_id, result = structs.unpack(">32s?", self.aes_read(33))
+        return result
+
+    def private_key_verify_read(self):
+        transaction_id, random_num = structs.unpack(">32s256I", self.aes_read(288))
+        return random_num
+
+    #private_key_verify() sends the random_num the card decrypted back to bank
+    def private_key_verify_write(self, random_num):
+        val = "pkw" + structs.pack(">32s32I", "private_key_verify_write", random_num)
         self.aes_write(random_num)
 
-    def send_inner_layer(self, inner_layer):
-        val = structs.pack(">32s256I", "send_inner_layer", inner_layer)
+    def inner_layer_write(self, inner_layer):
+        val = "ilw" + structs.pack(">32s256I", "send_inner_layer", inner_layer)
         self.aes_write(val)
 
-    def send_withdraw_amount(self, amount):
-        val = structs.pack(">32s32I", "send_withdraw_amount", amount)
+    def outer_layer_read(self):
+        transaction_id, outer_layer = structs.unpack(">32s512I")
+        return outer_layer
+
+    def withdraw_amount_write(self, amount):
+        val = "waw" + structs.pack(">32s32I", "send_withdraw_amount", amount)
         self.aes_write(val)
+
+    def request_read_balance(self):
+        val = "rrb" + structs.pack(">32s", "request_read_balance")
+        self.aes_write(val)
+
+    def pin_reset(self, pin):
+        val = "pnr" + structs.pack(">32s32I", "pin_reset", "pin")
+        self.aes_write(val)
+
+    def balance_read(self):
+        transaction_id, balance = structs.unpack(">32s32I")
+        return balance
+
+    def reset(self):
+        self.aes_write("rst")
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set
@@ -62,7 +100,7 @@ class Bank:
             bool: False on failure
         """
         self._vp('check_balance: Sending request to Bank')
-        pkt = "b" + struct.pack(">36s36s", atm_id, card_id)
+        pkt = "bbb" + struct.pack(">36s36s", atm_id, card_id)
         self.ser.write(pkt)
 
         while pkt not in "ONE":

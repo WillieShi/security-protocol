@@ -15,9 +15,9 @@ n_length = 2048
 our_message = "testing here please"
 
 #here we define AES functions
-def pad(unpadded_message):
-    unpadded_message += (((32 - len(unpadded_message)) % 32 * '{'))
-    return unpadded_message
+def pad(unpadded_message, pad_length):
+    padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
+    return padded_message
 
 def create_aes_key():
     #this takes 32 random bytes to make our key
@@ -58,14 +58,17 @@ def generate_key():
 
 #rsa encryption
 def encrypt_rsa(message, pub_key):
-    #changing message into bytes
+    #applies RSA Padding
+    rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
+    encrypted_rsa = rsa_pub_cipher.encrypt(message)
+    return encrypted_rsa
+    '''
     byte_msg = message.encode()
     encrypted_rsa = pub_key.encrypt(byte_msg, Random.new())
     return encrypted_rsa
+    '''
 
 #rsa decryption
-def decrypt_rsa(cipher_rsa, priv_key):
-    decrypted_rsa = priv_key.decrypt(cipher_rsa).decode("utf-8")
     return decrypted_rsa
 
 def hash_message(message):
