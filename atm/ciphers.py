@@ -42,12 +42,6 @@ def decrypt_aes(message, key):
     return plain_text
 
 
-# generates a prime number
-def generate_prime_number():
-    generated_number = number.getPrime(n_length)
-    return generated_number
-
-
 # generates rsa key
 # using generate() to generate key
 # first parameter can be any number that is a multiple of 256 and greater than 1024

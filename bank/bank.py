@@ -48,6 +48,11 @@ class Bank(object):
         message = self.atm.read(length)
         return ciphers.decrypt_aes(message, self.uptime_key)
 
+    # generates a prime number
+    def generate_prime_number():
+        generated_number = number.getPrime(n_length)
+        return generated_number
+
     # Generates the modulus and base for Diffie Hellman
     def diffie_hellman():
         modulus = generate_prime_number()
