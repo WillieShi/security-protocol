@@ -7,16 +7,19 @@ from Crypto.Hash import SHA1
 from base64 import b64encode, b64decode
 import hashlib
 
+
 # here we define AES functions
 def pad(unpadded_message, pad_length):
     padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
     return padded_message
+
 
 # Creates new AES key
 def create_aes_key():
     # this takes 32 random bytes to make our key
     new_key = get_random_bytes(32)
     return new_key
+
 
 # Takes a message and AES key, and encrypts the message.
 def encrypt_aes(message, key):
@@ -27,6 +30,7 @@ def encrypt_aes(message, key):
     encrypt_cipher = AES.new(key, AES.MODE_CBC, IV)
     cipher_text = encrypt_cipher.encrypt(message)
     return cipher_text
+
 
 # Takes a message and AES key, and decrypts the message.
 def decrypt_aes(message, key):
@@ -44,6 +48,7 @@ def generate_key():
     public = private.publickey()
     return private, public
 
+
 # RSA encryption
 # rsa_pub_cipher is the public key with padding
 # encrypted_rsa is the ciphertext
@@ -52,6 +57,7 @@ def encrypt_rsa(message, pub_key):
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
     encrypted_rsa = rsa_pub_cipher.encrypt(message)
     return encrypted_rsa
+
 
 # RSA decryption
 # ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
@@ -63,12 +69,14 @@ def decrypt_rsa(encrypted_rsa, priv_key):
     decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
 
+
 # Applies a hash to message input
 def hash_message(message):
     message = str(message)
     message = message
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
+
 
 # Makes new RSA signature
 def sign_data(key, data):

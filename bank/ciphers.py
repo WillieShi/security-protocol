@@ -7,6 +7,7 @@ from Crypto.Hash import SHA1
 from base64 import b64encode, b64decode
 import hashlib
 
+
 # here we define AES functions
 def pad(unpadded_message, pad_length):
     padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
@@ -38,6 +39,7 @@ def decrypt_aes(message, key):
     plain_text = decrypt_cipher.decrypt(message).decode("utf-8")
     return plain_text
 
+
 # generates rsa key
 # using generate() to generate key
 # first parameter can be any number that is a multiple of 256 and greater than 1024
@@ -67,11 +69,13 @@ def decrypt_rsa(encrypted_rsa, priv_key):
     decrypted_rsa = rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
 
+
 # Applies a hash to message input
 def hash_message(message):
     message = str(message)
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
+
 
 # Makes new RSA signature
 def sign_data(key, data):
