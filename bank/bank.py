@@ -83,7 +83,7 @@ class Bank(object):
         # Receives ATM's half of diffie hellman from ATM to compute final value.
         transaction_id, side_atm = struct.unpack("32s256I", self.default_read(288))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
-        uptime_key_bank = (side_atm**secret_number_b) % mod
+        self.uptime_key_bank = (side_atm**secret_number_b) % mod
 
     # Links commands in ATM-Bank interface to functions in the bank
     # Three letter codes link interface commands to bank functions.
