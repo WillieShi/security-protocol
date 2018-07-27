@@ -49,6 +49,7 @@ class Bank(object):
         return ciphers.decrypt_aes(message, self.uptime_key)
 
     # Links commands in ATM-Bank interface to functions in the bank
+    # Three letter codes link interface commands to bank functions.
     def start(self):
         while True:
             card_id = 0
