@@ -26,8 +26,10 @@ class Bank(object):
     GOOD = "O"
     BAD = "N"
     ERROR = "E"
-    # uptime_key is the AES key of the current uptime-session.
-    # A new uptime-session begins when the ATM is power-cycled.
+    '''
+    uptime_key is the AES key of the current uptime-session.
+    A new uptime-session begins when the ATM is power-cycled.
+    '''
     uptime_key_bank = 0
 
     def __init__(self, port, baud=115200, db_path="bank.json"):
@@ -58,12 +60,12 @@ class Bank(object):
         message = self.atm.read(length)
         return ciphers.decrypt_aes(message, self.uptime_key)
 
-    # generates a prime number
+    # generates a prime number to be used in diffie hellman
     def generate_prime_number(n):
         generated_number = number.getPrime(n)
         return generated_number
 
-    # Generates the modulus and base for Diffie Hellman
+    # Generates the modulus and base for Diffie Hellman using a prime number
     def diffie_hellman(self):
         modulus = self.generate_prime_number(617)
         base = self.generate_prime_number(617)
@@ -85,6 +87,7 @@ class Bank(object):
 
     # Links commands in ATM-Bank interface to functions in the bank
     # Three letter codes link interface commands to bank functions.
+    # Initializes AES Key first upon power cycle.
     def start(self):
         self.diffie_bank()
         while True:
@@ -116,43 +119,51 @@ class Bank(object):
             elif command != "":
                 self.atm.write(self.ERROR)
 
+    # Sends all verification results of every applicaple transaction.
     def send_verification_result(self, good):
         self.aes_write(struct.pack(">32s?", "send_verification_result", good))
 
+    # Changes the user's PIN based on user input.
     def pin_change(self, card_id):
         transaction_id, pin = struct.unpack(">32s32I", self.self.aes_read(64))
         self.db.set_hash(card_id, ciphers.hash_message(card_id + pin))
 
+    # Checks to see if card ID and PIN match a legitimate account in the bank database.
     def pin_verification_read(self, card_id):
         transaction_id, card_id, hash = struct.unpack(">32s32I32I", self.aes_read(96))
         if hash == self.db.get_hash(card_id):
             return card_id
         return False
 
+    # Generates a random number and encrypts it with RSA encryption that a valid card would have the private key to.
     def private_key_verification_write(self, card_id):
         rand_num = ciphers.random_with_N_bytes(32)
         self.aes_write(struct.pack(">32s256I256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id)), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id))))
         return rand_num
-        # self.aes_write may cause problems due to no "self." appended to the beginning.
 
+    # Compares the random number sent by card (through ATM) to the originally generated random number. If they are equal, the card is a valid card.
     def private_key_verification_read(self, rand_num, card_id):
         transaction_id, cand_rand_num = struct.unpack(">32s32I", self.aes_read(64))
         if rand_num == cand_rand_num:
             return True
         return False
 
+    # Encrypts data with the outer layer of the onion in RSA.
     def outer_layer_write(self, card_id):
         val = struct.pack(">32s512I256I", "outer_layer_write", self.db.get_onion(card_id), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id)))
         self.aes_write(val)
 
+    # Decrypts the inner layer of the onion (RSA).
     def inner_layer_read(self, card_id):
         transaction_id, enc_val = struct.unpack(">32s256I", self.aes_read(288))
         return ciphers.decrypt_rsa(enc_val, self.db.get_inner_onion_private_key(card_id))
 
+    # Reads the withdraw request to get the amount the user would like to withdraw.
     def withdraw_amount_read(self):
         transaction_id, withdraw_amount = struct.unpack(">32s32I", self.aes_read(64))
         return withdraw_amount
 
+    # Calculates the new balance using the withdraw amount. Only passes if the user has enough money to withdraw their requested amount.
     def withdraw_balance_modify(self, balance, withdraw_amount, card_id):
         if(balance - withdraw_amount >= 0):
             new_balance = balance - withdraw_amount
@@ -161,6 +172,7 @@ class Bank(object):
         else:
             return "Bad, try again"  # fix this later, error system
 
+    # Encrypts final balance with AES in preparation to send to ATM.
     def balance_write(self, balance):
         val = struct.pack(">32s32I", "balance_write", balance)
         self.aes_write(val)
