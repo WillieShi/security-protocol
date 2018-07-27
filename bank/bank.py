@@ -28,7 +28,7 @@ class Bank(object):
     ERROR = "E"
     # uptime_key is the AES key of the current uptime-session.
     # A new uptime-session begins when the ATM is power-cycled.
-    uptime_key = 0
+    uptime_key =
 
     def __init__(self, port, baud=115200, db_path="bank.json"):
         super(Bank, self).__init__()
@@ -87,6 +87,7 @@ class Bank(object):
     # Links commands in ATM-Bank interface to functions in the bank
     # Three letter codes link interface commands to bank functions.
     def start(self):
+        uptime_key = self.diffie_bank()
         while True:
             card_id = 0
             verified = False
