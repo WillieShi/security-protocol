@@ -94,20 +94,5 @@ def hash_message(message):
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
-# The ATM-side diffie hellman function, which receives the modulus and base from the bank.
-# Performs computations after receving modulus and base from bank.
-
-
-def diffie_atm():
-    mod, bas = "getting the mod and base"
-    # insert read (mod, bas) from bank
-    
-    secret_number_a = secrets.randbelow(9999)
-    side_atm = (bas**secret_number_a) % mod
-    # insert write (side_atm) to bank
-    # insert read (side_bank) from bank
-    # final_atm is the final atm side key for diffie hellman
-    final_atm = (side_bank**secret_number_a) % mod
-    return final_atm
 
 # any test code goes here
