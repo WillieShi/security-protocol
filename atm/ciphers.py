@@ -14,6 +14,7 @@ import hashlib
 def generate_salt():
     return get_random_bytes(80)
 
+
 def pad(unpadded_message, pad_length):
     padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
     return padded_message
