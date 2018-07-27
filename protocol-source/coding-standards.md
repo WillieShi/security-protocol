@@ -14,6 +14,14 @@ Item 3: 256 byte salt (uint8_t)
 
 Item 4: ___ End of transaction message ___ (String)
 
+### Card commands
+cir: (32 bytes of string) send the card number to the atm pls (as 32 bytes por favor)
+
+cvw: im gonna send you the encrypted verification number thing (256 bytes ofnumber and 256 bytes of signature and then 32 bytes of transaction id)
+pls return a 32 bytes number as a result
+
+own: im gonna send you the onion as 512 bytes of data, then 256 bytes of signature, then 32 bytes of transaction id.  pls respond w 256 bytes of inner layer
+
 ### Method descriptions
 
 ###### writeUART
