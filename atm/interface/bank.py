@@ -89,18 +89,22 @@ class Bank:
         transaction_id, outer_layer, signature = struct.unpack(">32s512I256I", self.aes_read(800))
         return outer_layer, signature
 
+    # Encrypts the withdraw amount requested by the card to send to the bank.
     def withdraw_amount_write(self, amount):
         val = "waw" + struct.pack(">32s32I", "send_withdraw_amount", amount)
         self.aes_write(val)
 
+    # Sends a request to the bank to check the balance.
     def request_read_balance(self):
         val = "rrb" + struct.pack(">32s", "request_read_balance")
         self.aes_write(val)
 
+    # Sends a request to the bank to reset the PIN.
     def pin_reset(self, pin):
         val = "pnr" + struct.pack(">32s32I", "pin_reset", "pin")
         self.aes_write(val)
 
+    # Sends the balance to the card from the bank.
     def balance_read(self):
         transaction_id, balance = struct.unpack(">32s32I")
         return balance
