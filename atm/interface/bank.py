@@ -1,5 +1,5 @@
 """Backend of ATM interface for xmlrpc
-Key
+Key for codes used in communication functions:
 pvc = pin_verify()
 pkv = private_key_verify()
 ilw = inner_layer_write()
