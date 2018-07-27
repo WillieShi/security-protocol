@@ -76,10 +76,11 @@ class Bank(object):
         self.default_write(struct.pack("32s256I256I", "dif_mod_base", mod, base))
         secret_number_b = secrets.randbelow(9999)
         side_bank = (base**secret_number_b) % mod
-        # insert write (side_bank) to atm
+        # Sends bank's half of diffie hellman to ATM.
         self.default_write(struct.pack("32s256I", "dif_side_bank", side_bank))
-        # insert read (side_atm) from atm
-        # final_bank is the final bank side key for diffie hellman
+        # Receives ATM's half of diffie hellman from ATM to compute final value.
+        transaction_id, side_atm = struct.unpack("32s256I", self.default_read(288))
+        # final_bank is the final bank-side agreed value for diffie hellman
         final_bank = (side_atm**secret_number_b) % mod
         return final_bank
 
