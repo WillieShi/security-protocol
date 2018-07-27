@@ -99,6 +99,14 @@ def diffie_hellman():
     return (modulus, base)
 
 
+def sign_data(key, data):
+    signer = PKCS1_OAEP.new(key)
+    digest = SHA256.new()
+    digest.update(b64decode(data))
+    sign = signer.sign(digest)
+    return b64encode(sign)
+
+
 def diffie_bank():
     mod, base = diffie_hellman()
     #  insert write (mod, bas) to atm
