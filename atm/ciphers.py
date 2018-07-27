@@ -91,6 +91,7 @@ def hash_message(message):
 def diffie_atm():
     mod, bas = "getting the mod and base"
     # insert read (mod, bas) from bank
+    
     secret_number_a = secrets.randbelow(9999)
     side_atm = (bas**secret_number_a) % mod
     # insert write (side_atm) to bank
