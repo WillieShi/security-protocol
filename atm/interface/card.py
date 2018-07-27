@@ -30,12 +30,30 @@ class Card(object):
         self.verbose = verbose
 
     def write(self, msg):
+        """Wrapper function to write to the card
+
+        Args:
+            msg (integer): msg to send to the card
+        """
         self.set.write(msg)
 
     def read(self, size):
+        """Wrapper function to read from the card
+
+        Args:
+            size (int): size of message to read in bytes
+
+        Returns:
+            bool: true if successfully verified
+        """
         return self.set.read(size)
 
     def card_id_read(self):
+        """Reads card number from the card
+
+        Returns:
+            int: card number
+        """
         transaction_id, card_id = struct.unpack(">32s32I", self.read(64))
         return card_id
 
