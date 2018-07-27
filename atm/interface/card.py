@@ -45,8 +45,8 @@ class Card(object):
         return random_num
 
     # encrypts decrypted random num w/ AES to send to bank
-    def card_verify_write(self, random_num):
-        val = struct.pack(">32s256I", "card_verify_write", random_num)
+    def card_verify_write(self, random_num, signature):
+        val = struct.pack(">256I256I32s", random_num, signature, "card_verify_write")
         self.write(val)
         # removes AES encryption from the onion to make the RSA decryptable
 
@@ -56,7 +56,7 @@ class Card(object):
 
     # Puts the one-layer onion (still has inner RSA layer) in the AES channel to send to bank.
     def onion_write(self, outer_layer):
-        val = struct.pack(">32s512I", "onion_write", outer_layer)
+        val = struct.pack(">512I32s", outer_layer, "onion_write")
         self.write(val)
 
     def _vp(self, msg, stream=logging.info):

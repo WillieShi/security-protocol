@@ -89,7 +89,7 @@ class Bank(object):
 
     def private_key_verification_write(self, card_id):
         rand_num = ciphers.random_with_N_bytes(32)
-        self.aes_write(struct.pack(">32s256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id))))
+        self.aes_write(struct.pack(">32s256I256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id)), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id))))
         return rand_num
         # self.aes_write may cause problems due to no "self." appended to the beginning.
 
