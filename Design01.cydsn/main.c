@@ -178,6 +178,7 @@ int main(void)
     CyGlobalIntEnable; /* Enable global interrupts. */
 
     uint8_t db[KEY_SIZE];
+    uint8_t dump[KEY_SIZE*4];
     uint8_t* cardnum;
     uint8_t* verif;
     uint8_t* banksig;
@@ -196,7 +197,8 @@ int main(void)
     //start process, recieve and write card num to mem
     UART_PutString( "Start card prod, give me card number\n\r");
     cardnum = readUART(20); //ask laslo about it dangerous since we give them things to write?
-    writeUART(cardnum, sizeof(cardnum));
+    UART_PutString( "Debug1\n\r");
+    writeUART(cardnum, 20);
     if(sizeof(cardnum) > 20)
     {
         UART_PutString("Nice try bucko, papa john taught me all the tricks, git outta here\n\r");
@@ -204,16 +206,18 @@ int main(void)
     }
     else
     {
-        UART_PutString("num recieved\n");
+        UART_PutString("num recieved\n\r");
     }
+    
     EEPROM_Write(0, cardnum, KEY_SIZE); //write num to memory
     EEPROM_Read(0, db, KEY_SIZE); //look to make sure its good
+    writeUART(db, (uint8_t)256);
     
     //recieve and write bank sig to mem
-    UART_PutString("Give me the Bank signature");
+    UART_PutString("Give me the Bank signature\n\r");
     //RSA sign #TODO !MIGHT JUST BE THE PUBLIC KEY COME BACK TO THIS
     banksig = readUART((uint8_t) KEY_SIZE);
-    UART_PutString("signature recieved\n");
+    UART_PutString("signature recieved\n\r");
     EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
     EEPROM_Read(KEY_SIZE, db, KEY_SIZE); //look to make sure its good
     writeUART(db,(uint8_t) KEY_SIZE);
@@ -222,91 +226,95 @@ int main(void)
     //TODO composing RSA keys from components given from python code
     privkey = (uint8_t*)&RSA_SK; //does this work lol
     EEPROM_Write(KEY_SIZE*2, privkey , KEY_SIZE);
-    UART_PutString("WRITE SUCCESSFUL\n");
+    UART_PutString("WRITE SUCCESSFUL\n\r");
     EEPROM_Read(KEY_SIZE*2, db, KEY_SIZE); //look to make sure its good
     writeUART(db, (uint8)KEY_SIZE);
-    UART_PutString("Card Christening finished, dump all memory to double check\n");
-    EEPROM_Read(0, db, KEY_SIZE*4);
-    writeUART(db, (uint8_t) KEY_SIZE); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
+    UART_PutString("Card Christening finished, dump all memory to double check\n\r");
+    EEPROM_Read(0, dump, KEY_SIZE*4);
+    writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
     
     //MAIN Rsa Protocol
     //Recieve Transaction code
-    UART_PutString("Give me signature\n");
+    UART_PutString("Give me the verification code\n\r");
+    verif = readUART((uint8_t)KEY_SIZE);
+    UART_PutString("Give me signature\n\r");
     testbanksigver = readUART((uint8_t)SIGNATURE_SIZE);
-    UART_PutString("Give me the verification code\n");
-    verif = readUART((uint8_t)SIGNATURE_SIZE);
-    UART_PutString("Decrypting ...\n");
+    UART_PutString("Decrypting and verifying...\n\r");
     verif = RSA_decrypt256(&br_rsa_i31_private, (char*) verif,(uint8_t) KEY_SIZE );
     //NEED TO DEBUG RSA VER
     if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksigver,verif, KEY_SIZE) == -1)
     {
-        UART_PutString("Signature wrong, terminating program\n");
+        UART_PutString("Signature wrong, terminating program\n\r");
         return -1;
     }
-    UART_PutString("Signature verified...\n");
-    UART_PutString("Sending be ready\n");
+    UART_PutString("Signature verified...\n\r");
+    UART_PutString("Sending be ready\n\r");
     writeUART(verif, sizeof(verif));
     
     //recieve data
-    UART_PutString("Send over onion protected message\n");
+    UART_PutString("Send over onion protected message\n\r");
     everything = readUART((uint8_t)KEY_SIZE*4);
-    UART_PutString("Onion recieved ... Starting decrypt\n");
+    UART_PutString("Onion recieved ... Starting decrypt\n\r");
     
     EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
     //should get 256 bytes
     everything = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) everything, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
-    UART_PutString("Decryption done ... starting decomp\n");
+    UART_PutString("Decryption done ... starting decomp\n\r");
     
     data = readData(everything);
-    UART_PutString("data extracted\n");
+    UART_PutString("data extracted\n\r");
     
     testbanksig = readSignature(everything);
-    UART_PutString("sig extracted\n");
+    UART_PutString("sig extracted\n\r");
     
     salt = readSalt(everything);
-    UART_PutString("salt extracted\n");
+    UART_PutString("salt extracted\n\r");
     
-    UART_PutString("Decomp done\n");
+    UART_PutString("Decomp done\n\r");
     
     //Verify signature
     pt = malloc(KEY_SIZE*3*sizeof(uint8_t));
     memcpy(pt, everything, KEY_SIZE*3);
     if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksig, pt , KEY_SIZE*3) == -1)
     {
-        UART_PutString("Signature wrong, terminating program\n");
+        UART_PutString("Signature wrong, terminating program\n\r");
         return -1;
     }
-    UART_PutString("Signature verified...\n");
+    UART_PutString("Signature verified...\n\r");
     
     
-    UART_PutString("Starting to send data ...\n");
+    UART_PutString("Starting to send data ...\n\r");
     writeUART(data, sizeof(data));
-    UART_PutString("Starting to send decrypted salt ...\n");
+    UART_PutString("Starting to send decrypted salt ...\n\r");
     writeUART(salt,sizeof(salt));
-    UART_PutString("Starting to send signature ...\n");
+    UART_PutString("Starting to send signature ...\n\r");
 }
 
   
 
 static uint8_t* readUART(uint8_t size)
 {
-  uint8_t* result = malloc(size*sizeof(uint8_t));
-  for(int i = 0; i < size;){
-    uint8_t rxData = (uint8_t)getValidByte();
-    if(rxData)
+    uint8_t* result = malloc(size*sizeof(uint8_t));
+    for(int i = 0; i < size; i++)
     {
-        result[i] = rxData;
+        uint8_t rxData = (uint8_t)getValidByte();
+        if(rxData)
+        {
+            result[i] = rxData;
+            UART_PutChar(result[i]);
+        }
     }
-  }
-  return result;
+ 
+    return result;
 }
 
 static void writeUART(uint8_t* buffer, uint8_t size)
 {
-  for(int i = 0; i < size; i++)
-  {
-    UART_PutChar((char)buffer[i]);
-  }
+    for(int i = 0; i < size; i++)
+    {
+        UART_PutChar((char)buffer[i]);
+    }
+    UART_PutString("\n\r");
 }
 
 //TEST TOMORROW
@@ -409,7 +417,7 @@ unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size)
     if (!fpriv(tmp, &RSA_SK)) 
     {
 		//fprintf(stderr, "RSA private operation failed\n");
-        UART_PutString("RSA PRIV OP FAILED\n");
+        UART_PutString("RSA PRIV OP FAILED\n\r");
 		exit(EXIT_FAILURE);
 	}
     
@@ -417,7 +425,7 @@ unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size)
     if (!fpriv(tmp2, &RSA_SK)) 
     {
 		//fprintf(stderr, "RSA private operation failed\n");
-        UART_PutString("RSA PRIV OP FAILED\n");
+        UART_PutString("RSA PRIV OP FAILED\n\r");
 		exit(EXIT_FAILURE);
 	}
     
@@ -439,7 +447,7 @@ unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size)
     if (!fpriv(tmp, &RSA_SK)) 
     {
 		//fprintf(stderr, "RSA private operation failed\n");
-        UART_PutString("RSA PRIV OP FAILED\n");
+        UART_PutString("RSA PRIV OP FAILED\n\r");
 		exit(EXIT_FAILURE);
 	}
     
