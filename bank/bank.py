@@ -48,6 +48,25 @@ class Bank(object):
         message = self.atm.read(length)
         return ciphers.decrypt_aes(message, self.uptime_key)
 
+    # Generates the modulus and base for Diffie Hellman
+    def diffie_hellman():
+        modulus = generate_prime_number()
+        base = generate_prime_number()
+        return (modulus, base)
+
+
+    # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
+    def diffie_bank():
+        mod, base = diffie_hellman()
+        #  insert write (mod, bas) to atm
+        secret_number_b = secrets.randbelow(9999)
+        side_bank = (bas**secret_number_b) % mod
+        # insert write (side_bank) to atm
+        # insert read (side_atm) from atm
+        # final_bank is the final bank side key for diffie hellman
+        final_bank = (side_atm**secret_number_b) % mod
+        return final_bank
+
     # Links commands in ATM-Bank interface to functions in the bank
     # Three letter codes link interface commands to bank functions.
     def start(self):
