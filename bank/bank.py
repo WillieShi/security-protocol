@@ -35,6 +35,14 @@ class Bank(object):
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
         self.transactionKey = self.generate_key_pair()
 
+    # Write function for when AES tunnel is not established.
+    def default_write(self, msg):
+        self.set.write(msg)
+
+    # Read function for when AES tunnel is not established.
+    def default_read(self, size):
+        return self.set.read(size)
+
     # Encrypts a message in AES using the current AES key.
     def aes_write(self, message):
         message = ciphers.encrypt_aes(message, self.uptime_key)

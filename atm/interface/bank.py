@@ -27,9 +27,11 @@ class Bank:
         self.ser = serial.Serial(port)
         self.verbose = verbose
 
+    # Write function for when AES tunnel is not established.
     def default_write(self, msg):
         self.set.write(msg)
 
+    # Read function for when AES tunnel is not established.
     def default_read(self, size):
         return self.set.read(size)
 
