@@ -28,7 +28,7 @@ class Bank(object):
     ERROR = "E"
     # uptime_key is the AES key of the current uptime-session.
     # A new uptime-session begins when the ATM is power-cycled.
-    uptime_key = 0
+    uptime_key =
 
     def __init__(self, port, baud=115200, db_path="bank.json"):
         super(Bank, self).__init__()
@@ -70,20 +70,24 @@ class Bank(object):
         return (modulus, base)
 
     # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
-    def diffie_bank():
-        mod, base = diffie_hellman()
-        #  insert write (mod, bas) to atm
+    def diffie_bank(self):
+        mod, base = self.diffie_hellman()
+        #  Sends modulus and base to ATM
+        self.default_write(struct.pack("32s256I256I", "dif_mod_base", mod, base))
         secret_number_b = secrets.randbelow(9999)
-        side_bank = (bas**secret_number_b) % mod
-        # insert write (side_bank) to atm
-        # insert read (side_atm) from atm
-        # final_bank is the final bank side key for diffie hellman
+        side_bank = (base**secret_number_b) % mod
+        # Sends bank's half of diffie hellman to ATM.
+        self.default_write(struct.pack("32s256I", "dif_side_bank", side_bank))
+        # Receives ATM's half of diffie hellman from ATM to compute final value.
+        transaction_id, side_atm = struct.unpack("32s256I", self.default_read(288))
+        # final_bank is the final bank-side agreed value for diffie hellman
         final_bank = (side_atm**secret_number_b) % mod
         return final_bank
 
     # Links commands in ATM-Bank interface to functions in the bank
     # Three letter codes link interface commands to bank functions.
     def start(self):
+        uptime_key = self.diffie_bank()
         while True:
             card_id = 0
             verified = False
