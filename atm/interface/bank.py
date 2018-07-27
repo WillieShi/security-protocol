@@ -33,6 +33,20 @@ class Bank:
     def aes_read(self, msg, size):
         return ciphers.decrypt_aes(self.set.read(size), self.uptime_key)
 
+    # The ATM-side diffie hellman function, which receives the modulus and base from the bank.
+    # Performs computations after receving modulus and base from bank.
+    def diffie_atm():
+        mod, bas = "getting the mod and base"
+        # insert read (mod, bas) from bank
+
+        secret_number_a = secrets.randbelow(9999)
+        side_atm = (bas**secret_number_a) % mod
+        # insert write (side_atm) to bank
+        # insert read (side_bank) from bank
+        # final_atm is the final atm side key for diffie hellman
+        final_atm = (side_bank**secret_number_a) % mod
+        return final_atm
+
     def private_key_verify(self, card_id):
         self.aes_write("pkv" + struct.pack(">32s32I", "private_key_verify", card_id))
 
