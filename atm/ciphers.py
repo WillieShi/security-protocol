@@ -1,14 +1,10 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util import number
-import Crypto
 from Crypto.PublicKey import RSA
-from Crypto import Random
-import os
-import base64
-import six
 from Crypto.Cipher import PKCS1_OAEP
 import secrets
+import hashlib
 
 # here we define initial variables
 n_length = 2048
@@ -19,19 +15,22 @@ def pad(unpadded_message, pad_length):
     padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
     return padded_message
 
+
 def create_aes_key():
     # this takes 32 random bytes to make our key
     new_key = get_random_bytes(32)
     return new_key
+
 
 def encrypt_aes(message, key):
     # key has to be 16 bytes long
     message = pad(message)
     global IV
     IV = get_random_bytes(16)
-    encrypt_cipher = AES.new(key, AES.MODE_CBC, IV = IV)
+    encrypt_cipher = AES.new(key, AES.MODE_CBC, IV)
     cipher_text = encrypt_cipher.encrypt(message)
     return cipher_text
+
 
 def decrypt_aes(message, key):
     decrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
@@ -47,9 +46,9 @@ def generate_prime_number():
 
 # generates rsa key
 def generate_key():
-    #using generate() to generate key
-    #first parameter can be any number that is a multiple of 256 and greater than 1024
-    #random = Crypto.Random.new()
+    # using generate() to generate key
+    # first parameter can be any number that is a multiple of 256 and greater than 1024
+    # random = Crypto.Random.new()
     private = RSA.generate(2048)
     public = private.publickey()
     return private, public
@@ -77,22 +76,23 @@ def decrypt_rsa(encrypted_rsa, priv_key):
 
 # generates a new salt every time it is run
 def hash_message(message):
-    salt = bcrypt.gensalt()
     message = str(message)
-    salt = salt.decode("utf-8")
-    message = message + salt
+    message = message
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
 def diffie_atm():
     mod, bas = "getting the mod and base"
-    #insert write (mod, bas) to atm
-    b = secrets.randbelow(9999)
-    side2 = (bas**b) % mod
-    #insert write (side2) to atm
-    #insert read (side1) from atm
-    #final_b is the final bank side key for diffie hellman
-    final_b = (side1**b) % mod
-    return final_b
+    # insert write (mod, bas) to atm
+    secret_number_a = secrets.randbelow(9999)
+    side_atm = (bas**secret_number_a) % mod
+    # insert write (side_atm) to bank
+    # insert read (side_bank) from bank
+    # final_atm is the final bank side key for diffie hellman
+    final_atm = (side_bank**secret_number_a) % mod
+    return final_atm
 
-#any test code goes here
+# any test code goes here
+
+
+diffie_bank()

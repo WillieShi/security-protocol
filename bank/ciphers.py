@@ -1,17 +1,10 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util import number
-import Crypto
 from Crypto.PublicKey import RSA
-from Crypto import Random
-import os
-import base64
-import six
 from Crypto.Cipher import PKCS1_OAEP
 import secrets
-from Crypto.Hash import SHA256
-from base64 import b64encode, b64decode
-
+import hashlib
 
 # here we define initial variables
 n_length = 32
@@ -66,9 +59,13 @@ def generate_key():
     return private, public
 
 
+def rsa_signature(message, private_key):
+    key = RSA.import_key()
+
+
 # rsa encryption
 def encrypt_rsa(message, pub_key):
-    #applies RSA Padding
+    # applies RSA Padding
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
     encrypted_rsa = rsa_pub_cipher.encrypt(message)
     return encrypted_rsa
@@ -78,9 +75,11 @@ def encrypt_rsa(message, pub_key):
     return encrypted_rsa
     '''
 
-#rsa decryption
+# rsa decryption
+
+
 def decrypt_rsa(encrypted_rsa, priv_key):
-    #applies RSA Padding
+    # applies RSA Padding
     rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
     decrypted_rsa = rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
@@ -89,10 +88,7 @@ def decrypt_rsa(encrypted_rsa, priv_key):
 
 
 def hash_message(message):
-    salt = bcrypt.gensalt()
     message = str(message)
-    salt = salt.decode("utf-8")
-    message = message + salt
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
@@ -114,12 +110,15 @@ def sign_data(key, data):
 def diffie_bank():
     mod, base = diffie_hellman()
     #  insert write (mod, bas) to atm
-    private_number = secrets.randbelow(9999)
-    side2 = (base**private_number) % mod
-    # insert write (side2) to atm
-    # insert read (side1) from atm
-    # final_b is the final bank side key for diffie hellman
-    final_bank_key = (side1**private_number) % mod
-    return final_bank_key
+    secret_number_b = secrets.randbelow(9999)
+    side_bank = (bas**secret_number_b) % mod
+    # insert write (side_bank) to atm
+    # insert read (side_atm) from atm
+    # final_bank is the final bank side key for diffie hellman
+    final_bank = (side_atm**secret_number_a) % mod
+    return final_bank
 
 # any test code goes here
+
+
+print(diffie_bank())
