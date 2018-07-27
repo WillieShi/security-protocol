@@ -4,12 +4,15 @@ This module implements an interface to the bank_server database.
 
 import json
 import os.path
+import ciphers
+import admin_db
 
 
 class DB(object):
     """Implements a Database interface for the bank server and admin interface"""
     def __init__(self, db_path="bank.json"):
         self.path = db_path
+        self.admin_db = admin_db.Admin_DB(db_path=db_path)
 
     def close(self):
         """close the database connection"""
@@ -84,12 +87,6 @@ class DB(object):
     def set_hash(self, card_id, value):
         return self.modify("cards", card_id, "hash", value)
 
-    def get_signature(self, card_id):
-        return self.read("cards", card_id, "signature")
-
-    def set_signature(self, card_id, value):
-        return self.modify("cards", card_id, "signature", value)
-
     def get_outer_onion_public_key(self, card_id):
         return self.read("cards", card_id, "outer_onion_public_key")
 
@@ -118,7 +115,8 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify('cards', card_id, ["bal"], [amount])
+
+        return self.modify('cards', card_id, ["onion"], [ciphers.encrypt_rsa(ciphers.encrypt_rsa(amount, self.get_inner_onion_public_key(card_id)), self.get_outer_onion_public_key(card_id))])
 
     def admin_create_atm(self, atm_id):
         """create atm with atm_id
@@ -126,7 +124,7 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify("atms", atm_id, ["nbills"], [128])
+        return self.modify("atms", atm_id, ["bills"], [128])
 
     def admin_get_balance(self, card_id):
         """get balance of account: card_id
@@ -134,7 +132,7 @@ class DB(object):
         Returns:
             (string or None): Returns balance on Success. None otherwise.
         """
-        return self.read("cards", card_id, "bal")
+        return ciphers.decrypt_rsa(ciphers.decrypt_rsa(self.read("cards", card_id, "onion"), self.get_inner_onion_private_key(card_id)), self.admin_db.get_outer_onion_private_key())
 
     def admin_set_balance(self, card_id, balance):
         """set balance of account: card_id
@@ -142,4 +140,4 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify("cards", card_id, ["bal"], [balance])
+        return self.modify("cards", card_id, ["onion"], [ciphers.encrypt_rsa(ciphers.encrypt_rsa(balance, self.get_inner_onion_public_key(card_id)), self.get_outer_onion_public_key(card_id))])

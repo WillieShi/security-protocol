@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
             print("Updating database...")
             db = DB(db_file)
-            db.admin_create_account(uuid, balance)
+            db.admin_create_account(balance)
             print("Account added!")
     except KeyboardInterrupt:
         print("Shutting down...")

@@ -69,7 +69,6 @@ class Bank(object):
         base = self.generate_prime_number(617)
         return (modulus, base)
 
-
     # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
     def diffie_bank():
         mod, base = diffie_hellman()
