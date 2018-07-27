@@ -8,9 +8,9 @@ from base64 import b64encode, b64decode
 import hashlib
 
 # here we define AES functions
-def pad(unpadded_message):
-    unpadded_message += (((32 - len(unpadded_message)) % 32 * '{'))
-    return unpadded_message
+def pad(unpadded_message, pad_length):
+    padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
+    return padded_message
 
 
 # Creates new AES key
