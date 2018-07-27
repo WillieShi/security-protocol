@@ -69,14 +69,15 @@ class Bank(object):
         base = self.generate_prime_number(617)
         return (modulus, base)
 
-
     # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
-    def diffie_bank():
-        mod, base = diffie_hellman()
-        #  insert write (mod, bas) to atm
+    def diffie_bank(self):
+        mod, base = self.diffie_hellman()
+        #  Sends modulus and base to ATM
+        self.default_write(struct.pack("32s256I256I", "dif_mod_base", mod, base))
         secret_number_b = secrets.randbelow(9999)
-        side_bank = (bas**secret_number_b) % mod
+        side_bank = (base**secret_number_b) % mod
         # insert write (side_bank) to atm
+        self.default_write(struct.pack("32s256I", "dif_side_bank", side_bank))
         # insert read (side_atm) from atm
         # final_bank is the final bank side key for diffie hellman
         final_bank = (side_atm**secret_number_b) % mod
