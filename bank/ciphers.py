@@ -93,6 +93,8 @@ def diffie_hellman():
 
 
 # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
+
+
 def diffie_bank():
     mod, base = diffie_hellman()
     #  insert write (mod, bas) to atm
