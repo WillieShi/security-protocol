@@ -9,6 +9,9 @@ import base64
 import six
 from Crypto.Cipher import PKCS1_OAEP
 import secrets
+from Crypto.Hash import SHA256
+from base64 import b64encode, b64decode
+
 
 # here we define initial variables
 n_length = 32
@@ -98,6 +101,14 @@ def diffie_hellman():
     modulus = generate_prime_number()
     base = generate_prime_number()
     return (modulus, base)
+
+
+def sign_data(key, data):
+    signer = PKCS1_OAEP.new(key)
+    digest = SHA256.new()
+    digest.update(b64decode(data))
+    sign = signer.sign(digest)
+    return b64encode(sign)
 
 
 def diffie_bank():
