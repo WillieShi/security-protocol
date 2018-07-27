@@ -1,4 +1,4 @@
-# ard interface
+# Card interface
 import logging
 import struct
 import time

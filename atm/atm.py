@@ -228,5 +228,6 @@ if __name__ == "__main__":
     bank = bank.Bank(b_port, verbose=verbose)
     card = card.Card(c_port, verbose=verbose)
     atm = ATM(bank, card, config, billfile, verbose=verbose)
+    # Generates the new AES key when it power cycles.
     self.diffie_atm()
     atm.cmdloop()

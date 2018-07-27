@@ -49,6 +49,7 @@ class Admin_DB(object):
         except KeyError:
             return None
 
+# Private key generators for the backup database(RSA)
     def get_outer_onion_private_key(self, card_id):
         return self.read("cards", card_id, "inner_onion_private_key")
 
