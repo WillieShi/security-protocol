@@ -55,8 +55,8 @@ class Card(object):
         return onion
 
     # Puts the one-layer onion (still has inner RSA layer) in the AES channel to send to bank.
-    def onion_write(self, outer_layer):
-        val = struct.pack(">512I32s", outer_layer, "onion_write")
+    def onion_write(self, outer_layer, signature):
+        val = struct.pack(">512I256I32s", outer_layer, signature, "onion_write")
         self.write(val)
 
     def _vp(self, msg, stream=logging.info):

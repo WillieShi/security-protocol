@@ -87,8 +87,8 @@ class ATM(cmd.Cmd, object):
             # get balance from bank if card accepted PIN
             if self.current_card_id:
                 self._vp('check_balance: Requesting balance from Bank')
-                outer_layer = self.bank.outer_layer_read()
-                self.card.onion_write(outer_layer)
+                outer_layer, signature = self.bank.outer_layer_read()
+                self.card.onion_write(outer_layer, signature)
                 inner_layer = self.card.onion_read()
                 self.bank.inner_layer_write(inner_layer)
                 return self.balance_read()

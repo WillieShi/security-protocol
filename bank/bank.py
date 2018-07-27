@@ -100,7 +100,7 @@ class Bank(object):
         return False
 
     def outer_layer_write(self, card_id):
-        val = struct.pack(">32s512I", "outer_layer_write", self.db.get_onion(card_id))
+        val = struct.pack(">32s512I256I", "outer_layer_write", self.db.get_onion(card_id), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id)))
         self.aes_write(val)
 
     def inner_layer_read(self, card_id):
