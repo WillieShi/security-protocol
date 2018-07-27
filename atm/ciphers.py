@@ -4,6 +4,7 @@ from Crypto.Util import number
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import secrets
+import hashlib
 
 # here we define initial variables
 n_length = 2048
@@ -28,9 +29,10 @@ def encrypt_aes(message, key):
     message = pad(message)
     global IV
     IV = get_random_bytes(16)
-    encrypt_cipher = AES.new(key, AES.MODE_CBC, IV = IV)
+    encrypt_cipher = AES.new(key, AES.MODE_CBC, IV)
     cipher_text = encrypt_cipher.encrypt(message)
     return cipher_text
+
 
 def decrypt_aes(message, key):
     decrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
@@ -39,6 +41,8 @@ def decrypt_aes(message, key):
     return plain_text
 
 # here we define RSA functions
+
+
 def generate_prime_number():
     generated_number = number.getPrime(n_length)
     return generated_number
@@ -47,6 +51,8 @@ def generate_prime_number():
 # What version should we use for RSA..?
 
 # generates rsa key
+
+
 def generate_key():
     # using generate() to generate key
     # first parameter can be any number that is a multiple of 256 and greater than 1024
@@ -56,6 +62,8 @@ def generate_key():
     return private, public
 
 # rsa encryption
+
+
 def encrypt_rsa(message, pub_key):
     # applies RSA Padding
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
@@ -80,10 +88,8 @@ def decrypt_rsa(encrypted_rsa, priv_key):
 
 
 def hash_message(message):
-    salt = bcrypt.gensalt()
     message = str(message)
-    salt = salt.decode("utf-8")
-    message = message + salt
+    message = message
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
@@ -91,12 +97,15 @@ def hash_message(message):
 def diffie_bank():
     mod, bas = "getting the mod and base"
     # insert write (mod, bas) to atm
-    b = secrets.randbelow(9999)
-    side2 = (bas**b) % mod
-    # insert write (side2) to atm
-    # insert read (side1) from atm
-    # final_b is the final bank side key for diffie hellman
-    final_b = (side1**b) % mod
-    return final_b
+    secret_number_a = secrets.randbelow(9999)
+    side_atm = (bas**secret_number_a) % mod
+    # insert write (side_atm) to bank
+    # insert read (side_bank) from bank
+    # final_atm is the final bank side key for diffie hellman
+    final_atm = (side_bank**secret_number_a) % mod
+    return final_atm
 
 # any test code goes here
+
+
+diffie_bank()
