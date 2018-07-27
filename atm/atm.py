@@ -61,6 +61,14 @@ class ATM(cmd.Cmd, object):
                                 "bills": self.bills}))
 
     def verify(self, pin):
+        """Verifies card with pin an private key
+
+        Args:
+            pin (int): the pin of the card
+
+        Returns:
+            bool: true if successfully verified
+        """
         if self.pin_verify(pin, self.card.card_id_read()):
             self._vp("verified pin")
         else:
