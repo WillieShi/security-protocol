@@ -1,7 +1,8 @@
 import logging
 import sys
 import cmd
-from interface import card
+from interface import card, bank
+from interface.card import NotProvisioned, AlreadyProvisioned
 import os
 import json
 import argparse
@@ -39,7 +40,6 @@ class ATM(cmd.Cmd, object):
         self.update()
 
     def _vp(self, msg, log=logging.debug):
-        print "here"
         if self.verbose:
             log(msg)
 
@@ -68,7 +68,7 @@ class ATM(cmd.Cmd, object):
             str: Balance on success
             bool: False on failure
         """
-        print "Here"
+       
         try:
             self._vp('check_balance: Requesting card_id using inputted pin')
             card_id = self.card.check_balance(pin)
@@ -78,10 +78,11 @@ class ATM(cmd.Cmd, object):
                 self._vp('check_balance: Requesting balance from Bank')
                 res = self.bank.check_balance(self.uuid, card_id)
                 if res:
+	            print "Balance is: " + str(res)
                     return res
             self._vp('check_balance failed')
             return False
-        except card.NotProvisioned:
+        except NotProvisioned:
             self._vp('ATM card has not been provisioned!')
             return False
 
@@ -103,7 +104,7 @@ class ATM(cmd.Cmd, object):
                 return True
             self._vp('change_pin failed')
             return False
-        except card.NotProvisioned:
+        except NotProvisioned:
             self._vp('ATM card has not been provisioned!')
             return False
 
@@ -143,7 +144,7 @@ class ATM(cmd.Cmd, object):
         except ValueError:
             self._vp('amount must be an int')
             return False
-        except card.NotProvisioned:
+        except NotProvisioned:
             self._vp('ATM card has not been provisioned!')
             return False
 

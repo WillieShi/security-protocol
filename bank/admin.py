@@ -24,7 +24,7 @@ class Admin(cmd.Cmd, object):
         """Usage: add_atm atm_id"""
         args = args.split(" ")
         if len(args) < 1 or args[0] == '':
-            print("Usage: add_atm config_outfile [bill_file]")
+            print "Usage: add_atm config_outfile [bill_file]"
             return
 
         uuid = os.urandom(36)
@@ -36,50 +36,50 @@ class Admin(cmd.Cmd, object):
             f.write(json.dumps(cfg))
 
         if self.db.admin_create_atm(uuid):
-            print("ATM %s added" % args[0].encode('hex')[:16])
+            print "ATM %s added" % args[0].encode('hex')[:16]
         else:
-            print("ATM add failed!")
+            print "ATM add failed!"
 
     def do_add_card(self, args):
         """Usage: add_card card_id balance"""
         args = args.split(" ")
         if len(args) != 2:
-            print("Usage: add_card card_id balance")
+            print "Usage: add_card card_id balance"
             return
         try:
             int(args[1])
         except ValueError:
-            print("Error: balance must be a valid integer")
+            print "Error: balance must be a valid integer"
 
         if self.db.admin_create_account(args[0], args[1]):
-            print("Card %s added" % args[0])
+            print "Card %s added" % args[0]
         else:
-            print("Card add failed!")
+            print "Card add failed!"
 
     def do_check_balance(self, args):
         """Usage: check_balance card_id"""
         args = args.split(" ")
         if len(args) != 1 or args[0] == '':
-            print("Usage: check_balance card_id")
+            print "Usage: check_balance card_id"
             return
 
         b = self.db.get_balance(args[0])
         if b:
-            print("Card %s balance: %d" % (args[0], int(b)))
+            print "Card %s balance: %d" % (args[0], int(b))
         else:
-            print("Card %s does not exist!" % args[0])
+            print "Card %s does not exist!" % args[0]
 
     def do_update_balance(self, args):
         """Usage: update_balance card_id balance"""
         args = args.split(" ")
         if len(args) != 2:
-            print("Usage: update_balance card_id balance")
+            print "Usage: update_balance card_id balance"
             return
 
         if self.db.admin_set_balance(args[0], args[1]):
-            print("Updated balance")
+            print "Updated balance"
         else:
-            print("Balance update failed!")
+            print "Balance update failed!"
 
 
 if __name__ == "__main__":

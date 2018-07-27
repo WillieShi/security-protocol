@@ -3,8 +3,7 @@
 import logging
 import struct
 import serial
-import ciphers.py
-#may or may not need .py
+
 
 class Bank:
     """Interface for communicating with the bank
@@ -12,33 +11,10 @@ class Bank:
     Args:
         port (serial.Serial): Port to connect to
     """
-    key
 
     def __init__(self, port, verbose=False):
-        self.ser = serial.Serial(port)
+        self.ser = serial.Serial(port, baudrate=115200)
         self.verbose = verbose
-
-    def aes_write(self, msg):
-        self.set.write(ciphers.encrypt_aes(msg, key))
-
-    def aes_read(self, msg, key, size):
-        return ciphers.decrypt_aes(self.set.read(size), key)
-
-    def pin_verify(self, pin, card_id):
-        val = structs.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
-        self.aes_write(val)
-
-    def private_key_verify(self, random_num):
-        val = structs.pack(">32s32I", "private_key_verify", random_num)
-        self.aes_write(random_num)
-
-    def send_inner_layer(self, inner_layer):
-        val = structs.pack(">32s256I", "send_inner_layer", inner_layer)
-        self.aes_write(val)
-
-    def send_withdraw_amount(self, amount):
-        val = structs.pack(">32s32I", "send_withdraw_amount", amount)
-        self.aes_write(val)
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set
@@ -105,4 +81,5 @@ class Bank:
 
     def provision_update(self, uuid, pin, balance):
         pkt = struct.pack(">36s8sI", uuid, pin, balance)
+	print "sending " + repr(pkt) + "..."
         self.ser.write("p" + pkt)

@@ -18,14 +18,17 @@ class DB(object):
     def init_db(self):
         """initialize database with file at filepath"""
         with open(self.path, 'w') as f:
-            f.write(json.dumps({'atms': {}, 'cards': {}, 'storage': {},}))
+            f.write(json.dumps({'atms': {}, 'cards': {}}))
 
     def exists(self):
         return os.path.exists(self.path)
 
     def modify(self, table, k, subks, vs):
+        if not self.exists():
+            self.init_db()
         with open(self.path, 'r') as f:
             db = json.loads(f.read())
+
 
         try:
             for subk, v in zip(subks, vs):
@@ -53,6 +56,22 @@ class DB(object):
     # BANK INTERFACE FUNCTIONS #
     ############################
 
+    def set_balance(self, card_id, balance):
+        """set balance of account: card_id
+
+        Returns:
+            (bool): Returns True on Success. False otherwise.
+        """
+        return self.modify("cards", card_id, ["bal"], [balance])
+
+    def get_balance(self, card_id):
+        """get balance of account: card_id
+
+        Returns:
+            (string or None): Returns balance on Success. None otherwise.
+        """
+        return self.read("cards", card_id, "bal")
+
     def get_atm(self, atm_id):
         """get atm_id of atm: atm_id
         this is an obviously dumb function but maybe it can be expanded...
@@ -60,9 +79,7 @@ class DB(object):
         Returns:
             (string or None): Returns atm_id on Success. None otherwise.
         """
-        if self.get_atm_num_bills(atm_id):
-            return atm_id
-        return None
+        return 1000
 
     def get_atm_num_bills(self, atm_id):
         """get number of bills in atm: atm_id
@@ -70,7 +87,7 @@ class DB(object):
         Returns:
             (string or None): Returns num_bills on Success. None otherwise.
         """
-        return self.read("atms", atm_id, "nbills")
+        return 1000
 
     def set_atm_num_bills(self, atm_id, num_bills):
         """set number of bills in atm: atm_id
@@ -78,58 +95,7 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify("atms", atm_id, ["nbills"], [num_bills])
-
-    ####################
-    # CUSTOM FUNCTIONS #
-    ####################
-    def get_onion(self, card_id):
-
-        return self.read("cards", card_id, "onion")
-
-    def set_onion(self, card_id, value):
-
-        return self.modify("cards", card_id, "onion", value)
-
-    def get_hash(self, card_id):
-
-        return self.read("cards", card_id, "hash")
-
-    def set_hash(self, card_id, value):
-
-        return self.modify("cards", card_id, "hash", value)
-
-    def get_signature(self, card_id):
-
-        return self.read("cards", card_id, "signature")
-
-    def set_signature(self, card_id, value):
-
-        return self.modify("cards", card_id, "signature", value)
-
-    def get_outer_onion_public_key(self, card_id):
-
-        return self.read("cards", card_id, "outer_onion_public_key")
-
-    def set_outer_onion_public_key(self, card_id, value):
-
-        return self.modify("cards", card_id, "outer_onion_public_key", value)
-
-    def get_inner_onion_private_key(self, card_id):
-
-        return self.read("cards", card_id, "inner_onion_private_key")
-
-    def set_inner_onion_private_key(self, card_id, value):
-
-        return self.modify("cards", card_id, "inner_onion_private_key", value)
-
-    def get_inner_onion_public_key(self, card_id):
-
-        return self.read("cards", card_id, "inner_onion_public_key")
-
-    def set_inner_onion_public_key(self, card_id, value):
-
-        return self.modify("cards", card_id, "inner_onion_public_key", value)
+        return True
 
     #############################
     # ADMIN INTERFACE FUNCTIONS #
