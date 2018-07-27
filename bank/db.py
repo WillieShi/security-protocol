@@ -53,24 +53,13 @@ class DB(object):
     # BANK INTERFACE FUNCTIONS #
     ############################
 
-    def get_atm(self, atm_id):
-        """get atm_id of atm: atm_id
-        this is an obviously dumb function but maybe it can be expanded...
-
-        Returns:
-            (string or None): Returns atm_id on Success. None otherwise.
-        """
-        if self.get_atm_num_bills(atm_id):
-            return atm_id
-        return 1000
-
     def get_atm_num_bills(self, atm_id):
         """get number of bills in atm: atm_id
 
         Returns:
             (string or None): Returns num_bills on Success. None otherwise.
         """
-        return 1000
+        return self.read("atms", atm_id, "bills")
 
     def set_atm_num_bills(self, atm_id, balance):
         """set number of bills in atm: atm_id
@@ -78,7 +67,7 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return True
+        return self.modify("atms", atm_id, "bills", balance)
 
     ####################
     # CUSTOM FUNCTIONS #
