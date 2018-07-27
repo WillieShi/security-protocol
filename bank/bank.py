@@ -17,6 +17,7 @@ import sys
 import serial
 import argparse
 import struct
+from Crypto.Util import number
 import secrets
 import ciphers
 
@@ -63,9 +64,9 @@ class Bank(object):
         return generated_number
 
     # Generates the modulus and base for Diffie Hellman
-    def diffie_hellman():
-        modulus = generate_prime_number(617)
-        base = generate_prime_number(617)
+    def diffie_hellman(self):
+        modulus = self.generate_prime_number(617)
+        base = self.generate_prime_number(617)
         return (modulus, base)
 
 
