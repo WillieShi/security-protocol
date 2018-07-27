@@ -43,7 +43,7 @@ class Bank:
         return result
 
     def private_key_verify_read(self):
-        transaction_id, random_num, signature = struct.unpack(">32s256I256I", self.aes_read(288))
+        transaction_id, random_num, signature = struct.unpack(">32s256I256I", self.aes_read(544))
         return random_num, signature
 
     # private_key_verify() sends the random_num the card decrypted back to bank
@@ -56,8 +56,8 @@ class Bank:
         self.aes_write(val)
 
     def outer_layer_read(self):
-        transaction_id, outer_layer = struct.unpack(">32s512I")
-        return outer_layer
+        transaction_id, outer_layer, signature = struct.unpack(">32s512I256I", self.aes_read(800))
+        return outer_layer, signature
 
     def withdraw_amount_write(self, amount):
         val = "waw" + struct.pack(">32s32I", "send_withdraw_amount", amount)
