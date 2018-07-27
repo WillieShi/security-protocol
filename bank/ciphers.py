@@ -63,7 +63,8 @@ def encrypt_rsa(message, pub_key):
     encrypted_rsa = rsa_pub_cipher.encrypt(message)
     return encrypted_rsa
 
-
+def export_public_key(key):
+    return key.publickey().exportKey(format='DER')
 # RSA decryption
 # rsa_pub_cipher is the private key with padding
 # decrypted_rsa is the decrypted ciphertext
@@ -85,7 +86,7 @@ def hash_message(message):
 # Makes new RSA signature
 def sign_data(key, data):
     signer = PKCS1_OAEP.new(key)
-    digest = SHA1.new()
+    digest = hashlib.sha1()
     digest.update(b64decode(data))
     sign = signer.sign(digest)
     return b64encode(sign)

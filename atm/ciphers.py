@@ -3,7 +3,6 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Hash import SHA1
 from base64 import b64encode, b64decode
 import hashlib
 
@@ -53,7 +52,8 @@ def generate_key():
     public = private.publickey()
     return private, public
 
-
+def export_public_key(key):
+    return key.publickey().exportKey(format='DER')
 # RSA encryption
 # rsa_pub_cipher is the public key with padding
 # encrypted_rsa is the ciphertext
@@ -86,7 +86,7 @@ def hash_message(message):
 # Makes new RSA signature
 def sign_data(key, data):
     signer = PKCS1_OAEP.new(key)
-    digest = SHA1.new()
+    digest = hashlib.sha1()
     digest.update(b64decode(data))
     sign = signer.sign(digest)
     return b64encode(sign)
