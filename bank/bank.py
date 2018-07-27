@@ -1,7 +1,7 @@
 """ Bank Server
 This module implements a bank server interface
 
-Key
+Key for codes used in communication functions:
 pvc = pin_verification_read()
 pkv = private_key_verification_read
 ilw = inner_layer_write()
@@ -24,7 +24,9 @@ class Bank(object):
     GOOD = "O"
     BAD = "N"
     ERROR = "E"
-    uptime_Key = 0
+    # uptime_key is the AES key of the current uptime-session.
+    # A new uptime-session begins when the ATM is power-cycled.
+    uptime_key = 0
 
     def __init__(self, port, baud=115200, db_path="bank.json"):
         super(Bank, self).__init__()
@@ -32,10 +34,12 @@ class Bank(object):
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
         self.transactionKey = self.generate_key_pair()
 
+    # Encrypts a message in AES using the current AES key.
     def aes_write(self, message):
         message = ciphers.encrypt_aes(message, self.uptime_key)
         self.atm.write(message)
 
+    # Decrypts AES. If it receives an invalid ATM ID (CARD# or PIN) it returns.
     def aes_read(self, length):
         if self.db.get_atm(self.atm_id) is None:
             self.atm.write(self.BAD)
