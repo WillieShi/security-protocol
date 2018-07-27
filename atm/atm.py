@@ -41,6 +41,7 @@ class ATM(cmd.Cmd, object):
         self.bills = cfg["bills"]
         self.update()
 
+
     def _vp(self, msg, log=logging.debug):
         print "here"
         if self.verbose:
@@ -227,4 +228,5 @@ if __name__ == "__main__":
     bank = bank.Bank(b_port, verbose=verbose)
     card = card.Card(c_port, verbose=verbose)
     atm = ATM(bank, card, config, billfile, verbose=verbose)
+    self.diffie_atm()
     atm.cmdloop()
