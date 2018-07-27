@@ -2,7 +2,6 @@ from interface.card import Card
 from interface.bank import Bank
 from os import urandom
 import argparse
-import serial
 
 
 def parse_args():
