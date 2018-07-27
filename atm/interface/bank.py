@@ -1,4 +1,5 @@
 """Backend of ATM interface for xmlrpc
+
 Key for codes used in communication functions:
 pvc = pin_verify()
 pkv = private_key_verify()
@@ -27,7 +28,6 @@ class Bank:
         self.ser = serial.Serial(port)
         self.verbose = verbose
 
-
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
         self.set.write(msg)
@@ -36,9 +36,11 @@ class Bank:
     def default_read(self, size):
         return self.set.read(size)
 
+    # Sends AES encrypted message.
     def aes_write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, self.uptime_key))
 
+    # Receives and decrypts AES from message.
     def aes_read(self, size):
         return ciphers.decrypt_aes(self.set.read(size), self.uptime_key)
 
@@ -56,15 +58,18 @@ class Bank:
         # uptime_key_atm is the final ATM-side agreed value for diffie hellman
         uptime_key_atm = (side_bank**secret_number_a) % mod
 
+    # Encrypts the verification number to test to see if the card is legitimate.
     def private_key_verify(self, card_id):
         self.aes_write("pkv" + struct.pack(">32s32I", "private_key_verify", card_id))
 
+    # Sends hashed card ID and PIN to the bank.
     def pin_verify(self, pin, card_id):
         val = "pvc" + struct.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
         self.aes_write(val)
         transaction_id, result = struct.unpack(">32s?", self.aes_read(33))
         return result
 
+    # Decrypts the AES on the random number to send to the card.
     def private_key_verify_read(self):
         transaction_id, random_num, signature = struct.unpack(">32s256I256I", self.aes_read(544))
         return random_num, signature
@@ -74,10 +79,12 @@ class Bank:
         val = "pkw" + struct.pack(">32s32I", "private_key_verify_write", random_num)
         self.aes_write(val)
 
+    # Writes the inner onion layer to the bank.
     def inner_layer_write(self, inner_layer):
         val = "ilw" + struct.pack(">32s256I", "send_inner_layer", inner_layer)
         self.aes_write(val)
 
+    # Decrypts the AES on the onion from the bank to send to the card.
     def outer_layer_read(self):
         transaction_id, outer_layer, signature = struct.unpack(">32s512I256I", self.aes_read(800))
         return outer_layer, signature
