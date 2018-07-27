@@ -75,33 +75,43 @@ class DB(object):
     ####################
     # CUSTOM FUNCTIONS #
     ####################
+    # Contains the balance in the double layer RSA.
     def get_onion(self, card_id):
         return self.read("cards", card_id, "onion")
 
+    # Puts onion in the database.
     def set_onion(self, card_id, value):
         return self.modify("cards", card_id, "onion", value)
 
+    # Gets the hash that contains the card ID and PIN from database.
     def get_hash(self, card_id):
         return self.read("cards", card_id, "hash")
 
+    # Sets the hash for card ID and PIN.
     def set_hash(self, card_id, value):
         return self.modify("cards", card_id, "hash", value)
 
+    # Gets the public key for the outer RSA layer.
     def get_outer_onion_public_key(self, card_id):
         return self.read("cards", card_id, "outer_onion_public_key")
 
+    # Sets the public key for the outer RSA layer.
     def set_outer_onion_public_key(self, card_id, value):
         return self.modify("cards", card_id, "outer_onion_public_key", value)
 
+    # Gets the private key for the inner RSA layer.
     def get_inner_onion_private_key(self, card_id):
         return self.read("cards", card_id, "inner_onion_private_key")
 
+    # Sets the private key for the inner RSA layer.
     def set_inner_onion_private_key(self, card_id, value):
         return self.modify("cards", card_id, "inner_onion_private_key", value)
 
+    # Gets the public key for the inner RSA layer.
     def get_inner_onion_public_key(self, card_id):
         return self.read("cards", card_id, "inner_onion_public_key")
 
+    # Sets the public key for the inner RSA layer.
     def set_inner_onion_public_key(self, card_id, value):
         return self.modify("cards", card_id, "inner_onion_public_key", value)
 
