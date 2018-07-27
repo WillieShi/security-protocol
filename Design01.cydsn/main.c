@@ -23,7 +23,7 @@
 
 const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0u};
 
-#define SIGNATURE_SIZE 256                                                                                   
+#define SIGNATURE_SIZE 256
 #define KEY_SIZE 256
 #define SALT_SIZE 256
 #define ENCRYPTION_NUMBER_SIZE 64;
@@ -177,7 +177,7 @@ int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
 
-    uint8_t db[KEY_SIZE];
+    uint8_t* db;
     uint8_t dump[KEY_SIZE*4];
     uint8_t* cardnum;
     uint8_t* verif;
@@ -189,16 +189,15 @@ int main(void)
     uint8_t* everything;
     uint8_t* salt;
     uint8_t* pt;
-    
+
     UART_Start();
-    //init();
-    EEPROM_Init((uint32)eeprom_ref);
-    
+    //init()
     //start process, recieve and write card num to mem
     UART_PutString( "Start card prod, give me card number\n\r");
-    cardnum = readUART(20); //ask laslo about it dangerous since we give them things to write?
-    UART_PutString( "Debug1\n\r");
-    writeUART(cardnum, 20);
+    cardnum = readUART((uint8_t)KEY_SIZE);       //ask laslo about it dangerous since we give them things to write?
+    //UART_PutString("Debug1\n\r");
+    //writeUART(cardnum, 20
+    /*
     if(sizeof(cardnum) > 20)
     {
         UART_PutString("Nice try bucko, papa john taught me all the tricks, git outta here\n\r");
@@ -208,11 +207,12 @@ int main(void)
     {
         UART_PutString("num recieved\n\r");
     }
-    
-    EEPROM_Write(0, cardnum, KEY_SIZE); //write num to memory
-    EEPROM_Read(0, db, KEY_SIZE); //look to make sure its good
+    */
+
+    CySysFlashWriteRow(150, cardnum); //write num to memory
+    db = (uint8_t*) (CY_FLASH_BASE + 150*128); //look to make sure its good
     writeUART(db, (uint8_t)256);
-    
+
     //recieve and write bank sig to mem
     UART_PutString("Give me the Bank signature\n\r");
     //RSA sign #TODO !MIGHT JUST BE THE PUBLIC KEY COME BACK TO THIS
@@ -221,7 +221,7 @@ int main(void)
     EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
     EEPROM_Read(KEY_SIZE, db, KEY_SIZE); //look to make sure its good
     writeUART(db,(uint8_t) KEY_SIZE);
-    
+
     //Write private key to memory
     //TODO composing RSA keys from components given from python code
     privkey = (uint8_t*)&RSA_SK; //does this work lol
@@ -232,7 +232,7 @@ int main(void)
     UART_PutString("Card Christening finished, dump all memory to double check\n\r");
     EEPROM_Read(0, dump, KEY_SIZE*4);
     writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
-    
+
     //MAIN Rsa Protocol
     //Recieve Transaction code
     UART_PutString("Give me the verification code\n\r");
@@ -250,28 +250,28 @@ int main(void)
     UART_PutString("Signature verified...\n\r");
     UART_PutString("Sending be ready\n\r");
     writeUART(verif, sizeof(verif));
-    
+
     //recieve data
     UART_PutString("Send over onion protected message\n\r");
     everything = readUART((uint8_t)KEY_SIZE*4);
     UART_PutString("Onion recieved ... Starting decrypt\n\r");
-    
+
     EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
     //should get 256 bytes
     everything = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) everything, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
     UART_PutString("Decryption done ... starting decomp\n\r");
-    
+
     data = readData(everything);
     UART_PutString("data extracted\n\r");
-    
+
     testbanksig = readSignature(everything);
     UART_PutString("sig extracted\n\r");
-    
+
     salt = readSalt(everything);
     UART_PutString("salt extracted\n\r");
-    
+
     UART_PutString("Decomp done\n\r");
-    
+
     //Verify signature
     pt = malloc(KEY_SIZE*3*sizeof(uint8_t));
     memcpy(pt, everything, KEY_SIZE*3);
@@ -281,8 +281,8 @@ int main(void)
         return -1;
     }
     UART_PutString("Signature verified...\n\r");
-    
-    
+
+
     UART_PutString("Starting to send data ...\n\r");
     writeUART(data, sizeof(data));
     UART_PutString("Starting to send decrypted salt ...\n\r");
@@ -290,7 +290,7 @@ int main(void)
     UART_PutString("Starting to send signature ...\n\r");
 }
 
-  
+
 
 static uint8_t* readUART(uint8_t size)
 {
@@ -304,7 +304,7 @@ static uint8_t* readUART(uint8_t size)
             UART_PutChar(result[i]);
         }
     }
- 
+
     return result;
 }
 
@@ -395,7 +395,7 @@ uint8_t* readSignature(uint8_t* buffer)
 
 static int check_equals(const void *v1, const void *v2, size_t len)
 {
-    
+
 	if (memcmp(v1, v2, len) == 0) {
 		return 1;
 	}
@@ -409,32 +409,32 @@ unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size)
     unsigned char tmp[256];
     unsigned char tmp2[256];
     unsigned char* ret = malloc(size*sizeof(unsigned char));
-   
+
     memcpy(tmp, msg, size/2);
     memcpy(tmp2, msg+256, size/2);
-    
+
     //decrypt first
-    if (!fpriv(tmp, &RSA_SK)) 
+    if (!fpriv(tmp, &RSA_SK))
     {
 		//fprintf(stderr, "RSA private operation failed\n");
         UART_PutString("RSA PRIV OP FAILED\n\r");
 		exit(EXIT_FAILURE);
 	}
-    
+
     //decrypted second
-    if (!fpriv(tmp2, &RSA_SK)) 
+    if (!fpriv(tmp2, &RSA_SK))
     {
 		//fprintf(stderr, "RSA private operation failed\n");
         UART_PutString("RSA PRIV OP FAILED\n\r");
 		exit(EXIT_FAILURE);
 	}
-    
+
     memcpy(ret, tmp, KEY_SIZE);
     memcpy(ret+128, tmp2, KEY_SIZE);
-   
 
-    return ret;    
-    
+
+    return ret;
+
 }
 
 unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size)
@@ -442,17 +442,17 @@ unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size)
     //unsigned char tmp[256];
     unsigned char* tmp = malloc(size*sizeof(unsigned char));
     memcpy(tmp, msg, size);
-    
+
     //decrypt first
-    if (!fpriv(tmp, &RSA_SK)) 
+    if (!fpriv(tmp, &RSA_SK))
     {
 		//fprintf(stderr, "RSA private operation failed\n");
         UART_PutString("RSA PRIV OP FAILED\n\r");
 		exit(EXIT_FAILURE);
 	}
-    
-    return tmp; 
-    
+
+    return tmp;
+
 }
 //returns 1 if verified, returns 0 if not
 int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, int sizept)
@@ -460,7 +460,7 @@ int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, 
     unsigned char t1[256];
 	unsigned char hv[256], tmp[256];
 	br_sha1_context hc;
-    
+
     memcpy(t1, buf, SIGNATURE_SIZE);
     br_sha1_init(&hc);
 	br_sha1_update(&hc, pt, sizept);
@@ -475,8 +475,8 @@ int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, 
         return 0;
     }
     return 1;
-        
-    
+
+
 }
 
 void mark_provisioned()
@@ -490,17 +490,17 @@ void mark_provisioned()
 void provision()
 {
     uint8 message[128];
-    
+
     // synchronize with bank
     syncConnection(SYNC_PROV);
- 
+
     pushMessage((uint8*)PROV_MSG, (uint8)strlen(PROV_MSG));
-        
+
     // set PIN
     pullMessage(message);
     write_pin(message);
     pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
-    
+
     // set account number
     pullMessage(message);
     write_uuid(message);
@@ -511,33 +511,33 @@ void init()
 {
     /* Declare vairables here */
     uint8 message[128];
-    
+
     //while(1) UART_UartPutString("HELLO WORLD!\r\n");
     // Provision card if on first boot
     if (*PROVISIONED == 0x00) {
         provision();
         mark_provisioned();
     }
-    
+
     // Go into infinite loop
     while (1) {
         /* Place your application code here. */
-        
+
         // syncronize communication with bank
         syncConnection(SYNC_NORM);
-        
+
         // receive pin number from ATM
         pullMessage(message);
-        
+
         if (strncmp((char*)message, (char*)PIN, PIN_LEN)) {
             pushMessage((uint8*)PIN_BAD, strlen(PIN_BAD));
         } else {
             pushMessage((uint8*)PIN_OK, strlen(PIN_OK));
-            
+
             // get command
             pullMessage(message);
             pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
-            
+
             // change PIN or broadcast UUID
             if(message[0] == CHANGE_PIN)
             {
@@ -545,10 +545,8 @@ void init()
                 write_pin(message);
                 pushMessage((uint8*)PINCHG_SUC, strlen(PINCHG_SUC));
             } else {
-                pushMessage(UUID, UUID_LEN);   
+                pushMessage(UUID, UUID_LEN);
             }
         }
     }
 }
-
-
