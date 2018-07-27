@@ -27,17 +27,23 @@ class Bank:
         self.ser = serial.Serial(port)
         self.verbose = verbose
 
+    def default_write(self, msg):
+        self.set.write(msg)
+
+    def default_read(self, size):
+        return self.set.read(size)
+
     def aes_write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, self.uptime_key))
 
-    def aes_read(self, msg, size):
+    def aes_read(self, size):
         return ciphers.decrypt_aes(self.set.read(size), self.uptime_key)
 
     # The ATM-side diffie hellman function, which receives the modulus and base from the bank.
     # Performs computations after receving modulus and base from bank.
     def diffie_atm():
-        # insert read (mod, bas) from bank
-        transaction_id, mod, bas = struct.unpack(">32s256I256I", self.aes_read(544))
+        # Receives modulus and base from bank.
+        transaction_id, mod, bas = struct.unpack(">32s256I256I", )
         secret_number_a = secrets.randbelow(9999)
         side_atm = (bas**secret_number_a) % mod
         # insert write (side_atm) to bank
