@@ -163,6 +163,7 @@ class Bank(object):
         transaction_id, withdraw_amount = struct.unpack(">32s32I", self.aes_read(64))
         return withdraw_amount
 
+    # Calculates the new balance using the withdraw amount. Only passes if the user has enough money to withdraw their requested amount.
     def withdraw_balance_modify(self, balance, withdraw_amount, card_id):
         if(balance - withdraw_amount >= 0):
             new_balance = balance - withdraw_amount
@@ -171,6 +172,7 @@ class Bank(object):
         else:
             return "Bad, try again"  # fix this later, error system
 
+    # Encrypts final balance with AES in preparation to send to ATM.
     def balance_write(self, balance):
         val = struct.pack(">32s32I", "balance_write", balance)
         self.aes_write(val)
