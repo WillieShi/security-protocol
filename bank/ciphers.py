@@ -3,6 +3,8 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util import number
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Hash import SHA256
+from base64 import b64encode, b64decode
 import secrets
 import hashlib
 
@@ -57,10 +59,6 @@ def generate_key():
     private = RSA.generate(2048)
     public = private.publickey()
     return private, public
-
-
-def rsa_signature(message, private_key):
-    key = RSA.import_key()
 
 
 # rsa encryption
