@@ -1,5 +1,5 @@
 """Backend of ATM interface for xmlrpc
-Key
+Key for codes used in communication functions:
 pvc = pin_verify()
 pkv = private_key_verify()
 ilw = inner_layer_write()
@@ -11,8 +11,8 @@ www = withdraw()
 import logging
 import struct
 import serial
-import ciphers.py
-# may or may not need .py
+import secrets
+import ciphers
 
 
 class Bank:
@@ -21,17 +21,40 @@ class Bank:
     Args:
         port (serial.Serial): Port to connect to
     """
-    uptime_key = 0
+    uptime_key_atm = 0
 
     def __init__(self, port, verbose=False):
         self.ser = serial.Serial(port)
         self.verbose = verbose
 
+
+    # Write function for when AES tunnel is not established.
+    def default_write(self, msg):
+        self.set.write(msg)
+
+    # Read function for when AES tunnel is not established.
+    def default_read(self, size):
+        return self.set.read(size)
+
     def aes_write(self, msg):
         self.set.write(ciphers.encrypt_aes(msg, self.uptime_key))
 
-    def aes_read(self, msg, size):
+    def aes_read(self, size):
         return ciphers.decrypt_aes(self.set.read(size), self.uptime_key)
+
+    # The ATM-side diffie hellman function, which receives the modulus and base from the bank.
+    # Performs computations after receving modulus and base from bank.
+    def diffie_atm(self):
+        # Receives modulus and base from bank.
+        transaction_id, mod, base = struct.unpack(">32s256I256I", self.default_read(544))
+        secret_number_a = secrets.randbelow(9999)
+        side_atm = (base**secret_number_a) % mod
+        # Receives bank's half of diffie hellman from bank to compute final value.
+        transaction_id, side_bank = struct.unpack("32s256I", self.default_read(288))
+        # Sends ATM's half of diffie hellman to bank.
+        self.default_write(struct.pack("32s256I", "dif_side_atm", side_atm))
+        # uptime_key_atm is the final ATM-side agreed value for diffie hellman
+        uptime_key_atm = (side_bank**secret_number_a) % mod
 
     def private_key_verify(self, card_id):
         self.aes_write("pkv" + struct.pack(">32s32I", "private_key_verify", card_id))
@@ -43,8 +66,8 @@ class Bank:
         return result
 
     def private_key_verify_read(self):
-        transaction_id, random_num = struct.unpack(">32s256I", self.aes_read(288))
-        return random_num
+        transaction_id, random_num, signature = struct.unpack(">32s256I256I", self.aes_read(544))
+        return random_num, signature
 
     # private_key_verify() sends the random_num the card decrypted back to bank
     def private_key_verify_write(self, random_num):
@@ -56,8 +79,8 @@ class Bank:
         self.aes_write(val)
 
     def outer_layer_read(self):
-        transaction_id, outer_layer = struct.unpack(">32s512I")
-        return outer_layer
+        transaction_id, outer_layer, signature = struct.unpack(">32s512I256I", self.aes_read(800))
+        return outer_layer, signature
 
     def withdraw_amount_write(self, amount):
         val = "waw" + struct.pack(">32s32I", "send_withdraw_amount", amount)
@@ -141,6 +164,6 @@ class Bank:
         self._vp('withdraw: Withdrawal accepted')
         return True
 
-    def provision_update(self, uuid, pin, balance):
+    def provision_update(self, pin, balance):
         pkt = struct.pack(">36s8sI", uuid, pin, balance)
         self.ser.write("p" + pkt)
