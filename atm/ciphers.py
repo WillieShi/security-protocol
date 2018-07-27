@@ -12,6 +12,8 @@ n_length = 2048
 our_message = "testing here please"
 
 # here we define AES functions
+
+
 def pad(unpadded_message, pad_length):
     padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
     return padded_message
@@ -57,6 +59,8 @@ def generate_key():
 # RSA encryption
 # rsa_pub_cipher is the public key with padding
 # encrypted_rsa is the ciphertext
+
+
 def encrypt_rsa(message, pub_key):
     # applies RSA Padding
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
@@ -71,6 +75,8 @@ def encrypt_rsa(message, pub_key):
 # RSA decryption
 # rsa_pub_cipher is the private key with padding
 # decrypted_rsa is the decrypted ciphertext
+
+
 def decrypt_rsa(encrypted_rsa, priv_key):
     # applies RSA Padding for more security
     rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
@@ -80,6 +86,8 @@ def decrypt_rsa(encrypted_rsa, priv_key):
     return decrypted_rsa
 
 # generates a new salt every time it is run
+
+
 def hash_message(message):
     message = str(message)
     message = message
@@ -88,6 +96,8 @@ def hash_message(message):
 
 # The ATM-side diffie hellman function, which receives the modulus and base from the bank.
 # Performs computations after receving modulus and base from bank.
+
+
 def diffie_atm():
     mod, bas = "getting the mod and base"
     # insert read (mod, bas) from bank

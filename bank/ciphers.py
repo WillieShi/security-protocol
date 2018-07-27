@@ -4,7 +4,7 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util import number
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Hash import SHA256
+from Crypto.Hash import SHA1
 from base64 import b64encode, b64decode
 import secrets
 import hashlib
@@ -87,7 +87,7 @@ def hash_message(message):
 
 def sign_data(key, data):
     signer = PKCS1_OAEP.new(key)
-    digest = SHA256.new()
+    digest = SHA1.new()
     digest.update(b64decode(data))
     sign = signer.sign(digest)
     return b64encode(sign)
