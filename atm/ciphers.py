@@ -3,25 +3,25 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Hash import SHA1
+from base64 import b64encode, b64decode
 import hashlib
 
-# here we define initial variables
-our_message = "testing here please"
 
 # here we define AES functions
-
-
 def pad(unpadded_message, pad_length):
     padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
     return padded_message
 
 
+# Creates new AES key
 def create_aes_key():
     # this takes 32 random bytes to make our key
     new_key = get_random_bytes(32)
     return new_key
 
 
+# Takes a message and AES key, and encrypts the message.
 def encrypt_aes(message, key):
     # key has to be 16 bytes long
     message = pad(message)
@@ -32,6 +32,7 @@ def encrypt_aes(message, key):
     return cipher_text
 
 
+# Takes a message and AES key, and decrypts the message.
 def decrypt_aes(message, key):
     decrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
     # ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
@@ -47,27 +48,19 @@ def generate_key():
     public = private.publickey()
     return private, public
 
+
 # RSA encryption
 # rsa_pub_cipher is the public key with padding
 # encrypted_rsa is the ciphertext
-
-
 def encrypt_rsa(message, pub_key):
     # applies RSA Padding
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
     encrypted_rsa = rsa_pub_cipher.encrypt(message)
     return encrypted_rsa
-    '''
-    byte_msg = message.encode()
-    encrypted_rsa = pub_key.encrypt(byte_msg, Random.new())
-    return encrypted_rsa
-    '''
+
 
 # RSA decryption
-# rsa_pub_cipher is the private key with padding
-# decrypted_rsa is the decrypted ciphertext
-
-
+# ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
 def decrypt_rsa(encrypted_rsa, priv_key):
     # applies RSA Padding for more security
     rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
@@ -76,14 +69,21 @@ def decrypt_rsa(encrypted_rsa, priv_key):
     decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
 
-# generates a new salt every time it is run
 
-
+# Applies a hash to message input
 def hash_message(message):
     message = str(message)
     message = message
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
+
+# Makes new RSA signature
+def sign_data(key, data):
+    signer = PKCS1_OAEP.new(key)
+    digest = SHA1.new()
+    digest.update(b64decode(data))
+    sign = signer.sign(digest)
+    return b64encode(sign)
 
 # any test code goes here

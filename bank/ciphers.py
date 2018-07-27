@@ -1,22 +1,17 @@
 # Bank-side crypto
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
-from Crypto.Util import number
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA1
 from base64 import b64encode, b64decode
 import hashlib
 
-# here we define initial variables
-n_length = 32
-our_message = "testing here please"
-
 
 # here we define AES functions
-def pad(unpadded_message):
-    unpadded_message += (((32 - len(unpadded_message)) % 32 * '{'))
-    return unpadded_message
+def pad(unpadded_message, pad_length):
+    padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
+    return padded_message
 
 
 # Creates new AES key
@@ -45,12 +40,6 @@ def decrypt_aes(message, key):
     return plain_text
 
 
-# Generates a prime number
-def generate_prime_number():
-    generated_number = number.getPrime(n_length)
-    return generated_number
-
-
 # generates rsa key
 # using generate() to generate key
 # first parameter can be any number that is a multiple of 256 and greater than 1024
@@ -60,7 +49,9 @@ def generate_key():
     return private, public
 
 
-# rsa encryption
+# RSA encryption
+# rsa_pub_cipher is the public key with padding
+# encrypted_rsa is the ciphertext
 def encrypt_rsa(message, pub_key):
     # applies RSA Padding
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
@@ -69,6 +60,8 @@ def encrypt_rsa(message, pub_key):
 
 
 # RSA decryption
+# rsa_pub_cipher is the private key with padding
+# decrypted_rsa is the decrypted ciphertext
 # ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
 def decrypt_rsa(encrypted_rsa, priv_key):
     # applies RSA Padding
@@ -84,6 +77,7 @@ def hash_message(message):
     return(hashlib.sha3_256(message).hexdigest())
 
 
+# Makes new RSA signature
 def sign_data(key, data):
     signer = PKCS1_OAEP.new(key)
     digest = SHA1.new()
