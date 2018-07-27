@@ -11,8 +11,8 @@ www = withdraw()
 import logging
 import struct
 import serial
-import ciphers.py
-# may or may not need .py
+import secrets
+import ciphers
 
 
 class Bank:
@@ -37,7 +37,7 @@ class Bank:
     # Performs computations after receving modulus and base from bank.
     def diffie_atm():
         # insert read (mod, bas) from bank
-        self.aes_read("dfa" + struct.pack(">32s32I32I"))
+        transaction_id, mod, bas = struct.unpack(">32s256I256I", self.aes_read(544))
         secret_number_a = secrets.randbelow(9999)
         side_atm = (bas**secret_number_a) % mod
         # insert write (side_atm) to bank

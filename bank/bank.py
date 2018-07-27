@@ -17,6 +17,7 @@ import sys
 import serial
 import argparse
 import struct
+import secrets
 import ciphers
 
 
@@ -49,14 +50,14 @@ class Bank(object):
         return ciphers.decrypt_aes(message, self.uptime_key)
 
     # generates a prime number
-    def generate_prime_number():
-        generated_number = number.getPrime(n_length)
+    def generate_prime_number(n):
+        generated_number = number.getPrime(n)
         return generated_number
 
     # Generates the modulus and base for Diffie Hellman
     def diffie_hellman():
-        modulus = generate_prime_number()
-        base = generate_prime_number()
+        modulus = generate_prime_number(617)
+        base = generate_prime_number(617)
         return (modulus, base)
 
 
