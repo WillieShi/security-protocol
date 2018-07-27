@@ -4,6 +4,7 @@ from Crypto.Util import number
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import secrets
+import hashlib
 
 # here we define initial variables
 n_length = 32
@@ -87,10 +88,7 @@ def decrypt_rsa(encrypted_rsa, priv_key):
 
 
 def hash_message(message):
-    salt = bcrypt.gensalt()
     message = str(message)
-    salt = salt.decode("utf-8")
-    message = message + salt
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
@@ -104,12 +102,15 @@ def diffie_hellman():
 def diffie_bank():
     mod, base = diffie_hellman()
     #  insert write (mod, bas) to atm
-    private_number = secrets.randbelow(9999)
-    side2 = (base**private_number) % mod
-    # insert write (side2) to atm
-    # insert read (side1) from atm
-    # final_b is the final bank side key for diffie hellman
-    final_bank_key = (side1**private_number) % mod
-    return final_bank_key
+    secret_number_b = secrets.randbelow(9999)
+    side_bank = (bas**secret_number_b) % mod
+    # insert write (side_bank) to atm
+    # insert read (side_atm) from atm
+    # final_bank is the final bank side key for diffie hellman
+    final_bank = (side_atm**secret_number_a) % mod
+    return final_bank
 
 # any test code goes here
+
+
+print(diffie_bank())
