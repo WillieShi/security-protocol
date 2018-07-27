@@ -6,7 +6,6 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA1
 from base64 import b64encode, b64decode
-import secrets
 import hashlib
 
 # here we define initial variables
