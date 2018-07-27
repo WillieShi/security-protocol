@@ -43,8 +43,8 @@ class Bank:
         return result
 
     def private_key_verify_read(self):
-        transaction_id, random_num = struct.unpack(">32s256I", self.aes_read(288))
-        return random_num
+        transaction_id, random_num, signature = struct.unpack(">32s256I256I", self.aes_read(288))
+        return random_num, signature
 
     # private_key_verify() sends the random_num the card decrypted back to bank
     def private_key_verify_write(self, random_num):
