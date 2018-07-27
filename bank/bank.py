@@ -17,6 +17,7 @@ import sys
 import serial
 import argparse
 import struct
+import secrets
 import ciphers
 
 
@@ -34,6 +35,14 @@ class Bank(object):
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
         self.transactionKey = self.generate_key_pair()
 
+    # Write function for when AES tunnel is not established.
+    def default_write(self, msg):
+        self.set.write(msg)
+
+    # Read function for when AES tunnel is not established.
+    def default_read(self, size):
+        return self.set.read(size)
+
     # Encrypts a message in AES using the current AES key.
     def aes_write(self, message):
         message = ciphers.encrypt_aes(message, self.uptime_key)
@@ -49,14 +58,14 @@ class Bank(object):
         return ciphers.decrypt_aes(message, self.uptime_key)
 
     # generates a prime number
-    def generate_prime_number():
-        generated_number = number.getPrime(n_length)
+    def generate_prime_number(n):
+        generated_number = number.getPrime(n)
         return generated_number
 
     # Generates the modulus and base for Diffie Hellman
     def diffie_hellman():
-        modulus = generate_prime_number()
-        base = generate_prime_number()
+        modulus = generate_prime_number(617)
+        base = generate_prime_number(617)
         return (modulus, base)
 
 

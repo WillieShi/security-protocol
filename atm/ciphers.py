@@ -4,11 +4,9 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util import number
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-import secrets
 import hashlib
 
 # here we define initial variables
-n_length = 2048
 our_message = "testing here please"
 
 # here we define AES functions
