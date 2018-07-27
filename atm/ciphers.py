@@ -1,3 +1,4 @@
+# ATM-side crypto
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util import number
@@ -34,9 +35,10 @@ def encrypt_aes(message, key):
 
 def decrypt_aes(message, key):
     decrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
-    # the decode thing stops the result from being b'decrypted_message'
+    # ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
     plain_text = decrypt_cipher.decrypt(message).decode("utf-8")
     return plain_text
+
 
 # generates a prime number
 def generate_prime_number():
@@ -45,15 +47,16 @@ def generate_prime_number():
 
 
 # generates rsa key
+# using generate() to generate key
+# first parameter can be any number that is a multiple of 256 and greater than 1024
 def generate_key():
-    # using generate() to generate key
-    # first parameter can be any number that is a multiple of 256 and greater than 1024
-    # random = Crypto.Random.new()
     private = RSA.generate(2048)
     public = private.publickey()
     return private, public
 
 # RSA encryption
+# rsa_pub_cipher is the public key with padding
+# encrypted_rsa is the ciphertext
 def encrypt_rsa(message, pub_key):
     # applies RSA Padding
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
@@ -66,6 +69,8 @@ def encrypt_rsa(message, pub_key):
     '''
 
 # RSA decryption
+# rsa_pub_cipher is the private key with padding
+# decrypted_rsa is the decrypted ciphertext
 def decrypt_rsa(encrypted_rsa, priv_key):
     # applies RSA Padding for more security
     rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
@@ -81,18 +86,17 @@ def hash_message(message):
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
 
+# The ATM-side diffie hellman function, which receives the modulus and base from the bank.
+# Performs computations after receving modulus and base from bank.
 def diffie_atm():
     mod, bas = "getting the mod and base"
-    # insert write (mod, bas) to atm
+    # insert read (mod, bas) from bank
     secret_number_a = secrets.randbelow(9999)
     side_atm = (bas**secret_number_a) % mod
     # insert write (side_atm) to bank
     # insert read (side_bank) from bank
-    # final_atm is the final bank side key for diffie hellman
+    # final_atm is the final atm side key for diffie hellman
     final_atm = (side_bank**secret_number_a) % mod
     return final_atm
 
 # any test code goes here
-
-
-diffie_bank()
