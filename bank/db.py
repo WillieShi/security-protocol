@@ -84,51 +84,39 @@ class DB(object):
     # CUSTOM FUNCTIONS #
     ####################
     def get_onion(self, card_id):
-
         return self.read("cards", card_id, "onion")
 
     def set_onion(self, card_id, value):
-
         return self.modify("cards", card_id, "onion", value)
 
     def get_hash(self, card_id):
-
         return self.read("cards", card_id, "hash")
 
     def set_hash(self, card_id, value):
-
         return self.modify("cards", card_id, "hash", value)
 
     def get_signature(self, card_id):
-
         return self.read("cards", card_id, "signature")
 
     def set_signature(self, card_id, value):
-
         return self.modify("cards", card_id, "signature", value)
 
     def get_outer_onion_public_key(self, card_id):
-
         return self.read("cards", card_id, "outer_onion_public_key")
 
     def set_outer_onion_public_key(self, card_id, value):
-
         return self.modify("cards", card_id, "outer_onion_public_key", value)
 
     def get_inner_onion_private_key(self, card_id):
-
         return self.read("cards", card_id, "inner_onion_private_key")
 
     def set_inner_onion_private_key(self, card_id, value):
-
         return self.modify("cards", card_id, "inner_onion_private_key", value)
 
     def get_inner_onion_public_key(self, card_id):
-
         return self.read("cards", card_id, "inner_onion_public_key")
 
     def set_inner_onion_public_key(self, card_id, value):
-
         return self.modify("cards", card_id, "inner_onion_public_key", value)
 
     #############################
