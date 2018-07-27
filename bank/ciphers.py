@@ -19,11 +19,13 @@ def pad(unpadded_message):
     unpadded_message += (((32 - len(unpadded_message)) % 32 * '{'))
     return unpadded_message
 
+
 # Creates new AES key
 def create_aes_key():
     # this takes 32 random bytes to make our key
     new_key = get_random_bytes(32)
     return new_key
+
 
 # Takes a message and AES key, and encrypts the message.
 def encrypt_aes(message, key):
@@ -34,6 +36,7 @@ def encrypt_aes(message, key):
     encrypt_cipher = AES.new(key, AES.MODE_CBC, IV)
     cipher_text = encrypt_cipher.encrypt(message)
     return cipher_text
+
 
 # Takes a message and AES key, and decrypts the message.
 def decrypt_aes(message, key):
@@ -58,16 +61,7 @@ def generate_key():
     return private, public
 
 
-<<<<<<< HEAD
 # rsa encryption
-=======
-# Creates RSA signature to ensure that messages from the bank and the card are legitimate
-def rsa_signature(message, private_key):
-    key = RSA.import_key()
-
-
-# RSA encryption
->>>>>>> 9f5ac665344a210a46e7efe0d3baed85330bfe98
 def encrypt_rsa(message, pub_key):
     # applies RSA Padding
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
@@ -89,6 +83,7 @@ def hash_message(message):
     message = str(message)
     message = message.encode("utf-8")
     return(hashlib.sha3_256(message).hexdigest())
+
 
 # Generates the modulus and base for Diffie Hellman
 def diffie_hellman():
