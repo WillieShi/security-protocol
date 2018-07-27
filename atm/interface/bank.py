@@ -43,9 +43,9 @@ class Bank:
 
     # The ATM-side diffie hellman function, which receives the modulus and base from the bank.
     # Performs computations after receving modulus and base from bank.
-    def diffie_atm():
+    def diffie_atm(self):
         # Receives modulus and base from bank.
-        transaction_id, mod, bas = struct.unpack(">32s256I256I", )
+        transaction_id, mod, bas = struct.unpack(">32s256I256I", self.default_read(544))
         secret_number_a = secrets.randbelow(9999)
         side_atm = (bas**secret_number_a) % mod
         # insert write (side_atm) to bank
