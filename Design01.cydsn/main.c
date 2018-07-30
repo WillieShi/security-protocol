@@ -21,7 +21,7 @@
 
 //static uint8_t privkey[] = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789123456";
 
-const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0u};
+//const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0u};
 
 #define SIGNATURE_SIZE 256
 #define KEY_SIZE 256
@@ -179,7 +179,8 @@ int main(void)
 
     uint8_t* db;
     uint8_t dump[KEY_SIZE*4];
-    uint8_t* cardnum;
+    uint8_t readrow[CY_FLASH_SIZEOF_ROW];
+    uint8_t cardnum[CY_FLASH_SIZEOF_ROW];
     uint8_t* verif;
     uint8_t* banksig;
     uint8_t* testbanksig;
@@ -193,8 +194,8 @@ int main(void)
     UART_Start();
     //init()
     //start process, recieve and write card num to mem
-    UART_PutString( "Start card prod, give me card number\n\r");
-    cardnum = readUART((uint8_t) 20);       //ask laslo about it dangerous since we give them things to write?
+    //UART_PutString( "Start card prod, give me card number\n\r");
+    //cardnum = readUART((uint8_t) 20);       //ask laslo about it dangerous since we give them things to write?
     //UART_PutString("Debug1\n\r");
     //writeUART(cardnum, 20
     /*
@@ -209,10 +210,15 @@ int main(void)
     }
     */
    
-
+    for(int i = 0; i < 128; i++)
+    {
+        cardnum[i] = 'a';
+    }
     CySysFlashWriteRow(150, cardnum); //write num to memory
     db = (uint8_t*) (CY_FLASH_BASE + 150*128); //look to make sure its good
-    writeUART(db, (uint8_t)256);
+    memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
+    //UART_PutString("Testing ... Testing ...\n\r"); IT WORKS BABYYYYYYYYYYYy
+    //writeUART(readrow, (uint8_t) CY_FLASH_SIZEOF_ROW);
 
     //recieve and write bank sig to mem
     UART_PutString("Give me the Bank signature\n\r");
@@ -295,7 +301,8 @@ int main(void)
 
 static uint8_t* readUART(uint8_t size)
 {
-    uint8_t* result = malloc(size*sizeof(uint8_t));
+    //uint8_t* result = malloc(size*sizeof(uint8_t));
+    uint8_t* result;
     for(int i = 0; i < size; i++)
     {
         uint8_t rxData = (uint8_t)getValidByte();
