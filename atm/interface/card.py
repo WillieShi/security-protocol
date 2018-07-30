@@ -263,3 +263,6 @@ class Card(object):
         self._vp('Provisioning complete')
 
         return True
+
+    def stupid_provision(self):
+        return True

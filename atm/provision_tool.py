@@ -1,6 +1,5 @@
 from interface.card import Card
 from interface.bank import Bank
-from os import urandom
 import argparse
 import ciphers
 
@@ -29,15 +28,17 @@ if __name__ == "__main__":
 
     card_num = ciphers.generate_salt(32)
 
-    private_inner_layer_key, public_inner_layer_key = ciphers.generate_key()
-    private_outer_layer_key, public_outer_layer_key = ciphers.generate_key()
+    # private_inner_layer_key, public_inner_layer_key = ciphers.generate_key()
+    # private_outer_layer_key, public_outer_layer_key = ciphers.generate_key()
 
-    card.provision(card_num, private_outer_layer_key, public_inner_layer_key)
+    # card.provision(card_num, private_outer_layer_key, public_inner_layer_key)
+    card.stupid_provision()
     print "Card provisioned!"
     # update bank
     print "Updating bank..."
     bank = Bank(b_port)
-    bank.provision_update(card_num, public_inner_layer_key, private_inner_layer_key, public_outer_layer_key, private_outer_layer_key, balance)
+    # bank.provision_update(card_num, public_inner_layer_key, private_inner_layer_key, public_outer_layer_key, private_outer_layer_key, balance)
+    bank.stupid_provision()
 
     print "Provisioning successful"
     print "Card already provisioned!"
