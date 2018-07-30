@@ -87,5 +87,5 @@ class Bank:
 
     def provision_update(self, uuid, pin, balance):
         pkt = struct.pack(">36s8sI", uuid, pin, balance)
-	print "sending " + repr(pkt) + "..."
+        print "sending " + repr(pkt) + "..."
         self.ser.write("p" + pkt)

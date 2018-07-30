@@ -33,7 +33,16 @@ class Bank(object):
         return self.set.read(size)
 
 
+    # Write function for when AES tunnel is not established.
+    def default_write(self, msg):
+        self.set.write(msg)
+
+    # Read function for when AES tunnel is not established.
+    def default_read(self, size):
+        return self.set.read(size)
+
     def start(self):
+        
         while True:
             command = self.atm.read()
             print("command: " + repr(command))
