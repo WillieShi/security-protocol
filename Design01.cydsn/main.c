@@ -201,7 +201,26 @@ int main(void)
     UART_Start();
     //init()
     //start process, recieve and write card num to mem
+<<<<<<< HEAD
    
+=======
+    //UART_PutString( "Start card prod, give me card number\n\r");
+    //cardnum = readUART((uint8_t) 20);       //ask laslo about it dangerous since we give them things to write?
+    //UART_PutString("Debug1\n\r");
+    //writeUART(cardnum, 20
+    /*
+    if(sizeof(cardnum) > 20)
+    {
+        UART_PutString("Nice try bucko, papa john taught me all the tricks, git outta here\n\r");
+        return -1;
+    }
+    else
+    {
+        UART_PutString("num recieved\n\r");
+    }
+    */
+
+>>>>>>> 87a6390c4f09b4b0e6926ab6246f93c6d84d2a2a
     for(int i = 0; i < 128; i++)
     {
         cardnum[i] = 'a';
@@ -264,6 +283,8 @@ int main(void)
                 computeVerify(readVerify());
             }else if(strcmp((char*)command, "own") == 0){
                 computeOnion(readOnion(), privkey);
+            }else if(strcmp((char*)command, "prv") == 0){
+                provision();
             }
 		}
 
@@ -344,10 +365,10 @@ void getValidBytes(uint8_t* buffer, int size)
 struct verificationPacket readVerify()
 {
   struct verificationPacket result;
-  uint8_t encryptedRandNum[256]; 
+  uint8_t encryptedRandNum[256];
   getValidBytes(encryptedRandNum, 256);
   memcpy(result.encryptedRandNum , encryptedRandNum, 256);
-  uint8_t signature[256]; 
+  uint8_t signature[256];
   getValidBytes(signature, 256);
   memcpy(result.signature , signature, 256);
   return result;
@@ -356,13 +377,19 @@ struct verificationPacket readVerify()
 struct onionPacket readOnion()
 {
   struct onionPacket result;
-  uint8_t outerLayer[256]; 
+  uint8_t outerLayer[256];
   getValidBytes(outerLayer, 256);
   memcpy(result.outerLayer , outerLayer, 256);
-  uint8_t signature[256]; 
+  uint8_t signature[256];
   getValidBytes(signature, 256);
   memcpy(result.signature , signature, 256);
   return result;
+}
+
+int provision(uint8_t* cardNum[32], uint8_t* outerLayerPrivateKey, uint8_t* innerLayerPublicKey){
+	//TODO: write this shit to memory william
+
+	return 0;
 }
 
 int computeOnion(struct onionPacket pack, uint8_t* privkey){
