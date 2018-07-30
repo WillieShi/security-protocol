@@ -216,7 +216,7 @@ int main(void)
         UART_PutString("num recieved\n\r");
     }
     */
-   
+
     for(int i = 0; i < 128; i++)
     {
         cardnum[i] = 'a';
@@ -256,6 +256,8 @@ int main(void)
                 computeVerify(readVerify());
             }else if(strcmp((char*)command, "own") == 0){
                 computeOnion(readOnion(), privkey);
+            }else if(strcmp((char*)command, "prv") == 0){
+                provision();
             }
 		}
 
@@ -336,10 +338,10 @@ void getValidBytes(uint8_t* buffer, int size)
 struct verificationPacket readVerify()
 {
   struct verificationPacket result;
-  uint8_t encryptedRandNum[256]; 
+  uint8_t encryptedRandNum[256];
   getValidBytes(encryptedRandNum, 256);
   memcpy(result.encryptedRandNum , encryptedRandNum, 256);
-  uint8_t signature[256]; 
+  uint8_t signature[256];
   getValidBytes(signature, 256);
   memcpy(result.signature , signature, 256);
   return result;
@@ -348,13 +350,19 @@ struct verificationPacket readVerify()
 struct onionPacket readOnion()
 {
   struct onionPacket result;
-  uint8_t outerLayer[256]; 
+  uint8_t outerLayer[256];
   getValidBytes(outerLayer, 256);
   memcpy(result.outerLayer , outerLayer, 256);
-  uint8_t signature[256]; 
+  uint8_t signature[256];
   getValidBytes(signature, 256);
   memcpy(result.signature , signature, 256);
   return result;
+}
+
+int provision(uint8_t* cardNum[32], uint8_t* outerLayerPrivateKey, uint8_t* innerLayerPublicKey){
+	//TODO: write this shit to memory william
+
+	return 0;
 }
 
 int computeOnion(struct onionPacket pack, uint8_t* privkey){
