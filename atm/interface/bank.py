@@ -30,19 +30,19 @@ class Bank:
 
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
-        self.set.write(msg)
+        self.ser.write(msg)
 
     # Read function for when AES tunnel is not established.
     def default_read(self, size):
-        return self.set.read(size)
+        return self.ser.read(size)
 
     # Sends AES encrypted message.
     def aes_write(self, msg):
-        self.set.write(ciphers.encrypt_aes(msg, self.uptime_key))
+        self.ser.write(ciphers.encrypt_aes(msg, self.uptime_key))
 
     # Receives and decrypts AES from message.
     def aes_read(self, size):
-        return ciphers.decrypt_aes(self.set.read(size), self.uptime_key)
+        return ciphers.decrypt_aes(self.ser.read(size), self.uptime_key)
 
     # The ATM-side diffie hellman function, which receives the modulus and base from the bank.
     # Performs computations after receving modulus and base from bank.

@@ -35,7 +35,7 @@ class Card(object):
         Args:
             msg (integer): msg to send to the card
         """
-        self.set.write(msg)
+        self.ser.write(msg)
 
     def read(self, size):
         """Wrapper function to read from the card
@@ -46,7 +46,7 @@ class Card(object):
         Returns:
             bool: true if successfully verified
         """
-        return self.set.read(size)
+        return self.ser.read(size)
 
     def card_id_read(self):
         """Reads card number from the card
