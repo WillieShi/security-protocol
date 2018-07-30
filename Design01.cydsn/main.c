@@ -194,7 +194,7 @@ int main(void)
     //init()
     //start process, recieve and write card num to mem
     UART_PutString( "Start card prod, give me card number\n\r");
-    cardnum = readUART((uint8_t)KEY_SIZE);       //ask laslo about it dangerous since we give them things to write?
+    cardnum = readUART((uint8_t) 20);       //ask laslo about it dangerous since we give them things to write?
     //UART_PutString("Debug1\n\r");
     //writeUART(cardnum, 20
     /*
@@ -208,6 +208,7 @@ int main(void)
         UART_PutString("num recieved\n\r");
     }
     */
+   
 
     CySysFlashWriteRow(150, cardnum); //write num to memory
     db = (uint8_t*) (CY_FLASH_BASE + 150*128); //look to make sure its good
