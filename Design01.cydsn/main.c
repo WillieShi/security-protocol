@@ -180,7 +180,7 @@ int computeOnion(struct onionPacket pack, uint8_t* privkey);
 struct verificationPacket readVerify();
 struct onionPacket readOnion();
 void getValidBytes(uint8_t* buffer, int n);
-int provision()
+int provisionlaz();
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -202,9 +202,7 @@ int main(void)
     UART_Start();
     //init()
     //start process, recieve and write card num to mem
-<<<<<<< HEAD
-   
-=======
+
     //UART_PutString( "Start card prod, give me card number\n\r");
     //cardnum = readUART((uint8_t) 20);       //ask laslo about it dangerous since we give them things to write?
     //UART_PutString("Debug1\n\r");
@@ -220,8 +218,6 @@ int main(void)
         UART_PutString("num recieved\n\r");
     }
     */
-
->>>>>>> 87a6390c4f09b4b0e6926ab6246f93c6d84d2a2a
     for(int i = 0; i < 128; i++)
     {
         cardnum[i] = 'a';
@@ -387,7 +383,7 @@ struct onionPacket readOnion()
   return result;
 }
 
-int provision(){
+int provisionlaz(){
 	uint8_t cardNum[32];
 	getValidBytes(cardNum, 32);
 	uint8_t outerLayerPrivateKey[256];
