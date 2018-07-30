@@ -54,18 +54,18 @@ class Card(object):
         Returns:
             int: card number
         """
-        self.write("cir" + struct.pack(">32s", "card_id_read"))
-        transaction_id, card_id = struct.unpack(">32s32I", self.read(64))
+        self.write("cir")
+        card_id = struct.unpack(">32I", self.read(32))
         return card_id
 
     # decrypts the random num received from bank to verify card
     def read_random_num(self, encrypted_randnum):
-        random_num = struct.unpack(">32I", self.read(64))
+        random_num = struct.unpack(">32I", self.read(32))
         return random_num
 
     # encrypts decrypted random num w/ AES to send to bank
     def card_verify_write(self, random_num, signature):
-        val = "cvw" + struct.pack(">256I256I32s", random_num, signature, "card_verify_write")
+        val = "cvw" + struct.pack(">256I256I", random_num, signature)
         self.write(val)
         # removes AES encryption from the onion to make the RSA decryptable
 
@@ -75,7 +75,7 @@ class Card(object):
 
     # Puts the one-layer onion (still has inner RSA layer) in the AES channel to send to bank.
     def onion_write(self, outer_layer, signature):
-        val = "own" + struct.pack(">512I256I32s", outer_layer, signature, "onion_write")
+        val = "own" + struct.pack(">512I256I", outer_layer, signature)
         self.write(val)
 
     def _vp(self, msg, stream=logging.info):
