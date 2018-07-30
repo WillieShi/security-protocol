@@ -201,21 +201,6 @@ int main(void)
     UART_Start();
     //init()
     //start process, recieve and write card num to mem
-    //UART_PutString( "Start card prod, give me card number\n\r");
-    //cardnum = readUART((uint8_t) 20);       //ask laslo about it dangerous since we give them things to write?
-    //UART_PutString("Debug1\n\r");
-    //writeUART(cardnum, 20
-    /*
-    if(sizeof(cardnum) > 20)
-    {
-        UART_PutString("Nice try bucko, papa john taught me all the tricks, git outta here\n\r");
-        return -1;
-    }
-    else
-    {
-        UART_PutString("num recieved\n\r");
-    }
-    */
    
     for(int i = 0; i < 128; i++)
     {
@@ -232,20 +217,43 @@ int main(void)
     //RSA sign #TODO !MIGHT JUST BE THE PUBLIC KEY COME BACK TO THIS
     banksig = readUART((uint8_t) KEY_SIZE);
     UART_PutString("signature recieved\n\r");
-    EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
-    EEPROM_Read(KEY_SIZE, db, KEY_SIZE); //look to make sure its good
+    CySysFlashWriteRow(151, banksig);
+    CySysFlashWriteRow(152, banksig+128);
+    
+    //debug 
+    /*
+    db = (uint8_t*) (CY_FLASH_BASE + 151*128);
     writeUART(db,(uint8_t) KEY_SIZE);
+    memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
+    writeUART(readrow, (uint8_t) CY_FLASH_SIZEOF_ROW);
+    db = (uint8_t*) (CY_FLASH_BASE + 152*128);
+    writeUART(db,(uint8_t) KEY_SIZE);
+    memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
+    writeUART(readrow, (uint8_t) CY_FLASH_SIZEOF_ROW);
+    */
 
     //Write private key to memory
     //TODO composing RSA keys from components given from python code
     privkey = (uint8_t*)&RSA_SK; //does this work lol
-    EEPROM_Write(KEY_SIZE*2, privkey , KEY_SIZE);
+    // EEPROM_Write(KEY_SIZE*2, privkey , KEY_SIZE);
+    int row = 153;
+    //key size 1636
+    for(int i = 0; i < 13; i++)
+    {
+        CySysFlashWriteRow(row+i, privkey + (i*128));
+        //debug
+        /*
+        db = (uint8_t*) (CY_FLASH_BASE + row+i*128);
+        writeUART(db,(uint8_t) KEY_SIZE);
+        memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
+        writeUART(readrow, (uint8_t) CY_FLASH_SIZEOF_ROW);
+        */
+    }    
+     
     UART_PutString("WRITE SUCCESSFUL\n\r");
-    EEPROM_Read(KEY_SIZE*2, db, KEY_SIZE); //look to make sure its good
-    writeUART(db, (uint8)KEY_SIZE);
-    UART_PutString("Card Christening finished, dump all memory to double check\n\r");
-    EEPROM_Read(0, dump, KEY_SIZE*4);
-    writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
+    
+    UART_PutString("Card Provisioning finished, dump all memory to double check\n\r");
+    //writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
 
 		for(;;){
             char* command[3];
@@ -358,7 +366,8 @@ struct onionPacket readOnion()
 }
 
 int computeOnion(struct onionPacket pack, uint8_t* privkey){
-	EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
+	privkey = (uint8_t*) (CY_FLASH_BASE + 153*128);
+   
 	//should get 256 bytes
 	uint8_t* innerLayer = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) pack.outerLayer, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
 	//UART_PutString("Decryption done ... starting decomp\n\r");
