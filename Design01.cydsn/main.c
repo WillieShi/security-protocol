@@ -173,6 +173,8 @@ void init();
 unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size);
 unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size);
 int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, int sizept);
+int computeVerify(verificationPacket pack);
+int computeOnion(onionPacket pack);
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -209,11 +211,16 @@ int main(void)
         UART_PutString("num recieved\n\r");
     }
     */
+<<<<<<< HEAD
    
     for(int i = 0; i < 128; i++)
     {
         cardnum[i] = 'a';
     }
+=======
+
+
+>>>>>>> ff5c4a8d96b77a128425f5f7cb407735147fd9ab
     CySysFlashWriteRow(150, cardnum); //write num to memory
     db = (uint8_t*) (CY_FLASH_BASE + 150*128); //look to make sure its good
     memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
@@ -240,8 +247,27 @@ int main(void)
     EEPROM_Read(0, dump, KEY_SIZE*4);
     writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
 
+		for(;;){
+			char* command = (char*)getValidBytes(3)
+			switch(command){
+				case "cir":
+					pushMessage(cardnum, 32)
+					break;
+				case "cvw":
+					computeVerify(readVerify());
+					break;
+				case "own":
+					computeOnion(readOnion())
+					break;
+			}
+		}
+
+
+
+
     //MAIN Rsa Protocol
     //Recieve Transaction code
+		/*
     UART_PutString("Give me the verification code\n\r");
     verif = readUART((uint8_t)KEY_SIZE);
     UART_PutString("Give me signature\n\r");
@@ -257,8 +283,10 @@ int main(void)
     UART_PutString("Signature verified...\n\r");
     UART_PutString("Sending be ready\n\r");
     writeUART(verif, sizeof(verif));
+		*/
 
     //recieve data
+		/*
     UART_PutString("Send over onion protected message\n\r");
     everything = readUART((uint8_t)KEY_SIZE*4);
     UART_PutString("Onion recieved ... Starting decrypt\n\r");
@@ -295,9 +323,53 @@ int main(void)
     UART_PutString("Starting to send decrypted salt ...\n\r");
     writeUART(salt,sizeof(salt));
     UART_PutString("Starting to send signature ...\n\r");
+		*/
+}
+
+int computeOnion(onionPacket pack){
+	EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
+	//should get 256 bytes
+	innerLayer = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) pack.outerLayer, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
+	//UART_PutString("Decryption done ... starting decomp\n\r");
+
+	testbanksig = pack.signature;
+	//UART_PutString("sig extracted\n\r");
+
+	//Verify signature
+	pt = malloc(KEY_SIZE*3*sizeof(uint8_t));
+	memcpy(pt, innerLayer, KEY_SIZE*3);
+	if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksig, pt , KEY_SIZE*3) == -1)
+	{
+			//UART_PutString("Signature wrong, terminating program\n\r");
+			return -1;
+	}
+	//UART_PutString("Signature verified...\n\r");
+
+
+	//UART_PutString("Starting to send data ...\n\r");
+	pushMessage(data, sizeof(data));
+	//UART_PutString("Starting to send signature ...\n\r");
 }
 
 
+int processVerify(verificationPacket pack){
+	//UART_PutString("Give me the verification code\n\r");
+	verif = pack.encryptedRandNum;
+	//UART_PutString("Give me signature\n\r");
+	testbanksigver = pack.signature;
+	//UART_PutString("Decrypting and verifying...\n\r");
+	verif = RSA_decrypt256(&br_rsa_i31_private, (char*) verif,(uint8_t) KEY_SIZE );
+	//NEED TO DEBUG RSA VER
+	if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksigver,verif, KEY_SIZE) == -1)
+	{
+			//UART_PutString("Signature wrong, terminating program\n\r");
+			return -1;
+	}
+	//UART_PutString("Signature verified...\n\r");
+	//UART_PutString("Sending be ready\n\r");
+	pushMessage(verif, sizeof(verif));
+	return 0;
+}
 
 static uint8_t* readUART(uint8_t size)
 {
