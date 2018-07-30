@@ -245,7 +245,7 @@ class Card(object):
 
         return self._get_uuid()
 
-    def provision(self, uuid, pin):
+    def provision(self, card_num, private_outer_layer_key, public_inner_layer_key):
         """Attempts to provision a new ATM card
 
         Args:
@@ -257,21 +257,8 @@ class Card(object):
         """
         self._sync(True)
 
-        msg = self._pull_msg()
-        if msg != 'P':
-            self._vp('Card alredy provisioned!', logging.error)
-            return False
-        self._vp('Card sent provisioning message')
-
-        self._push_msg('%s\00' % pin)
-        while self._pull_msg() != 'K':
-            self._vp('Card hasn\'t accepted PIN', logging.error)
-        self._vp('Card accepted PIN')
-
-        self._push_msg('%s\00' % uuid)
-        while self._pull_msg() != 'K':
-            self._vp('Card hasn\'t accepted uuid', logging.error)
-        self._vp('Card accepted uuid')
+        packet = "prv" + struct.pack(">32I256I256I", card_num, private_outer_layer_key, public_inner_layer_key)
+        self.ser.write(packet)
 
         self._vp('Provisioning complete')
 

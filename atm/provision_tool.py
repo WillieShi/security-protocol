@@ -2,6 +2,7 @@ from interface.card import Card
 from interface.bank import Bank
 from os import urandom
 import argparse
+import ciphers
 
 
 def parse_args():
@@ -22,18 +23,21 @@ def parse_args():
 
 if __name__ == "__main__":
     balance, c_port, b_port, c_baud, b_baud, pin = parse_args()
-
     # provision card
     print "Provisioning card..."
     card = Card(c_port, baudrate=c_baud, verbose=True)
-    uuid = urandom(18).encode("hex")
-    if card.provision(uuid, pin):
-        print "Card provisioned!"
 
-        # update bank
-        print "Updating bank..."
-        bank = Bank(b_port)
-        bank.provision_update(uuid, pin, balance)
-        print "Provisioning successful"
-    else:
-        print "Card already provisioned!"
+    card_num = ciphers.generate_salt(32)
+
+    private_inner_layer_key, public_inner_layer_key = ciphers.generate_key()
+    private_outer_layer_key, public_outer_layer_key = ciphers.generate_key()
+
+    card.provision(card_num, private_outer_layer_key, public_inner_layer_key)
+    print "Card provisioned!"
+    # update bank
+    print "Updating bank..."
+    bank = Bank(b_port)
+    bank.provision_update(card_num, public_inner_layer_key, private_inner_layer_key, public_outer_layer_key, private_outer_layer_key, balance)
+
+    print "Provisioning successful"
+    print "Card already provisioned!"

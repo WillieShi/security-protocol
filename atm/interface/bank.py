@@ -56,7 +56,7 @@ class Bank:
         # Sends ATM's half of diffie hellman to bank.
         self.default_write(struct.pack("32s256I", "dif_side_atm", side_atm))
         # uptime_key_atm is the final ATM-side agreed value for diffie hellman
-        uptime_key_atm = (side_bank**secret_number_a) % mod
+        self.uptime_key_atm = (side_bank**secret_number_a) % mod
 
     # Encrypts the verification number to test to see if the card is legitimate.
     def private_key_verify(self, card_id):
@@ -175,6 +175,7 @@ class Bank:
         self._vp('withdraw: Withdrawal accepted')
         return True
 
-    def provision_update(self, pin, balance):
-        pkt = struct.pack(">36s8sI", uuid, pin, balance)
+    def provision_update(self, card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance):
+        pkt = struct.pack(">32I256I256I256I256I32I", card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance)
+        # total length is 1088 bytes
         self.ser.write("p" + pkt)
