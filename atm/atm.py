@@ -41,7 +41,6 @@ class ATM(cmd.Cmd, object):
         self.bills = cfg["bills"]
         self.update()
 
-
     def _vp(self, msg, log=logging.debug):
         print "here"
         if self.verbose:
