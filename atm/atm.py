@@ -2,7 +2,6 @@ import logging
 import sys
 import cmd
 from interface import card, bank
-# from interface.card import NotProvisioned, AlreadyProvisioned
 import os
 import json
 import argparse
