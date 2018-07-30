@@ -173,8 +173,13 @@ void init();
 unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size);
 unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size);
 int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, int sizept);
-int computeVerify(verificationPacket pack);
-int computeOnion(onionPacket pack);
+struct verificationPacket{uint8_t encryptedRandNum[256];uint8_t signature[256];};
+struct onionPacket{uint8_t outerLayer[512];uint8_t signature[256];};
+int computeVerify(struct verificationPacket pack);
+int computeOnion(struct onionPacket pack, uint8_t* privkey);
+struct verificationPacket readVerify();
+struct onionPacket readOnion();
+void getValidBytes(uint8_t* buffer, int n);
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -211,16 +216,11 @@ int main(void)
         UART_PutString("num recieved\n\r");
     }
     */
-<<<<<<< HEAD
    
     for(int i = 0; i < 128; i++)
     {
         cardnum[i] = 'a';
     }
-=======
-
-
->>>>>>> ff5c4a8d96b77a128425f5f7cb407735147fd9ab
     CySysFlashWriteRow(150, cardnum); //write num to memory
     db = (uint8_t*) (CY_FLASH_BASE + 150*128); //look to make sure its good
     memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
@@ -248,18 +248,15 @@ int main(void)
     writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
 
 		for(;;){
-			char* command = (char*)getValidBytes(3)
-			switch(command){
-				case "cir":
-					pushMessage(cardnum, 32)
-					break;
-				case "cvw":
-					computeVerify(readVerify());
-					break;
-				case "own":
-					computeOnion(readOnion())
-					break;
-			}
+            char* command[3];
+			getValidBytes((uint8_t*) command, 3);
+            if(strcmp((char*)command, "cir") == 0){
+                pushMessage(cardnum, 32);
+            }else if(strcmp((char*)command, "cvw") == 0){
+                computeVerify(readVerify());
+            }else if(strcmp((char*)command, "own") == 0){
+                computeOnion(readOnion(), privkey);
+            }
 		}
 
 
@@ -326,17 +323,51 @@ int main(void)
 		*/
 }
 
-int computeOnion(onionPacket pack){
+void getValidBytes(uint8_t* buffer, int size)
+{
+    for(int i = 0; i < size; i++){
+      while(UART_GetRxBufferSize() < 1); // wait for byte
+      buffer[i] = UART_GetByte();
+    }
+}
+
+
+
+struct verificationPacket readVerify()
+{
+  struct verificationPacket result;
+  uint8_t encryptedRandNum[256]; 
+  getValidBytes(encryptedRandNum, 256);
+  memcpy(result.encryptedRandNum , encryptedRandNum, 256);
+  uint8_t signature[256]; 
+  getValidBytes(signature, 256);
+  memcpy(result.signature , signature, 256);
+  return result;
+}
+
+struct onionPacket readOnion()
+{
+  struct onionPacket result;
+  uint8_t outerLayer[256]; 
+  getValidBytes(outerLayer, 256);
+  memcpy(result.outerLayer , outerLayer, 256);
+  uint8_t signature[256]; 
+  getValidBytes(signature, 256);
+  memcpy(result.signature , signature, 256);
+  return result;
+}
+
+int computeOnion(struct onionPacket pack, uint8_t* privkey){
 	EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
 	//should get 256 bytes
-	innerLayer = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) pack.outerLayer, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
+	uint8_t* innerLayer = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) pack.outerLayer, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
 	//UART_PutString("Decryption done ... starting decomp\n\r");
 
-	testbanksig = pack.signature;
+	uint8_t* testbanksig = pack.signature;
 	//UART_PutString("sig extracted\n\r");
 
 	//Verify signature
-	pt = malloc(KEY_SIZE*3*sizeof(uint8_t));
+	uint8_t* pt = malloc(KEY_SIZE*3*sizeof(uint8_t));
 	memcpy(pt, innerLayer, KEY_SIZE*3);
 	if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksig, pt , KEY_SIZE*3) == -1)
 	{
@@ -347,16 +378,17 @@ int computeOnion(onionPacket pack){
 
 
 	//UART_PutString("Starting to send data ...\n\r");
-	pushMessage(data, sizeof(data));
+	pushMessage(innerLayer, sizeof(innerLayer));
 	//UART_PutString("Starting to send signature ...\n\r");
+    return 1;
 }
 
 
-int processVerify(verificationPacket pack){
+int computeVerify(struct verificationPacket pack){
 	//UART_PutString("Give me the verification code\n\r");
-	verif = pack.encryptedRandNum;
+	uint8_t* verif = pack.encryptedRandNum;
 	//UART_PutString("Give me signature\n\r");
-	testbanksigver = pack.signature;
+	uint8_t* testbanksigver = pack.signature;
 	//UART_PutString("Decrypting and verifying...\n\r");
 	verif = RSA_decrypt256(&br_rsa_i31_private, (char*) verif,(uint8_t) KEY_SIZE );
 	//NEED TO DEBUG RSA VER
