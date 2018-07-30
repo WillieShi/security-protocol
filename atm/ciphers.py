@@ -2,11 +2,11 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.PublicKey import RSA
-from Crypto import Random
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Cipher import PKCS1_OAEP
 import hashlib
 from Crypto.Hash import SHA1
+from base64 import b64decode
 
 
 # here we define AES functions
@@ -77,6 +77,7 @@ def export_public_key(key):
     # key is the public key object
     return key.publickey().exportKey(format='DER')
 
+
 # RSA decryption
 # rsa_pub_cipher is the private key with padding
 # decrypted_rsa is the decrypted ciphertext
@@ -104,6 +105,7 @@ def sign_data(key, data):
     digest.update(b64decode(data))
     sign = signer.sign(digest)
     return sign
+
 
 # any test code goes here
 """privatekey, publickey = generate_key()
