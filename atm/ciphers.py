@@ -53,11 +53,14 @@ def generate_key():
     public = private.publickey()
     return private, public
 
+
 def export_public_key(key):
     return key.publickey().exportKey(format='DER')
 # RSA encryption
 # rsa_pub_cipher is the public key with padding
 # encrypted_rsa is the ciphertext
+
+
 def encrypt_rsa(message, pub_key):
     # applies RSA Padding
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
