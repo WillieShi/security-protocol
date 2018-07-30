@@ -180,6 +180,7 @@ int computeOnion(struct onionPacket pack, uint8_t* privkey);
 struct verificationPacket readVerify();
 struct onionPacket readOnion();
 void getValidBytes(uint8_t* buffer, int n);
+int provision()
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -359,7 +360,14 @@ struct onionPacket readOnion()
   return result;
 }
 
-int provision(uint8_t* cardNum[32], uint8_t* outerLayerPrivateKey, uint8_t* innerLayerPublicKey){
+int provision(){
+	uint8_t cardNum[32];
+	getValidBytes(cardNum, 32);
+	uint8_t outerLayerPrivateKey[256];
+	getValidBytes(cardNum, 256);
+	uint8_t innerLayerPublicKey[256];
+	getValidBytes(innerLayerPublicKey, 256);
+
 	//TODO: write this shit to memory william
 
 	return 0;
