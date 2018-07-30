@@ -179,3 +179,6 @@ class Bank:
         pkt = struct.pack(">32I256I256I256I256I32I", card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance)
         # total length is 1088 bytes
         self.ser.write("p" + pkt)
+
+    def stupid_provision_update(self):
+        self.ser.write("f")
