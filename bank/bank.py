@@ -42,7 +42,7 @@ class Bank(object):
         return self.set.read(size)
 
     def start(self):
-        
+        test_func()
         while True:
             command = self.atm.read()
             print("command: " + repr(command))
@@ -58,6 +58,9 @@ class Bank(object):
                 self.check_balance(atm_id, card_id)
             elif command != '':
                 self.atm.write(self.ERROR)
+    def test_func(self):
+        test = "Hello, World"
+        self.default_write(struct.pack(">32s", test))
 
     def withdraw(self, atm_id, card_id, amount):
         try:

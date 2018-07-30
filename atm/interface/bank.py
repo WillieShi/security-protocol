@@ -28,7 +28,7 @@ class Bank:
 
 
     def gabis_silly_test_function(self):
-        
+        testing = self.default_read(struct.unpack(">32s", ))
 
 
 
