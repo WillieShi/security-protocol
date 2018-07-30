@@ -39,6 +39,12 @@ class ATM(cmd.Cmd, object):
         self.bills = cfg["bills"]
         self.update()
 
+        while True:
+            if(bank.ser.in_waiting()):
+                print(bank.ser.read(bank.ser.in_waiting()))
+
+
+
     def _vp(self, msg, log=logging.debug):
         if self.verbose:
             log(msg)
@@ -68,7 +74,7 @@ class ATM(cmd.Cmd, object):
             str: Balance on success
             bool: False on failure
         """
-       
+
         try:
             self._vp('check_balance: Requesting card_id using inputted pin')
             card_id = self.card.check_balance(pin)

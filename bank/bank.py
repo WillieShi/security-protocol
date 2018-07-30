@@ -21,28 +21,20 @@ class Bank(object):
         super(Bank, self).__init__()
         self.db = db.DB(db_path=db_path)
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
-        testing = "Hello, World"
-        self.default_write(struct.pack("32s", testing))
+
+        #while True:
+        self.test_func()
 
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
-        self.set.write(msg)
+        self.atm.write(msg)
 
     # Read function for when AES tunnel is not established.
     def default_read(self, size):
-        return self.set.read(size)
-
-
-    # Write function for when AES tunnel is not established.
-    def default_write(self, msg):
-        self.set.write(msg)
-
-    # Read function for when AES tunnel is not established.
-    def default_read(self, size):
-        return self.set.read(size)
+        return self.atm.read(size)
 
     def start(self):
-        test_func()
+        #test_func()
         while True:
             command = self.atm.read()
             print("command: " + repr(command))
@@ -58,7 +50,9 @@ class Bank(object):
                 self.check_balance(atm_id, card_id)
             elif command != '':
                 self.atm.write(self.ERROR)
+                
     def test_func(self):
+        print("worked")
         test = "Hello, World"
         self.default_write(struct.pack(">32s", test))
 
