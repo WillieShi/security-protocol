@@ -39,7 +39,29 @@ uint8_t* getValidBytes(int size)
     return retval;
 }
 
+struct verificationPacket{
+  uint8_t[256] encryptedRandNum;
+  uint8_t[256] signature;
+}
 
+struct onionPacket{
+  uint8_t[512] outerLayer;
+  uint8_t[256] signature;
+}
+
+verificationPacket readVerify(){
+  verificationPacket result;
+  result.encryptedRandNum = getValidBytes(256);
+  result.signature = getValidBytes(256);
+  return result
+}
+
+onionPacket readOnion(){
+  onionPacket result;
+  result.outerLayer = getValidBytes(512);
+  result.signature = getValidBytes(256);
+  return result
+}
 
 int pushMessage(const uint8 data[], uint8 size)
 {
