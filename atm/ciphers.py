@@ -10,8 +10,8 @@ import hashlib
 # here we define AES functions
 
 
-def generate_salt():
-    return get_random_bytes(80)
+def generate_salt(length):
+    return get_random_bytes(length)
 
 
 def pad(unpadded_message, pad_length):
