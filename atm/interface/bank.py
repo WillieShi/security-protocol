@@ -26,6 +26,12 @@ class Bank:
         if self.verbose:
             stream("card: " + msg)
 
+
+    def gabis_silly_test_function(self):
+        
+
+
+
     def check_balance(self, atm_id, card_id):
         """Requests the balance of the account associated with the card_id
 

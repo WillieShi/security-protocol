@@ -21,6 +21,17 @@ class Bank(object):
         super(Bank, self).__init__()
         self.db = db.DB(db_path=db_path)
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
+        testing = "Hello, World"
+        self.default_write(struct.pack("32s", testing))
+
+    # Write function for when AES tunnel is not established.
+    def default_write(self, msg):
+        self.set.write(msg)
+
+    # Read function for when AES tunnel is not established.
+    def default_read(self, size):
+        return self.set.read(size)
+
 
     def start(self):
         while True:
