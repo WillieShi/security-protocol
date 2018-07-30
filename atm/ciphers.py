@@ -75,8 +75,6 @@ def decrypt_rsa(encrypted_rsa, priv_key):
     rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
     decrypted_rsa = rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
-    decrypted_rsa = priv_key.decrypt(encrypted_rsa).decode("utf-8")
-    return decrypted_rsa
 
 
 # Applies a hash to message input
