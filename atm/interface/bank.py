@@ -30,19 +30,19 @@ class Bank:
 
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
-        self.set.write(msg)
+        self.ser.write(msg)
 
     # Read function for when AES tunnel is not established.
     def default_read(self, size):
-        return self.set.read(size)
+        return self.ser.read(size)
 
     # Sends AES encrypted message.
     def aes_write(self, msg):
-        self.set.write(ciphers.encrypt_aes(msg, self.uptime_key))
+        self.ser.write(ciphers.encrypt_aes(msg, self.uptime_key))
 
     # Receives and decrypts AES from message.
     def aes_read(self, size):
-        return ciphers.decrypt_aes(self.set.read(size), self.uptime_key)
+        return ciphers.decrypt_aes(self.ser.read(size), self.uptime_key)
 
     # The ATM-side diffie hellman function, which receives the modulus and base from the bank.
     # Performs computations after receving modulus and base from bank.
@@ -56,7 +56,7 @@ class Bank:
         # Sends ATM's half of diffie hellman to bank.
         self.default_write(struct.pack("32s256I", "dif_side_atm", side_atm))
         # uptime_key_atm is the final ATM-side agreed value for diffie hellman
-        uptime_key_atm = (side_bank**secret_number_a) % mod
+        self.uptime_key_atm = (side_bank**secret_number_a) % mod
 
     # Encrypts the verification number to test to see if the card is legitimate.
     def private_key_verify(self, card_id):
@@ -175,6 +175,10 @@ class Bank:
         self._vp('withdraw: Withdrawal accepted')
         return True
 
-    def provision_update(self, pin, balance):
-        pkt = struct.pack(">36s8sI", uuid, pin, balance)
+    def provision_update(self, card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance):
+        pkt = struct.pack(">32I256I256I256I256I32I", card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance)
+        # total length is 1088 bytes
         self.ser.write("p" + pkt)
+
+    def stupid_provision_update(self):
+        self.ser.write("f")

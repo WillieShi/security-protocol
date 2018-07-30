@@ -16,6 +16,7 @@ def generate_salt(length):
     # length is the length of the salt you want
     return get_random_bytes(length)
 
+
 def pad(unpadded_message, pad_length):
     # unpadded_message is the message you want sent
     # pad_length is the length of the final message
@@ -70,6 +71,7 @@ def encrypt_rsa(message, pub_key):
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
     encrypted_rsa = rsa_pub_cipher.encrypt(message)
     return encrypted_rsa
+
 
 def export_public_key(key):
     # key is the public key object

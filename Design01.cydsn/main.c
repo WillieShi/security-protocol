@@ -21,7 +21,7 @@
 
 //static uint8_t privkey[] = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789123456";
 
-const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0u};
+//const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0u};
 
 #define SIGNATURE_SIZE 256
 #define KEY_SIZE 256
@@ -173,15 +173,22 @@ void init();
 unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size);
 unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size);
 int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, int sizept);
-int computeVerify(verificationPacket pack);
-int computeOnion(onionPacket pack);
+struct verificationPacket{uint8_t encryptedRandNum[256];uint8_t signature[256];};
+struct onionPacket{uint8_t outerLayer[512];uint8_t signature[256];};
+int computeVerify(struct verificationPacket pack);
+int computeOnion(struct onionPacket pack, uint8_t* privkey);
+struct verificationPacket readVerify();
+struct onionPacket readOnion();
+void getValidBytes(uint8_t* buffer, int n);
+int provisionlaz();
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
 
     uint8_t* db;
     uint8_t dump[KEY_SIZE*4];
-    uint8_t* cardnum;
+    uint8_t readrow[CY_FLASH_SIZEOF_ROW];
+    uint8_t cardnum[CY_FLASH_SIZEOF_ROW];
     uint8_t* verif;
     uint8_t* banksig;
     uint8_t* testbanksig;
@@ -195,8 +202,9 @@ int main(void)
     UART_Start();
     //init()
     //start process, recieve and write card num to mem
-    UART_PutString( "Start card prod, give me card number\n\r");
-    cardnum = readUART((uint8_t) 20);       //ask laslo about it dangerous since we give them things to write?
+
+    //UART_PutString( "Start card prod, give me card number\n\r");
+    //cardnum = readUART((uint8_t) 20);       //ask laslo about it dangerous since we give them things to write?
     //UART_PutString("Debug1\n\r");
     //writeUART(cardnum, 20
     /*
@@ -210,45 +218,71 @@ int main(void)
         UART_PutString("num recieved\n\r");
     }
     */
-
-
+    for(int i = 0; i < 128; i++)
+    {
+        cardnum[i] = 'a';
+    }
     CySysFlashWriteRow(150, cardnum); //write num to memory
     db = (uint8_t*) (CY_FLASH_BASE + 150*128); //look to make sure its good
-    writeUART(db, (uint8_t)256);
+    memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
+    //UART_PutString("Testing ... Testing ...\n\r"); IT WORKS BABYYYYYYYYYYYy
+    //writeUART(readrow, (uint8_t) CY_FLASH_SIZEOF_ROW);
 
     //recieve and write bank sig to mem
     UART_PutString("Give me the Bank signature\n\r");
     //RSA sign #TODO !MIGHT JUST BE THE PUBLIC KEY COME BACK TO THIS
     banksig = readUART((uint8_t) KEY_SIZE);
     UART_PutString("signature recieved\n\r");
-    EEPROM_Write(KEY_SIZE, banksig, KEY_SIZE); //write num to memory
-    EEPROM_Read(KEY_SIZE, db, KEY_SIZE); //look to make sure its good
+    CySysFlashWriteRow(151, banksig);
+    CySysFlashWriteRow(152, banksig+128);
+    
+    //debug 
+    /*
+    db = (uint8_t*) (CY_FLASH_BASE + 151*128);
     writeUART(db,(uint8_t) KEY_SIZE);
+    memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
+    writeUART(readrow, (uint8_t) CY_FLASH_SIZEOF_ROW);
+    db = (uint8_t*) (CY_FLASH_BASE + 152*128);
+    writeUART(db,(uint8_t) KEY_SIZE);
+    memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
+    writeUART(readrow, (uint8_t) CY_FLASH_SIZEOF_ROW);
+    */
 
     //Write private key to memory
     //TODO composing RSA keys from components given from python code
     privkey = (uint8_t*)&RSA_SK; //does this work lol
-    EEPROM_Write(KEY_SIZE*2, privkey , KEY_SIZE);
+    // EEPROM_Write(KEY_SIZE*2, privkey , KEY_SIZE);
+    int row = 153;
+    //key size 1636
+    for(int i = 0; i < 13; i++)
+    {
+        CySysFlashWriteRow(row+i, privkey + (i*128));
+        //debug
+        /*
+        db = (uint8_t*) (CY_FLASH_BASE + row+i*128);
+        writeUART(db,(uint8_t) KEY_SIZE);
+        memcpy(readrow, db, CY_FLASH_SIZEOF_ROW);
+        writeUART(readrow, (uint8_t) CY_FLASH_SIZEOF_ROW);
+        */
+    }    
+     
     UART_PutString("WRITE SUCCESSFUL\n\r");
-    EEPROM_Read(KEY_SIZE*2, db, KEY_SIZE); //look to make sure its good
-    writeUART(db, (uint8)KEY_SIZE);
-    UART_PutString("Card Christening finished, dump all memory to double check\n\r");
-    EEPROM_Read(0, dump, KEY_SIZE*4);
-    writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
+    
+    UART_PutString("Card Provisioning finished, dump all memory to double check\n\r");
+    //writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
 
 		for(;;){
-			char* command = (char*)getValidBytes(3)
-			switch(command){
-				case "cir":
-					pushMessage(cardnum, 32)
-					break;
-				case "cvw":
-					computeVerify(readVerify());
-					break;
-				case "own":
-					computeOnion(readOnion())
-					break;
-			}
+            char* command[3];
+			getValidBytes((uint8_t*) command, 3);
+            if(strcmp((char*)command, "cir") == 0){
+                pushMessage(cardnum, 32);
+            }else if(strcmp((char*)command, "cvw") == 0){
+                computeVerify(readVerify());
+            }else if(strcmp((char*)command, "own") == 0){
+                computeOnion(readOnion(), privkey);
+            }else if(strcmp((char*)command, "prv") == 0){
+                provision();
+            }
 		}
 
 
@@ -315,17 +349,65 @@ int main(void)
 		*/
 }
 
-int computeOnion(onionPacket pack){
-	EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
+void getValidBytes(uint8_t* buffer, int size)
+{
+    for(int i = 0; i < size; i++){
+      while(UART_GetRxBufferSize() < 1); // wait for byte
+      buffer[i] = UART_GetByte();
+    }
+}
+
+
+
+struct verificationPacket readVerify()
+{
+  struct verificationPacket result;
+  uint8_t encryptedRandNum[256];
+  getValidBytes(encryptedRandNum, 256);
+  memcpy(result.encryptedRandNum , encryptedRandNum, 256);
+  uint8_t signature[256];
+  getValidBytes(signature, 256);
+  memcpy(result.signature , signature, 256);
+  return result;
+}
+
+struct onionPacket readOnion()
+{
+  struct onionPacket result;
+  uint8_t outerLayer[256];
+  getValidBytes(outerLayer, 256);
+  memcpy(result.outerLayer , outerLayer, 256);
+  uint8_t signature[256];
+  getValidBytes(signature, 256);
+  memcpy(result.signature , signature, 256);
+  return result;
+}
+
+int provisionlaz(){
+	uint8_t cardNum[32];
+	getValidBytes(cardNum, 32);
+	uint8_t outerLayerPrivateKey[256];
+	getValidBytes(cardNum, 256);
+	uint8_t innerLayerPublicKey[256];
+	getValidBytes(innerLayerPublicKey, 256);
+
+	//TODO: write this shit to memory william
+
+	return 0;
+}
+
+int computeOnion(struct onionPacket pack, uint8_t* privkey){
+	privkey = (uint8_t*) (CY_FLASH_BASE + 153*128);
+   
 	//should get 256 bytes
-	innerLayer = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) pack.outerLayer, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
+	uint8_t* innerLayer = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) pack.outerLayer, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
 	//UART_PutString("Decryption done ... starting decomp\n\r");
 
-	testbanksig = pack.signature;
+	uint8_t* testbanksig = pack.signature;
 	//UART_PutString("sig extracted\n\r");
 
 	//Verify signature
-	pt = malloc(KEY_SIZE*3*sizeof(uint8_t));
+	uint8_t* pt = malloc(KEY_SIZE*3*sizeof(uint8_t));
 	memcpy(pt, innerLayer, KEY_SIZE*3);
 	if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksig, pt , KEY_SIZE*3) == -1)
 	{
@@ -336,16 +418,17 @@ int computeOnion(onionPacket pack){
 
 
 	//UART_PutString("Starting to send data ...\n\r");
-	pushMessage(data, sizeof(data));
+	pushMessage(innerLayer, sizeof(innerLayer));
 	//UART_PutString("Starting to send signature ...\n\r");
+    return 1;
 }
 
 
-int processVerify(verificationPacket pack){
+int computeVerify(struct verificationPacket pack){
 	//UART_PutString("Give me the verification code\n\r");
-	verif = pack.encryptedRandNum;
+	uint8_t* verif = pack.encryptedRandNum;
 	//UART_PutString("Give me signature\n\r");
-	testbanksigver = pack.signature;
+	uint8_t* testbanksigver = pack.signature;
 	//UART_PutString("Decrypting and verifying...\n\r");
 	verif = RSA_decrypt256(&br_rsa_i31_private, (char*) verif,(uint8_t) KEY_SIZE );
 	//NEED TO DEBUG RSA VER
@@ -362,7 +445,8 @@ int processVerify(verificationPacket pack){
 
 static uint8_t* readUART(uint8_t size)
 {
-    uint8_t* result = malloc(size*sizeof(uint8_t));
+    //uint8_t* result = malloc(size*sizeof(uint8_t));
+    uint8_t* result;
     for(int i = 0; i < size; i++)
     {
         uint8_t rxData = (uint8_t)getValidByte();

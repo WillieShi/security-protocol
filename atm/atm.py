@@ -41,7 +41,6 @@ class ATM(cmd.Cmd, object):
         self.bills = cfg["bills"]
         self.update()
 
-
     def _vp(self, msg, log=logging.debug):
         print "here"
         if self.verbose:
@@ -229,5 +228,5 @@ if __name__ == "__main__":
     card = card.Card(c_port, verbose=verbose)
     atm = ATM(bank, card, config, billfile, verbose=verbose)
     # Generates the new AES key when it power cycles.
-    self.diffie_atm()
+    bank.diffie_atm()
     atm.cmdloop()

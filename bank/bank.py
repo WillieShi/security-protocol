@@ -40,11 +40,11 @@ class Bank(object):
 
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
-        self.set.write(msg)
+        self.atm.write(msg)
 
     # Read function for when AES tunnel is not established.
     def default_read(self, size):
-        return self.set.read(size)
+        return self.atm.read(size)
 
     # Encrypts a message in AES using the current AES key.
     def aes_write(self, message):
@@ -137,7 +137,7 @@ class Bank(object):
 
     # Generates a random number and encrypts it with RSA encryption that a valid card would have the private key to.
     def private_key_verification_write(self, card_id):
-        rand_num = ciphers.random_with_N_bytes(32)
+        rand_num = ciphers.generate_salt(32)
         self.aes_write(struct.pack(">32s256I256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id)), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id))))
         return rand_num
 
