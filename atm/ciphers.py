@@ -104,9 +104,9 @@ def sign_data(key, data):
     return sign
 
 # any test code goes here
-privatekey, publickey = generate_key()
+"""privatekey, publickey = generate_key()
 exported_priv = (privatekey.exportKey())
 exported_priv = exported_priv.decode("utf-8")
 exported_priv = exported_priv.replace("\n","")
 exported_priv = exported_priv.b64decode()
-print(exported_priv)
+print(exported_priv)"""
