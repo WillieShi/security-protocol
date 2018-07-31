@@ -2,9 +2,10 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
 from Crypto.Cipher import PKCS1_OAEP
-from base64 import b64encode, b64decode
 import hashlib
+from Crypto.Hash import SHA1
 
 
 # here we define AES functions
@@ -13,6 +14,7 @@ import hashlib
 def generate_salt(length):
     # length is the length of the salt you want
     return get_random_bytes(length)
+
 
 def pad(unpadded_message, pad_length):
     # unpadded_message is the message you want sent
@@ -69,9 +71,12 @@ def encrypt_rsa(message, pub_key):
     encrypted_rsa = rsa_pub_cipher.encrypt(message)
     return encrypted_rsa
 
+
 def export_public_key(key):
     # key is the public key object
     return key.publickey().exportKey(format='DER')
+
+
 # RSA decryption
 # rsa_pub_cipher is the private key with padding
 # decrypted_rsa is the decrypted ciphertext
@@ -93,12 +98,12 @@ def hash_message(message):
 
 # Makes new RSA signature
 def sign_data(key, data):
-    signer = PKCS1_OAEP.new(key)
-    digest = hashlib.sha1()
+    data = data.encode("utf-8")
+    signer = PKCS1_v1_5.new(key)
+    digest = SHA1.new()
     digest.update(b64decode(data))
     sign = signer.sign(digest)
-    return b64encode(sign)
-
+    return sign
 # any test code goes here
 private, public = generate_key()
 our_data = sign_data(private, "yo help plz")
