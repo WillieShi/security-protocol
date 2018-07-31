@@ -14,7 +14,7 @@ import db
 import logging
 from logging import info as log
 import sys
-from serial import Serial
+from serial import serial
 import argparse
 import struct
 from Crypto.Util import number
