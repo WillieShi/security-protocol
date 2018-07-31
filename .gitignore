@@ -137,6 +137,7 @@ dkms.conf
 *.svd
 .cache
 CARD.cydsn
+Design01.cysdn/src
 
 
 # eCTF Files #
