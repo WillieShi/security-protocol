@@ -67,8 +67,8 @@ class Bank(object):
 
     # Generates the modulus and base for Diffie Hellman using a prime number
     def diffie_hellman(self):
-        modulus = self.generate_prime_number(617)
-        base = self.generate_prime_number(617)
+        modulus = self.generate_prime_number(2)
+        base = self.generate_prime_number(2)
         return (modulus, base)
 
     # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
