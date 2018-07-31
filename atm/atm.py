@@ -41,7 +41,7 @@ class ATM(cmd.Cmd, object):
         self.update()
 
     def _vp(self, msg, log=logging.debug):
-        print "here"
+        print("here")
         if self.verbose:
             log(msg)
 
@@ -93,7 +93,7 @@ class ATM(cmd.Cmd, object):
         """
 
         if self.verify(self.get_pin()):
-            print "Here"
+            print("Here")
             try:
                 self._vp('check_balance: Requesting card_id using inputted pin')
 
@@ -152,7 +152,7 @@ class ATM(cmd.Cmd, object):
                         with open(self.billfile, "w") as f:
                             self._vp('withdraw: Dispensing bills...')
                             for i in range(self.dispensed, self.dispensed + amount):
-                                print self.bills[i]
+                                print(self.bills[i])
                                 f.write(self.bills[i] + "\n")
                                 self.bills[i] = "-DISPENSED BILL-"
                                 self.dispensed += 1
@@ -174,7 +174,7 @@ class ATM(cmd.Cmd, object):
         while len(pin) != 8:
             pin = raw_input(prompt)
             if not pin.isdigit():
-                print "Please only use digits"
+                print("Please only use digits")
                 continue
         return pin
 
@@ -182,7 +182,7 @@ class ATM(cmd.Cmd, object):
         """Check Balance"""
         pin = self.get_pin()
         if not self.check_balance(pin):
-            print "Balance lookup failed!"
+            print("Balance lookup failed!")
 
     def do_2(self, args):
         """Withdraw"""
@@ -193,18 +193,18 @@ class ATM(cmd.Cmd, object):
             amount = raw_input("Please enter valid amount to withdraw: ")
 
         if self.withdraw(pin, int(amount)):
-            print "Withdraw success!"
+            print("Withdraw success!")
         else:
-            print "Withdraw failed!"
+            print("Withdraw failed!")
 
     def do_3(self, args):
         """Change PIN"""
         old_pin = self.get_pin()
         new_pin = self.get_pin("Please insert new 8-digit PIN: ")
         if self.change_pin(old_pin, new_pin):
-            print "PIN change success!"
+            print("PIN change success!")
         else:
-            print "PIN change failed!"
+            print("PIN change failed!")
 
 
 def parse_args():

@@ -5,7 +5,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Cipher import PKCS1_OAEP
 import hashlib
-from Crypto.Hash import SHA1
+from Crypto.Hash import SHA
+from base64 import b64decode
 
 
 # here we define AES functions
@@ -100,10 +101,11 @@ def hash_message(message):
 def sign_data(key, data):
     data = data.encode("utf-8")
     signer = PKCS1_v1_5.new(key)
-    digest = SHA1.new()
+    digest = SHA.new()
     digest.update(b64decode(data))
     sign = signer.sign(digest)
     return sign
+
 
 """privatekey, publickey = generate_key()
 f = open("private_2.pem","w+")

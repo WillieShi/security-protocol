@@ -68,7 +68,7 @@ class Bank(object):
     # Generates the modulus and base for Diffie Hellman using a prime number
     def diffie_hellman(self):
         modulus = self.generate_prime_number(2)
-        base = self.generate_prime_number(2)
+        base = self.generate_prime_number(3)
         return (modulus, base)
 
     # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
@@ -78,8 +78,9 @@ class Bank(object):
         self.default_write(struct.pack(">32s256s256s", format("dif_mod_base"), format(mod, 256), format(base, 256)))
         secret_number_b = random.randint(1, 9999)
         side_bank = (base**secret_number_b) % mod
+
         # Sends bank's half of diffie hellman to ATM.
-        self.default_write(struct.pack(">32s256s", format("dif_side_bank"), format(side_bank)))
+        self.default_write(struct.pack(">32s256s", format("dif_side_bank"), format(side_bank, 256)))
         # Receives ATM's half of diffie hellman from ATM to compute final value.
         transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
@@ -161,6 +162,7 @@ class Bank(object):
     # Reads the withdraw request to get the amount the user would like to withdraw.
     def withdraw_amount_read(self):
         transaction_id, withdraw_amount = struct.unpack(">32s32s", self.aes_read(64))
+        withdraw_amount = process(withdraw_amount)
         return withdraw_amount
 
     # Calculates the new balance using the withdraw amount. Only passes if the user has enough money to withdraw their requested amount.
@@ -185,11 +187,15 @@ def parse_args():
     return parser.parse_args()
 
 
-def format(value, size=0):
+def format(value, size=256):
     if type(value) is str:
         return bytes(value, "utf-8")
     else:
         return (value).to_bytes(size, byteorder='little')
+
+
+def process(value):
+    return int.from_bytes(value, byteorder="little")
 
 
 def main():
