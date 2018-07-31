@@ -14,11 +14,12 @@ import db
 import logging
 from logging import info as log
 import sys
-from serial import serial
+import serial
 import argparse
 import struct
 from Crypto.Util import number
 import ciphers
+import random
 
 
 class Bank(object):
@@ -35,7 +36,7 @@ class Bank(object):
         super(Bank, self).__init__()
         self.db = db.DB(db_path=db_path)
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
-        self.transactionKey = self.generate_key_pair()
+        self.transactionKey = self.diffie_bank()
 
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
@@ -60,7 +61,7 @@ class Bank(object):
         return ciphers.decrypt_aes(message, self.uptime_key)
 
     # generates a prime number to be used in diffie hellman
-    def generate_prime_number(n):
+    def generate_prime_number(self, n):
         generated_number = number.getPrime(n)
         return generated_number
 
@@ -74,13 +75,13 @@ class Bank(object):
     def diffie_bank(self):
         mod, base = self.diffie_hellman()
         #  Sends modulus and base to ATM
-        self.default_write(struct.pack("32s256I256I", "dif_mod_base", mod, base))
-        secret_number_b = ciphers.generate_salt(15)
+        self.default_write(struct.pack(">32s256s256s", format("dif_mod_base"), format(mod, 256), format(base)))
+        secret_number_b = random.randint(1, 9999)
         side_bank = (base**secret_number_b) % mod
         # Sends bank's half of diffie hellman to ATM.
-        self.default_write(struct.pack("32s256I", "dif_side_bank", side_bank))
+        self.default_write(struct.pack(">32s256s", format("dif_side_bank"), format(side_bank)))
         # Receives ATM's half of diffie hellman from ATM to compute final value.
-        transaction_id, side_atm = struct.unpack("32s256I", self.default_read(288))
+        transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
         self.uptime_key_bank = (side_atm**secret_number_b) % mod
 
@@ -124,12 +125,12 @@ class Bank(object):
 
     # Changes the user's PIN based on user input.
     def pin_change(self, card_id):
-        transaction_id, pin = struct.unpack(">32s32I", self.self.aes_read(64))
+        transaction_id, pin = struct.unpack(">32s32s", self.self.aes_read(64))
         self.db.set_hash(card_id, ciphers.hash_message(card_id + pin))
 
     # Checks to see if card ID and PIN match a legitimate account in the bank database.
     def pin_verification_read(self, card_id):
-        transaction_id, card_id, hash = struct.unpack(">32s32I32I", self.aes_read(96))
+        transaction_id, card_id, hash = struct.unpack(">32s32s32s", self.aes_read(96))
         if hash == self.db.get_hash(card_id):
             return card_id
         return False
@@ -137,29 +138,29 @@ class Bank(object):
     # Generates a random number and encrypts it with RSA encryption that a valid card would have the private key to.
     def private_key_verification_write(self, card_id):
         rand_num = ciphers.generate_salt(32)
-        self.aes_write(struct.pack(">32s256I256I", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id)), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id))))
+        self.aes_write(struct.pack(">32s256s256s", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id)), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id))))
         return rand_num
 
     # Compares the random number sent by card (through ATM) to the originally generated random number. If they are equal, the card is a valid card.
     def private_key_verification_read(self, rand_num, card_id):
-        transaction_id, cand_rand_num = struct.unpack(">32s32I", self.aes_read(64))
+        transaction_id, cand_rand_num = struct.unpack(">32s32s", self.aes_read(64))
         if rand_num == cand_rand_num:
             return True
         return False
 
     # Encrypts data with the outer layer of the onion in RSA.
     def outer_layer_write(self, card_id):
-        val = struct.pack(">32s512I256I", "outer_layer_write", self.db.get_onion(card_id), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id)))
+        val = struct.pack(">32s512s256s", "outer_layer_write", self.db.get_onion(card_id), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id)))
         self.aes_write(val)
 
     # Decrypts the inner layer of the onion (RSA).
     def inner_layer_read(self, card_id):
-        transaction_id, enc_val = struct.unpack(">32s256I", self.aes_read(288))
+        transaction_id, enc_val = struct.unpack(">32s256s", self.aes_read(288))
         return ciphers.decrypt_rsa(enc_val, self.db.get_inner_onion_private_key(card_id))
 
     # Reads the withdraw request to get the amount the user would like to withdraw.
     def withdraw_amount_read(self):
-        transaction_id, withdraw_amount = struct.unpack(">32s32I", self.aes_read(64))
+        transaction_id, withdraw_amount = struct.unpack(">32s32s", self.aes_read(64))
         return withdraw_amount
 
     # Calculates the new balance using the withdraw amount. Only passes if the user has enough money to withdraw their requested amount.
@@ -173,7 +174,7 @@ class Bank(object):
 
     # Encrypts final balance with AES in preparation to send to ATM.
     def balance_write(self, balance):
-        val = struct.pack(">32s32I", "balance_write", balance)
+        val = struct.pack(">32s32s", "balance_write", balance)
         self.aes_write(val)
 
 
@@ -182,6 +183,13 @@ def parse_args():
     parser.add_argument("port", help="Serial port ATM is connected to")
     parser.add_argument("--baudrate", help="Optional baudrate (default 115200)")
     return parser.parse_args()
+
+
+def format(value, size):
+    if type(value) is int:
+        return (value).to_bytes(size, byteorder='little')
+    if type(value) is str:
+        return bytes(value, "utf-8")
 
 
 def main():
