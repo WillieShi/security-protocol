@@ -12,8 +12,8 @@ www = withdraw()
 import logging
 import struct
 import serial
-import secrets
 import ciphers
+from random import randint
 
 
 class Bank:
@@ -51,7 +51,7 @@ class Bank:
         transaction_id, mod, base = struct.unpack(">32s256s256s", self.default_read(544))
         mod = process(mod)
         base = process(base)
-        secret_number_a = secrets.randbelow(9999)
+        secret_number_a = randint(0, 9999)
         side_atm = (base**secret_number_a) % mod
         # Receives bank's half of diffie hellman from bank to compute final value.
         transaction_id, side_bank = struct.unpack("32s256s", self.default_read(288))

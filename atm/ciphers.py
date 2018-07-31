@@ -136,7 +136,3 @@ print(encrypted)
 decrypted = decrypt_aes(encrypted, key)
 print(decrypted)
 '''
-
-# Test Code for default read/Write
-def default_write():
-    
