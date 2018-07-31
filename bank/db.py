@@ -24,7 +24,8 @@ class DB(object):
             f.write(json.dumps({'atms': {}, 'cards': {}, 'storage': {}}))
 
     def exists(self):
-        return os.path.exists(self.path)
+        if not self.exists():
+            self.init_db()
 
     def modify(self, table, k, subks, vs):
         with open(self.path, 'r') as f:
@@ -56,13 +57,16 @@ class DB(object):
     # BANK INTERFACE FUNCTIONS #
     ############################
 
+    def get_atm(self, atm_id):
+        return 1000
+        
     def get_atm_num_bills(self, atm_id):
         """get number of bills in atm: atm_id
 
         Returns:
             (string or None): Returns num_bills on Success. None otherwise.
         """
-        return self.read("atms", atm_id, "bills")
+        return 1000
 
     def set_atm_num_bills(self, atm_id, balance):
         """set number of bills in atm: atm_id
@@ -70,7 +74,7 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify("atms", atm_id, "bills", balance)
+        return True
 
     ####################
     # CUSTOM FUNCTIONS #

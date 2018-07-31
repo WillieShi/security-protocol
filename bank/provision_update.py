@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
             struct.unpack()
 
-            card_num = ciphers.generate_salt(32)
+            card_num = int.from_bytes(ciphers.generate_salt(32))
 
             print("card number is" + card_num)
 

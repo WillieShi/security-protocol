@@ -12,8 +12,8 @@ www = withdraw()
 import logging
 import struct
 import serial
-import secrets
 import ciphers
+from random import randint
 
 
 class Bank:
@@ -48,11 +48,14 @@ class Bank:
     # Performs computations after receving modulus and base from bank.
     def diffie_atm(self):
         # Receives modulus and base from bank.
-        transaction_id, mod, base = struct.unpack(">32s256I256I", self.default_read(544))
-        secret_number_a = secrets.randbelow(9999)
+        transaction_id, mod, base = struct.unpack(">32s256s256s", self.default_read(544))
+        mod = process(mod)
+        base = process(base)
+        secret_number_a = randint(0, 9999)
         side_atm = (base**secret_number_a) % mod
         # Receives bank's half of diffie hellman from bank to compute final value.
-        transaction_id, side_bank = struct.unpack("32s256I", self.default_read(288))
+        transaction_id, side_bank = struct.unpack("32s256s", self.default_read(288))
+        side_bank = process(side_bank)
         # Sends ATM's half of diffie hellman to bank.
         self.default_write(struct.pack("32s256s", format("dif_side_atm"), format(side_atm, 256)))
         # uptime_key_atm is the final ATM-side agreed value for diffie hellman
@@ -72,6 +75,8 @@ class Bank:
     # Decrypts the AES on the random number to send to the card.
     def private_key_verify_read(self):
         transaction_id, random_num, signature = struct.unpack(">32s256I256I", self.aes_read(544))
+        random_num = process(random_num)
+        signature = process(signature)
         return random_num, signature
 
     # private_key_verify() sends the random_num the card decrypted back to bank
@@ -87,6 +92,8 @@ class Bank:
     # Decrypts the AES on the onion from the bank to send to the card.
     def outer_layer_read(self):
         transaction_id, outer_layer, signature = struct.unpack(">32s512I256I", self.aes_read(800))
+        outer_layer = process(outer_layer)
+        signature = process(signature)
         return outer_layer, signature
 
     # Encrypts the withdraw amount requested by the card to send to the bank.
@@ -107,13 +114,8 @@ class Bank:
     # Sends the balance to the card from the bank.
     def balance_read(self):
         transaction_id, balance = struct.unpack(">32s32I")
+        balance = process(balance)
         return balance
-
-    def format(value, size):
-        if type(value) is str:
-            return bytes(value, "utf-8")
-        else:
-            return (value).to_bytes(size, byteorder='little')
 
     def reset(self):
         self.aes_write("rst")
@@ -182,9 +184,20 @@ class Bank:
         return True
 
     def provision_update(self, card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance):
-        pkt = struct.pack(">32I256I256I256I256I32I", card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance)
+        pkt = struct.pack(">32s256s256s256s256s32s", format(card_num, 32), format(inner_layer_public_key, 256), format(inner_layer_private_key, 256), format(outer_layer_public_key, 256), format(outer_layer_private_key, 256), format(balance, 32))
         # total length is 1088 bytes
         self.ser.write("p" + pkt)
 
     def stupid_provision_update(self):
         self.ser.write("f")
+
+
+def format(value, size=256):
+    if type(value) is str:
+        return bytes(value, "utf-8")
+    else:
+        return (value).to_bytes(size, byteorder='little')
+
+
+def process(value):
+    return int.from_bytes(value, byteorder="little")

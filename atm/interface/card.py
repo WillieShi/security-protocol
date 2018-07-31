@@ -55,27 +55,30 @@ class Card(object):
             int: card number
         """
         self.write("cir")
-        card_id = struct.unpack(">32I", self.read(32))
+        card_id = struct.unpack(">32s", self.read(32))
+        card_id = process(card_id)
         return card_id
 
     # decrypts the random num received from bank to verify card
     def read_random_num(self, encrypted_randnum):
-        random_num = struct.unpack(">32I", self.read(32))
+        random_num = struct.unpack(">32s", self.read(32))
+        random_num = process(random_num)
         return random_num
 
     # encrypts decrypted random num w/ AES to send to bank
     def card_verify_write(self, random_num, signature):
-        val = "cvw" + struct.pack(">256I256I", random_num, signature)
+        val = "cvw" + struct.pack(">256s256s", format(random_num, 256), format(signature, 256))
         self.write(val)
         # removes AES encryption from the onion to make the RSA decryptable
 
     def onion_read(self):
-        onion = struct.unpack(">256I", self.read(288))
+        onion = struct.unpack(">256s", self.read(288))
+        onion = process(onion)
         return onion
 
     # Puts the one-layer onion (still has inner RSA layer) in the AES channel to send to bank.
     def onion_write(self, outer_layer, signature):
-        val = "own" + struct.pack(">512I256I", outer_layer, signature)
+        val = "own" + struct.pack(">512s256s", format(outer_layer, 256), format(signature, 256))
         self.write(val)
 
     def _vp(self, msg, stream=logging.info):
@@ -266,3 +269,14 @@ class Card(object):
 
     def stupid_provision(self):
         return True
+
+
+def format(value, size=256):
+    if type(value) is str:
+        return bytes(value, "utf-8")
+    else:
+        return (value).to_bytes(size, byteorder='little')
+
+
+def process(value):
+    return int.from_bytes(value, byteorder="little")
