@@ -83,7 +83,7 @@ def encrypt_rsa(message, pub_key):
 
 
 def export_public_key(key):
-    # key is the public key object
+    # key is the public key object (RSA)
     return key.publickey().exportKey(format='DER')
 
 
@@ -126,3 +126,17 @@ print(type(encrypted_message))
 f = open("fuck.txt", "w")
 f.write("%s" % (encrypted_message))
 """
+
+'''
+# Test Code for AES
+message = "Hello, World"
+key = create_aes_key()
+encrypted = encrypt_aes(message, key)
+print(encrypted)
+decrypted = decrypt_aes(encrypted, key)
+print(decrypted)
+'''
+
+# Test Code for default read/Write
+def default_write():
+    
