@@ -14,11 +14,10 @@ import db
 import logging
 from logging import info as log
 import sys
-import serial
+from serial import Serial
 import argparse
 import struct
 from Crypto.Util import number
-import secrets
 import ciphers
 
 
