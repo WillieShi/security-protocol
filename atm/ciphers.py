@@ -112,66 +112,35 @@ def sign_data(key, data):
     digest.update(b64decode(data))
     sign = signer.sign(digest)
     return sign
-"""
-def privKeyXML(pemPrivateKeyFile):
-   with open (pemPrivateKeyFile, 'rb') as pkFile:
-      pemPrivKey = pkFile.read()
-   print(pemPrivKey)
-   lines = pemPrivKey
-   lines = lines
-   lines = lines.replace(" ", '').split()
-   print(lines)
-   keyDer = DerSequence()
-   keyDer.decode(a2b_base64(''.join(lines[1:-1])))
-   xml  = '<RSAKeyValue>'
-   xml += '<Modulus>'
-   xml += standard_b64encode(number.long_to_bytes(keyDer[1]))
-   xml += '</Modulus>'
-   xml += '<Exponent>'
-   xml += standard_b64encode(number.long_to_bytes(keyDer[2]))
-   xml += '</Exponent>'
-   xml += '<D>'
-   xml += standard_b64encode(number.long_to_bytes(keyDer[3]))
-   xml += '</D>'
-   xml += '<P>'
-   xml += standard_b64encode(number.long_to_bytes(keyDer[4]))
-   xml += '</P>'
-   xml += '<Q>'
-   xml += standard_b64encode(number.long_to_bytes(keyDer[5]))
-   xml += '</Q>'
-   xml += '<DP>'
-   xml += standard_b64encode(number.long_to_bytes(keyDer[6]))
-   xml += '</DP>'
-   xml += '<DQ>'
-   xml += standard_b64encode(number.long_to_bytes(keyDer[7]))
-   xml += '</DQ>'
-   xml += '<InverseQ>'
-   xml += standard_b64encode(number.long_to_bytes(keyDer[8]))
-   xml += '</InverseQ>'
-   xml += '</RSAKeyValue>'
-   fileName = basename(pemPrivateKeyFile)
-   with open (fileName+'.xml', 'w') as pkFile:
-      pkFile.write(xml)
-   return
-#
-# Get Long Int
-#
-def GetLong(nodelist):
-   rc = []
-   for node in nodelist:
-      if node.nodeType == node.TEXT_NODE:
-         rc.append(node.data)
-   string = ''.join(rc)
-   return number.bytes_to_long(b64decode(string))
 
-# any test code goes here
-privatekey, publickey = generate_key()
-exported_priv = (privatekey.exportKey())
-exported_priv = exported_priv.decode("utf-8")
-exported_priv = exported_priv.replace("\n","")
-exported_priv = exported_priv.encode("utf-8")
-f= open("heck.txt","w+")
-f.write("%s"% (exported_priv))
+"""privatekey, publickey = generate_key()
+f = open("private_2.pem","w+")
+f.write("%s" % (privatekey.exportKey()))
+f.write("\n")
+f.write("\n")
+f.write("%s" % (privatekey.p))
+f.write("\n")
+f.write("\n")
+f.write("%s" % (privatekey.q))
+f.write("\n")
+f.write("\n")
+f.write("%s" % (privatekey.d))
+f.write("\n")
+f.write("\n")
+f.write("%s" % (privatekey.e))
+f.write("\n")
+f.write("\n")
+f.write("%s" % (privatekey.u))
+f.write("\n")
+f.write("\n")
+f.write("%s" % (privatekey.n))
 f.close()
-privKeyXML("heck.txt")
-"""
+j = open("public_2.pem", "w+")
+j.write("%s" % (privatekey.publickey().exportKey()))
+j.write("\n")
+j.write("\n")
+j.write("%s" % (privatekey.publickey().e))
+j.write("\n")
+j.write("\n")
+j.write("%s" % (privatekey.publickey().n))
+j.close()"""
