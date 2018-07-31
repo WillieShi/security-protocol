@@ -80,18 +80,18 @@ def export_public_key(key):
     return key.publickey().exportKey(format='DER')
 
 
-
 # RSA decryption
 # rsa_pub_cipher is the private key with padding
 # decrypted_rsa is the decrypted ciphertext
 # ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
-def decrypt_rsa(encrypted_rsa, priv_key):
+def decrypt_rsa(encrypted_rsa, priv_key, isString=False):
     # applies RSA Padding
     # encrypted_rsa is the encrypted message
     # priv_key is the private key object
     rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
-    decrypted_rsa = rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
-    return decrypted_rsa
+    if isString:
+        return rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
+    return rsa_priv_cipher.decrypt(encrypted_rsa)
 
 
 # Applies a hash to message input
