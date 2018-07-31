@@ -75,7 +75,7 @@ class Bank(object):
     def diffie_bank(self):
         mod, base = self.diffie_hellman()
         #  Sends modulus and base to ATM
-        self.default_write(struct.pack(">32s256s256s", format("dif_mod_base"), format(mod, 256), format(base)))
+        self.default_write(struct.pack(">32s256s256s", format("dif_mod_base"), format(mod, 256), format(base, 256)))
         secret_number_b = random.randint(1, 9999)
         side_bank = (base**secret_number_b) % mod
         # Sends bank's half of diffie hellman to ATM.
@@ -121,7 +121,7 @@ class Bank(object):
 
     # Sends all verification results of every applicaple transaction.
     def send_verification_result(self, good):
-        self.aes_write(struct.pack(">32s?", "send_verification_result", good))
+        self.aes_write(struct.pack(">32s?", format("send_verification_result"), good))
 
     # Changes the user's PIN based on user input.
     def pin_change(self, card_id):
@@ -138,7 +138,7 @@ class Bank(object):
     # Generates a random number and encrypts it with RSA encryption that a valid card would have the private key to.
     def private_key_verification_write(self, card_id):
         rand_num = ciphers.generate_salt(32)
-        self.aes_write(struct.pack(">32s256s256s", "private_key_verification_write", ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id)), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id))))
+        self.aes_write(struct.pack(">32s256s256s", format("private_key_verification_write"), format(ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id)), 256), format(ciphers.sign_data(self.db.get_inner_onion_private_key(card_id)), 256)))
         return rand_num
 
     # Compares the random number sent by card (through ATM) to the originally generated random number. If they are equal, the card is a valid card.
@@ -150,7 +150,7 @@ class Bank(object):
 
     # Encrypts data with the outer layer of the onion in RSA.
     def outer_layer_write(self, card_id):
-        val = struct.pack(">32s512s256s", "outer_layer_write", self.db.get_onion(card_id), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id)))
+        val = struct.pack(">32s512s256s", format("outer_layer_write"), self.db.get_onion(card_id), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id)))
         self.aes_write(val)
 
     # Decrypts the inner layer of the onion (RSA).
@@ -174,7 +174,7 @@ class Bank(object):
 
     # Encrypts final balance with AES in preparation to send to ATM.
     def balance_write(self, balance):
-        val = struct.pack(">32s32s", "balance_write", balance)
+        val = struct.pack(">32s32s", format("balance_write"), format(balance, 256))
         self.aes_write(val)
 
 
@@ -186,10 +186,10 @@ def parse_args():
 
 
 def format(value, size):
-    if type(value) is int:
-        return (value).to_bytes(size, byteorder='little')
     if type(value) is str:
         return bytes(value, "utf-8")
+    else:
+        return (value).to_bytes(size, byteorder='little')
 
 
 def main():
