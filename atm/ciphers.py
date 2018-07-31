@@ -95,6 +95,8 @@ def decrypt_rsa(encrypted_rsa, priv_key):
 def hash_message(message):
     # message is anything you want hashes regardless of type.
     return(hashlib.sha3_256((str(message)).encode("utf-8")).hexdigest())
+
+
 # Makes new RSA signature
 def sign_data(key, data):
     data = data.encode("utf-8")
@@ -103,6 +105,7 @@ def sign_data(key, data):
     digest.update(b64decode(data))
     sign = signer.sign(digest)
     return sign
+
 
 plain_message = "fuck off"
 plain_message = plain_message.encode("utf-8")
