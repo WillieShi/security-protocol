@@ -24,6 +24,10 @@ def pad(unpadded_message, pad_length):
     return padded_message
 
 
+def unpad(padded_message):
+    return padded_message.strip('!')
+
+
 # Creates new AES key
 def create_aes_key():
     # this takes 32 random bytes to make our key
@@ -35,7 +39,7 @@ def create_aes_key():
 def encrypt_aes(message, key):
     # key has to be 16 bytes long, probably generated from create_aes_key()
     # message is just the message you want to send
-    message = pad(message)
+    message = pad(message, 32)
     global IV
     IV = get_random_bytes(16)
     encrypt_cipher = AES.new(key, AES.MODE_CBC, IV)
@@ -50,6 +54,7 @@ def decrypt_aes(message, key):
     decrypt_cipher = AES.new(key, AES.MODE_CBC, IV=IV)
     # ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
     plain_text = decrypt_cipher.decrypt(message).decode("utf-8")
+    plain_text = unpad(plain_text)
     return plain_text
 
 
