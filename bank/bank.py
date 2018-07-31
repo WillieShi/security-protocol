@@ -76,7 +76,7 @@ class Bank(object):
         mod, base = self.diffie_hellman()
         #  Sends modulus and base to ATM
         self.default_write(struct.pack("32s256I256I", "dif_mod_base", mod, base))
-        secret_number_b = secrets.randbelow(9999)
+        secret_number_b = ciphers.generate_salt(15)
         side_bank = (base**secret_number_b) % mod
         # Sends bank's half of diffie hellman to ATM.
         self.default_write(struct.pack("32s256I", "dif_side_bank", side_bank))
