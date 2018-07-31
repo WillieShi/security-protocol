@@ -105,6 +105,8 @@ def sign_data(key, data):
     sign = signer.sign(digest)
     return sign
 # any test code goes here
+"""
 private, public = generate_key()
 our_data = sign_data(private, "yo help plz")
 print(our_data)
+"""

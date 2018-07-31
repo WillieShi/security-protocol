@@ -135,7 +135,10 @@ dkms.conf
 *.cydsn/CortexM0
 *.cydsn/Export
 *.svd
+*.cydwr
 .cache
+CARD.cydsn
+Design01.cysdn/src
 
 
 # eCTF Files #

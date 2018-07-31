@@ -54,17 +54,17 @@ class Bank:
         # Receives bank's half of diffie hellman from bank to compute final value.
         transaction_id, side_bank = struct.unpack("32s256I", self.default_read(288))
         # Sends ATM's half of diffie hellman to bank.
-        self.default_write(struct.pack("32s256I", "dif_side_atm", side_atm))
+        self.default_write(struct.pack("32s256s", format("dif_side_atm"), format(side_atm, 256)))
         # uptime_key_atm is the final ATM-side agreed value for diffie hellman
         self.uptime_key_atm = (side_bank**secret_number_a) % mod
 
     # Encrypts the verification number to test to see if the card is legitimate.
     def private_key_verify(self, card_id):
-        self.aes_write("pkv" + struct.pack(">32s32I", "private_key_verify", card_id))
+        self.aes_write("pkv" + struct.pack(">32s32s", format("private_key_verify"), format(card_id, 32)))
 
     # Sends hashed card ID and PIN to the bank.
     def pin_verify(self, pin, card_id):
-        val = "pvc" + struct.pack(">32s32I32I", "pin_verify", card_id, ciphers.hash_message(card_id+pin))
+        val = "pvc" + struct.pack(">32s32s32s", format("pin_verify"), format(card_id, 32), format(ciphers.hash_message(card_id+pin), 32))
         self.aes_write(val)
         transaction_id, result = struct.unpack(">32s?", self.aes_read(33))
         return result
@@ -76,12 +76,12 @@ class Bank:
 
     # private_key_verify() sends the random_num the card decrypted back to bank
     def private_key_verify_write(self, random_num):
-        val = "pkw" + struct.pack(">32s32I", "private_key_verify_write", random_num)
+        val = "pkw" + struct.pack(">32s32s", format("private_key_verify_write"), format(random_num, 32))
         self.aes_write(val)
 
     # Writes the inner onion layer to the bank.
     def inner_layer_write(self, inner_layer):
-        val = "ilw" + struct.pack(">32s256I", "send_inner_layer", inner_layer)
+        val = "ilw" + struct.pack(">32s256s", format("send_inner_layer"), format(inner_layer, 256))
         self.aes_write(val)
 
     # Decrypts the AES on the onion from the bank to send to the card.
@@ -91,23 +91,29 @@ class Bank:
 
     # Encrypts the withdraw amount requested by the card to send to the bank.
     def withdraw_amount_write(self, amount):
-        val = "waw" + struct.pack(">32s32I", "send_withdraw_amount", amount)
+        val = "waw" + struct.pack(">32s32s", format("send_withdraw_amount"), format(amount, 256))
         self.aes_write(val)
 
     # Sends a request to the bank to check the balance.
     def request_read_balance(self):
-        val = "rrb" + struct.pack(">32s", "request_read_balance")
+        val = "rrb" + struct.pack(">32s", format("request_read_balance"))
         self.aes_write(val)
 
     # Sends a request to the bank to reset the PIN.
     def pin_reset(self, pin):
-        val = "pnr" + struct.pack(">32s32I", "pin_reset", "pin")
+        val = "pnr" + struct.pack(">32s32s", format("pin_reset"), format(pin, 32))
         self.aes_write(val)
 
     # Sends the balance to the card from the bank.
     def balance_read(self):
         transaction_id, balance = struct.unpack(">32s32I")
         return balance
+
+    def format(value, size):
+        if type(value) is str:
+            return bytes(value, "utf-8")
+        else:
+            return (value).to_bytes(size, byteorder='little')
 
     def reset(self):
         self.aes_write("rst")
