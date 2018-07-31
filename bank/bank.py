@@ -185,7 +185,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def format(value, size):
+def format(value, size=0):
     if type(value) is str:
         return bytes(value, "utf-8")
     else:

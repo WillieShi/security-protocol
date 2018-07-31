@@ -136,6 +136,7 @@ dkms.conf
 *.cydsn/Export
 *.svd
 .cache
+CARD.cydsn
 
 
 # eCTF Files #
