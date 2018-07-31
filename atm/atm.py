@@ -1,6 +1,7 @@
 import logging
 import sys
 import cmd
+from interface.card import NotProvisioned, AlreadyProvisioned
 from interface import card, bank
 import os
 import json
@@ -104,10 +105,11 @@ class ATM(cmd.Cmd, object):
                     self.card.onion_write(outer_layer, signature)
                     inner_layer = self.card.onion_read()
                     self.bank.inner_layer_write(inner_layer)
+                    print "Balance is: ", self.balance_read()
                     return self.balance_read()
                 self._vp('check_balance failed')
                 return False
-            except card.NotProvisioned:
+            except NotProvisioned:
                 self._vp('ATM card has not been provisioned!')
                 return False
 
@@ -165,7 +167,7 @@ class ATM(cmd.Cmd, object):
             except ValueError:
                 self._vp('amount must be an int')
                 return False
-            except card.NotProvisioned:
+            except NotProvisioned:
                 self._vp('ATM card has not been provisioned!')
                 return False
 

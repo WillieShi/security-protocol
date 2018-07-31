@@ -183,7 +183,7 @@ class Bank(object):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("port", help="Serial port ATM is connected to")
-    parser.add_argument("--baudrate", help="Optional baudrate (default 115200)")
+    parser.add_argument("--baudrate", default = 115200, help="Optional baudrate (default 115200)")
     return parser.parse_args()
 
 
