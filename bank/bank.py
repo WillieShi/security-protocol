@@ -22,6 +22,7 @@ import ciphers
 import random
 
 
+
 class Bank(object):
     GOOD = "O"
     BAD = "N"
@@ -68,7 +69,7 @@ class Bank(object):
     # Generates the modulus and base for Diffie Hellman using a prime number
     def diffie_hellman(self):
         modulus = self.generate_prime_number(2)
-        base = self.generate_prime_number(3)
+        base = self.generate_prime_number(2)
         return (modulus, base)
 
     # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
@@ -78,13 +79,56 @@ class Bank(object):
         self.default_write(struct.pack(">32s256s256s", format("dif_mod_base"), format(mod, 256), format(base, 256)))
         secret_number_b = random.randint(1, 9999)
         side_bank = (base**secret_number_b) % mod
-
         # Sends bank's half of diffie hellman to ATM.
         self.default_write(struct.pack(">32s256s", format("dif_side_bank"), format(side_bank, 256)))
         # Receives ATM's half of diffie hellman from ATM to compute final value.
         transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
         self.uptime_key_bank = (side_atm**secret_number_b) % mod
+
+    # The ATM-side diffie hellman function, which receives the modulus and base from the bank.
+    # Performs computations after receving modulus and base from bank.
+    def diffie_atm(self):
+        # Receives modulus and base from bank.
+        transaction_id, mod, base = struct.unpack(">32s256s256s", self.default_read(544))
+        mod = process(mod)
+        base = process(base)
+        secret_number_a = random.randint(9999)
+        side_atm = (base**secret_number_a) % mod
+        # Receives bank's half of diffie hellman from bank to compute final value.
+        transaction_id, side_bank = struct.unpack("32s256s", self.default_read(288))
+        side_bank = process(side_bank)
+        # Sends ATM's half of diffie hellman to bank.
+        self.default_write(struct.pack("32s256s", format("dif_side_atm"), format(side_atm, 256)))
+        # uptime_key_atm is the final ATM-side agreed value for diffie hellman
+        self.uptime_key_atm = (side_bank**secret_number_a) % mod
+
+    def bytesize(value):
+        if type(value) is str:
+            return len(bytes(value, "utf-8"))
+        else:
+            n = 0
+            while value != 0:
+                value >>= 8
+                n = n + 1
+            return n
+
+    def test():
+        mod, base = self.diffie_hellman()
+        secret_number_b = random.randint(1, 9999)
+        side_bank = (base**secret_number_b) % mod
+        secret_number_a = random.randint(9999)
+        side_atm = (base**secret_number_a) % mod
+        final_a = (side_bank**secret_number_a) % mod
+        final_b = (side_atm**secret_number_b) % mod
+        if final_a == final_b:
+            print("Keys are equal")
+        a_size = bytesize(final_a)
+        b_size = bytesize(final_b)
+        print(a_size)
+        print(b_size)
+
+
 
     # Links commands in ATM-Bank interface to functions in the bank
     # Three letter codes link interface commands to bank functions.

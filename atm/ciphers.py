@@ -66,10 +66,8 @@ def generate_key():
 # rsa_pub_cipher is the public key with padding
 # encrypted_rsa is the ciphertext
 def encrypt_rsa(message, pub_key):
-    """
     if type(message) is str:
         message = bytes(message, 'utf-8')
-    """
     # message is the message you want to send
     # pub_key is the public key that you got
     rsa_pub_cipher = PKCS1_OAEP.new(pub_key)
@@ -131,7 +129,3 @@ print(encrypted)
 decrypted = decrypt_aes(encrypted, key)
 print(decrypted)
 '''
-
-# Test Code for default read/Write
-def default_write():
-    
