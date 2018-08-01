@@ -152,6 +152,7 @@ struct verificationPacket readVerify();
 struct onionPacket readOnion();
 void getValidBytes(uint8_t* buffer, int n);
 int provisionlaz();
+static size_t hextobin(unsigned char *dst, const char *src);
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -211,13 +212,14 @@ int main(void)
     //TODO composing RSA keys from components given from python code
     privkey = (uint8_t*)&RSA_SK; //does this work lol
     // EEPROM_Write(KEY_SIZE*2, privkey , KEY_SIZE);
-    
+    char* msg = "0b1e950e6de96a8e07d9cf467eeffafe4de9b27fca52d812b49d79f5a12cc71fa0863b915dbaf77bd3d4b3fbefa9a62563740b88095981a7801507e6dbb6db241a70163547ae7d0363ed94ac256a79c8d49c2771e1799ddaca4624bb303535eb6ee5e034b558d25ff9ecd4830f72aefe9d61657c06c65740af4062f8ab19349fc7ac4d9f7994471a519d743e38dd7b59694ea45ed9ed9fecf53b8e92ab560cd4a37057c8eec89e3a47619aabd05a2798ff42e5f324f0395a9a68f61f33dc3b15abc1a0fde0f6231ff80f3a66f11195df10c281fcc1dfcbd074934d3322d64ee65c0030f9d3a72ac43981ab0820125b3459ad7908e1142834dabaa4a8847f7153";
+    RSA_decrypt256(&br_rsa_i31_private, msg,(uint8_t) KEY_SIZE*2 );
      
     //UART_PutString("WRITE SUCCESSFUL\n\r");
     
     //UART_PutString("Card Provisioning finished, dump all memory to double check\n\r");
     //writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
-
+    /*
 	for(;;)
     {
         char* command[3];
@@ -239,6 +241,7 @@ int main(void)
             provisionlaz();
         }
     }
+    */
 
     //MAIN Rsa Protocol
     //Recieve Transaction code
@@ -484,18 +487,30 @@ unsigned char* RSA_decrypt512(br_rsa_private fpriv, char* msg, uint8_t size)
 unsigned char* RSA_decrypt256(br_rsa_private fpriv, char* msg, uint8_t size)
 {
     //unsigned char tmp[256];
-    unsigned char* tmp = malloc(size*sizeof(unsigned char));
+    //unsigned char* tmp = malloc(size*sizeof(unsigned char));
+    unsigned char tmp[KEY_SIZE*2];
+    unsigned char t1[KEY_SIZE*2];
+    unsigned char check[8] = "Fuck off";
     memcpy(tmp, msg, size);
-
+    
+    hextobin(t1, (const char*)tmp);
     //decrypt first
-    if (!fpriv(tmp, &RSA_SK))
+    if (!fpriv(t1, &RSA_SK))
     {
 		//fprintf(stderr, "RSA private operation failed\n");
         UART_PutString("RSA PRIV OP FAILED\n\r");
 		exit(EXIT_FAILURE);
 	}
-
-    return tmp;
+    if(check_equals(t1, check, 8) == 1)
+    {
+         UART_PutString("Sucess");
+    }
+    else
+    {
+        UART_PutString("Failed");
+        UART_PutString((const char8*) t1);
+    }
+    return t1;
 
 }
 //returns 1 if verified, returns 0 if not
@@ -513,7 +528,7 @@ int RSAver( br_rsa_pkcs1_vrfy fvrfy, unsigned char buf[256], unsigned char *pt, 
 		//fprintf(stderr, "Signature verification failed\n");
 		return 0;
 	}
-	int i = check_equals( hv, tmp, sizeof tmp);
+	int i = check_equals(hv, tmp, sizeof tmp);
     if(i == -1)
     {
         return 0;
@@ -593,4 +608,35 @@ void init()
             }
         }
     }
+}
+
+static size_t hextobin(unsigned char *dst, const char *src)
+{
+	size_t num;
+	unsigned acc;
+	int z;
+
+	num = 0;
+	z = 0;
+	acc = 0;
+	while (*src != 0) {
+		int c = *src ++;
+		if (c >= '0' && c <= '9') {
+			c -= '0';
+		} else if (c >= 'A' && c <= 'F') {
+			c -= ('A' - 10);
+		} else if (c >= 'a' && c <= 'f') {
+			c -= ('a' - 10);
+		} else {
+			continue;
+		}
+		if (z) {
+			*dst ++ = (acc << 4) + c;
+			num ++;
+		} else {
+			acc = c;
+		}
+		z = !z;
+	}
+	return num;
 }
