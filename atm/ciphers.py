@@ -5,13 +5,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Cipher import PKCS1_OAEP
 import hashlib
-<<<<<<< HEAD
-from Crypto.Hash import SHA1
-from base64 import b64decode, b64decode
-=======
 from Crypto.Hash import SHA
 from base64 import b64decode
->>>>>>> 089f6413a97ec249877805201b154e0f6fe38171
 
 
 # here we define AES functions
@@ -122,7 +117,7 @@ def sign_data(key, data):
     sign = signer.sign(digest)
     return sign
 
-<<<<<<< HEAD
+"""
 bank_priv, bank_pub = generate_key()
 f = open("bank_priv.pem", "wb")
 priv_key = bank_priv.exportKey()
@@ -186,9 +181,8 @@ f.write("%s" % (bank_priv.n))
 f.write("\n")
 f.write("%s" % (bank_priv.e))
 f.close()
-=======
 
-"""
+
 plain_message = "fuck off"
 plain_message = plain_message.encode("utf-8")
 public_key = RSA.import_key("-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqJ4tb2LShx1pFYwcRGzA\ngn/2J7fowEuLY9vLMib9AokRwxbRQYmL2DKDTSq1B9TAot3ONmIFx88t9JwpdCYP\nfYqOFFo7LSffgzmwOdc1vPnLqGm/W2tavs2YJygSdmoy+s3hCrHq7IcXD/a7PR23\nv+88LkrnaZz9zsQlpuY1dJ7F5sAblf/u8rdPq6iu4LglSdNk9sC5jVSc5H5le8Gm\n2xbO+gyrS2YLpmzu32M9nvKenFFpLPig+zHFZYjoti5koseHINSAMaZc8QWHOMf+\nqtDPNI/EK76lUs7v3PZcN5QjglOc7j1TnR/tTD8olaRcA2lbxOAz3fJIjCCFWnaV\nNQIDAQAB\n-----END PUBLIC KEY-----")
@@ -207,4 +201,3 @@ print(encrypted)
 decrypted = decrypt_aes(encrypted, key)
 print(decrypted)
 '''
->>>>>>> 089f6413a97ec249877805201b154e0f6fe38171

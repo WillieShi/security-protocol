@@ -259,8 +259,7 @@ class Card(object):
             bool: True if provisioning succeeded, False otherwise
         """
         self._sync(True)
-
-        packet = "prv" + struct.pack(">32I256I256I", card_num, private_outer_layer_key, public_inner_layer_key)
+        packet = "prv" + struct.pack(">32s128s128s128s128s128s256s3s", card_num, format(private_outer_layer_key.p, 128), format(private_outer_layer_key.q, 128), format(private_outer_layer_key.d % (private_outer_layer_key.p - 1), 128), format(private_outer_layer_key.d % (private_outer_layer_key.q - 1), 128), format(modInverse(private_outer_layer_key.q, private_outer_layer_key.p), 128), format(public_inner_layer_key.n, 256), format(public_inner_layer_key.e, 3))
         self.ser.write(packet)
 
         self._vp('Provisioning complete')
@@ -280,3 +279,32 @@ def format(value, size=256):
 
 def process(value):
     return int.from_bytes(value, byteorder="little")
+
+
+def modInverse(a, m):
+    g = gcd(a, m)
+    if (g != 1):
+        print("Inverse doesn't exist")
+    else:
+        # If a and m are relatively prime,
+        # then modulo inverse is a^(m-2) mode m
+        print("Modular multiplicative inverse is ", power(a, m - 2, m))
+
+
+def power(x, y, m):
+    if (y == 0):
+        return 1
+
+    p = power(x, y // 2, m) % m
+    p = (p * p) % m
+
+    if(y % 2 == 0):
+        return p
+    else:
+        return ((x * p) % m)
+
+
+def gcd(a, b):
+    if (a == 0):
+        return b
+    return gcd(b % a, a)
