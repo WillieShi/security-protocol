@@ -250,7 +250,7 @@ class Card(object):
 
         return self._get_uuid()
 
-    def provision(self, card_num, private_outer_layer_key, public_inner_layer_key):
+    def provision(self, aes_key, IV, card_num, passkey):
         """Attempts to provision a new ATM card
 
         Args:
@@ -261,8 +261,7 @@ class Card(object):
             bool: True if provisioning succeeded, False otherwise
         """
         self._sync(True)
-        #Fox
-        # packet = "prv" + struct.pack(">32s128s128s128s128s128s256s3s", card_num, format(private_outer_layer_key.p, 128), format(private_outer_layer_key.q, 128), format(private_outer_layer_key.d % (private_outer_layer_key.p - 1), 128), format(private_outer_layer_key.d % (private_outer_layer_key.q - 1), 128), format(modInverse(private_outer_layer_key.q, private_outer_layer_key.p), 128), format(public_inner_layer_key.n, 256), format(public_inner_layer_key.e, 3))
+        packet = "prv" + struct.pack(">32s16s16s16s", aes_key, IV, card_num, passkey)
         self.ser.write(packet)
 
         self._vp('Provisioning complete')
