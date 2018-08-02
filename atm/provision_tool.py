@@ -42,18 +42,21 @@ if __name__ == "__main__":
     card = Card(c_port, baudrate=c_baud, verbose=True)
 
     card_num = ciphers.generate_salt(32)
-
+'''
+    # Fox
     private_inner_layer_key, public_inner_layer_key = ciphers.generate_key()
     private_outer_layer_key, public_outer_layer_key = ciphers.generate_key()
 
+    # Fox
     card.provision(card_num, private_outer_layer_key, public_inner_layer_key)
     # card.stupid_provision()
     print "Card provisioned!"
     # update bank
     print "Updating bank..."
     bank = Bank(b_port)
+    # Fox
     bank.provision_update(card_num, public_inner_layer_key, private_inner_layer_key, public_outer_layer_key, private_outer_layer_key, balance)
     # bank.stupid_provision()
-
+'''
     print "Provisioning successful"
     print "Card already provisioned!"
