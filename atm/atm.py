@@ -196,7 +196,7 @@ class ATM(cmd.Cmd, object):
         #print current_sec
         if current_sec == 59:
             mins = minutes + 1
-            print ">>>>>>>>>>>>>>>>>>>>>", mins
+            print ">>>", mins
 
 def parse_args():
     parser = argparse.ArgumentParser()

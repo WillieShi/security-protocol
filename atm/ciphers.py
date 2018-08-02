@@ -9,6 +9,7 @@ import base64
 import six
 from Crypto.Cipher import PKCS1_OAEP
 import secrets
+import hmac
 
 #here we define initial variables
 n_length = 2048
@@ -36,6 +37,26 @@ def decrypt_aes(message, key):
     #the decode thing stops the result from being b'decrypted_message'
     plain_text = decrypt_cipher.decrypt(message).decode("utf-8")
     return plain_text
+
+def encrypt(data, shared_key, hmac_key):
+    """encrypt data with AES-CBC and sign it with HMAC-SHA256"""
+    pad = AES.block_size - len(data) % AES.block_size
+    data = data + pad * chr(pad)
+    iv_bytes = get_random_bytes(AES.block_size)
+    cypher = AES.new(shared_key, AES.MODE_CBC, iv_bytes)
+    encrypted_data = cypher.encrypt(data)
+    iv_data = iv_bytes + encrypted_data
+    sig = hmac.new(hmac_key, iv_data, HASH_ALGO).digest()
+    return (encrypted_data, iv_bytes, sig)
+
+def decrypt(encrypted_data, iv_bytes, signature, shared_key, hmac_key):
+    """verify HMAC-SHA256 signature and decrypt data with AES-CBC"""
+    iv_data = iv_bytes + encrypted_data
+    if not compare_mac(hmac.new(hmac_key, iv_data, HASH_ALGO).digest(), signature):
+        raise AuthenticationError("message authentication failed")
+    cypher = AES.new(shared_key, AES.MODE_CBC, iv_bytes)
+    data = cypher.decrypt(encrypted_data)
+    return data[:-ord(data[-1])]
 
 #here we define RSA functions
 def generate_prime_number():
