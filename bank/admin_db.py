@@ -50,8 +50,8 @@ class Admin_DB(object):
             return None
 
 # Private key generators for the backup database(RSA)
-    def get_outer_onion_private_key(self, card_id):
-        return self.read("cards", card_id, "inner_onion_private_key")
+    def get_hashed_data(self, card_id):
+        return self.read("cards", card_id, "hashed_data")
 
-    def set_outer_onion_private_key(self, card_id, value):
-        return self.modify("cards", card_id, "inner_onion_private_key", value)
+    def set_hashed_data(self, card_id, value):
+        return self.modify("cards", card_id, "hashed_data", value)

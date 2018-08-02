@@ -104,7 +104,6 @@ class Bank(object):
         else:
             self.default_write("Nice try kid, papa john knows all the tricks")
 
-
     # Reads the withdraw request to get the amount the user would like to withdraw.
     def withdraw_amount_read(self):
         transaction_id, withdraw_amount = struct.unpack(">32s32s", self.aes_read(64))
