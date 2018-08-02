@@ -119,7 +119,7 @@ void loadmem(int row, int size, uint8* buf)
 {
     for(int i = 0; i < size; i++)
     {
-        buf[i] = CY_FLASH_BASE + (row*128) + i;
+        buf[i] = *((uint8_t*)CY_FLASH_BASE + (row*128) + i);
     }
 }
 
