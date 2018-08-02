@@ -19,9 +19,9 @@
 
 
 
-//static uint8_t privkey[] = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789123456";
 
-//const uint8 eeprom_ref[EEPROM_PHYSICAL_SIZE] __ALIGNED(CY_FLASH_SIZEOF_ROW) = {0u};
+
+
 
 #define SIGNATURE_SIZE 256
 #define KEY_SIZE 256
@@ -172,7 +172,7 @@ int main(void)
 
     //UART_PutString("Card Provisioning finished, dump all memory to double check\n\r");
     //writeUART(dump, (uint8_t) KEY_SIZE*4); //REMEMBER TO GET RID OF THIS SO THEY CAN'T EXPLOIT THIS
-    /*
+    
 	for(;;)
     {
         char* command[3];
@@ -194,67 +194,9 @@ int main(void)
             provisionlaz();
         }
     }
-    */
+    
 
-    //MAIN Rsa Protocol
-    //Recieve Transaction code
-		/*
-    UART_PutString("Give me the verification code\n\r");
-    verif = readUART((uint8_t)KEY_SIZE);
-    UART_PutString("Give me signature\n\r");
-    testbanksigver = readUART((uint8_t)SIGNATURE_SIZE);
-    UART_PutString("Decrypting and verifying...\n\r");
-    verif = RSA_decrypt256(&br_rsa_i31_private, (char*) verif,(uint8_t) KEY_SIZE );
-    //NEED TO DEBUG RSA VER
-    if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksigver,verif, KEY_SIZE) == -1)
-    {
-        UART_PutString("Signature wrong, terminating program\n\r");
-        return -1;
-    }
-    UART_PutString("Signature verified...\n\r");
-    UART_PutString("Sending be ready\n\r");
-    writeUART(verif, sizeof(verif));
-		*/
-
-    //recieve data
-		/*
-    UART_PutString("Send over onion protected message\n\r");
-    everything = readUART((uint8_t)KEY_SIZE*4);
-    UART_PutString("Onion recieved ... Starting decrypt\n\r");
-
-    EEPROM_Read(KEY_SIZE*2, privkey, KEY_SIZE); //load key from mem
-    //should get 256 bytes
-    everything = (uint8_t*) RSA_decrypt512(&br_rsa_i31_private, (char*) everything, (uint8_t) KEY_SIZE*2); //still needs to be modified assume works
-    UART_PutString("Decryption done ... starting decomp\n\r");
-
-    data = readData(everything);
-    UART_PutString("data extracted\n\r");
-
-    testbanksig = readSignature(everything);
-    UART_PutString("sig extracted\n\r");
-
-    salt = readSalt(everything);
-    UART_PutString("salt extracted\n\r");
-
-    UART_PutString("Decomp done\n\r");
-
-    //Verify signature
-    pt = malloc(KEY_SIZE*3*sizeof(uint8_t));
-    memcpy(pt, everything, KEY_SIZE*3);
-    if(RSAver(&br_rsa_i31_pkcs1_vrfy, testbanksig, pt , KEY_SIZE*3) == -1)
-    {
-        UART_PutString("Signature wrong, terminating program\n\r");
-        return -1;
-    }
-    UART_PutString("Signature verified...\n\r");
-
-
-    UART_PutString("Starting to send data ...\n\r");
-    writeUART(data, sizeof(data));
-    UART_PutString("Starting to send decrypted salt ...\n\r");
-    writeUART(salt,sizeof(salt));
-    UART_PutString("Starting to send signature ...\n\r");
-    */
+    
 }
 
 void getValidBytes(uint8_t* buffer, int size)
@@ -385,7 +327,6 @@ int computeVerify(struct verificationPacket pack){
 
 static uint8_t* readUART(uint8_t size)
 {
-    //uint8_t* result = malloc(size*sizeof(uint8_t));
     uint8_t* result;
     for(int i = 0; i < size; i++)
     {
