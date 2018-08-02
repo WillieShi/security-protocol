@@ -67,11 +67,12 @@ class Bank:
         self.aes_write("pkv" + struct.pack(">32s32s", format("private_key_verify"), format(card_id, 32)))
 '''
     # Sends hashed card ID and PIN to the bank.
-    def pin_verify(self, pin, card_id):
-        val = "pvc" + struct.pack(">32s32s32s", format("pin_verify"), format(card_id, 32), format(ciphers.hash_message(card_id+pin), 32))
+    def pin_verify(self, card_id, pin, passkey):
+        transaction_id, card_id, pin, passkey = struct.unpack("32s32s32s16s", self.aes_read(112))
+        val = "pvc" + struct.pack(">32s32s32s16s", format("pin_verify"), format(card_id, 32), format(ciphers.hash_message(card_id+pin), 32), format(passkey, 16))
         self.aes_write(val)
-        transaction_id, result = struct.unpack(">32s?", self.aes_read(33))
-        return result
+
+# IV = 16 byte number
 '''
     # Fox
     # Decrypts the AES on the random number to send to the card.
