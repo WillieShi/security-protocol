@@ -4,6 +4,7 @@ import argparse
 import ciphers
 import sys
 import struct
+import random
 
 
 def parse_args():
@@ -41,22 +42,17 @@ if __name__ == "__main__":
     print "Provisioning card..."
     card = Card(c_port, baudrate=c_baud, verbose=True)
 
-    card_num = ciphers.generate_salt(32)
-'''
-    # Fox
-    private_inner_layer_key, public_inner_layer_key = ciphers.generate_key()
-    private_outer_layer_key, public_outer_layer_key = ciphers.generate_key()
+    card_num = ciphers.generate_salt(16)
+    IV = ciphers.generate_salt(16)
+    passkey = ciphers.generate_salt(16)
+    aes_key = ciphers.create_aes_key()
+    pin = random.randint(0, 9999)
 
-    # Fox
-    card.provision(card_num, private_outer_layer_key, public_inner_layer_key)
-    # card.stupid_provision()
+    card.provision(aes_key, IV, card_num, passkey)
     print "Card provisioned!"
     # update bank
     print "Updating bank..."
     bank = Bank(b_port)
-    # Fox
-    bank.provision_update(card_num, public_inner_layer_key, private_inner_layer_key, public_outer_layer_key, private_outer_layer_key, balance)
-    # bank.stupid_provision()
-'''
+    bank.provision_update(card_num, )
     print "Provisioning successful"
     print "Card already provisioned!"

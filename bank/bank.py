@@ -12,7 +12,7 @@ pnr = pin_reset()
 
 import db
 import logging
-from logging import info as log
+# from logging import info as log
 import sys
 import serial
 import argparse
@@ -35,7 +35,6 @@ class Bank(object):
         super(Bank, self).__init__()
         self.db = db.DB(db_path=db_path)
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
-        self.transactionKey = self.diffie_bank()
 
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
@@ -69,7 +68,7 @@ class Bank(object):
         # Receives ATM's half of diffie hellman from ATM to compute final value.
         transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
-        self.uptime_key_bank = (side_atm**secret_number_b) % mod
+        self.atm_key, self.atm_IV = (side_atm**secret_number_b) % mod, ciphers.generate_salt(16)
 
     # Links commands in ATM-Bank interface to functions in the bank
     # Three letter codes link interface commands to bank functions.
@@ -80,9 +79,9 @@ class Bank(object):
         while True:
             command = self.atm.read(3)
             if command == "ver":
-                self.verify()
+                balance, card_id, data = self.verify()
             elif command == "wtd":
-                self.withdraw()
+                self.withdraw(balance, card_id, data)
             elif command != "":
                 self.atm.write(self.ERROR)
 
@@ -96,24 +95,28 @@ class Bank(object):
 
         balance = ciphers.decrypt_aes(self.db.get_encrypted_balance(), hashed_data)
 
-        IV = ciphers.get_random_bytes(16)
-
         if hashed_passkey == self.db.get_hashed_passkey(card_id):
-            self.default_write(struct.pack(">16s16s16s", ciphers.encrypt_aes(balance, self.db.get_aes_key(card_id)), IV, ciphers.encrypt_aes(balance, self.atm_key)))
+            newIV = ciphers.generate_salt(16)
+            self.default_write(struct.pack(">16s16s16s", ciphers.encrypt_aes(balance, self.db.get_aes_key(card_id), self.db.get_iv(card_id)), newIV, ciphers.encrypt_aes(balance, self.atm_key, self.atm_IV)))
             self.db.set_aes_key(card_id, gen_new_key(self.db.get_aes_key(card_id), balance))
+            self.db.set_iv(card_id, newIV)
+            return balance, card_id, hashed_data
         else:
-            self.default_write("Nice try kid, papa john knows all the tricks")
+            self.default_write("Nice try kid, papa john taught me all the tricks")
 
-    # Reads the withdraw request to get the amount the user would like to withdraw.
-    def withdraw_amount_read(self):
-        transaction_id, withdraw_amount = struct.unpack(">32s32s", self.aes_read(64))
-        withdraw_amount = process(withdraw_amount)
-        return withdraw_amount
+    def withdraw(self, balance, card_id, hashed_data):
+        encrypted_withdraw_amount = struct.unpack(">16s", self.default_read(16))
+        withdraw_amount = ciphers.decrypt_aes(encrypted_withdraw_amount, self.db.get_aes_key(card_id), self.db.get_iv(card_id))
 
-    # Encrypts final balance with AES in preparation to send to ATM.
-    def balance_write(self, balance):
-        val = struct.pack(">32s32s", format("balance_write"), format(balance, 256))
-        self.aes_write(val)
+        if balance > withdraw_amount:
+            new_balance = balance - withdraw_amount
+            newIV = ciphers.generate_salt(16)
+            self.default_write(struct.pack(">16s16s16s", ciphers.encrypt_aes(new_balance, self.db.get_aes_key(card_id), self.db.get_iv(card_id)), newIV, ciphers.encrypt_aes(new_balance, self.atm_key, self.atm_IV)))
+            self.db.set_aes_key(card_id, gen_new_key(self.db.get_aes_key(card_id), new_balance))
+            self.db.set_iv(card_id, newIV)
+            self.db.set_encrypted_balance(card_id, ciphers.encrypt_aes(new_balance, hashed_data))
+        else:
+            self.default_write("You're broke ponyboy")
 
 
 def gen_new_key(old_key, balance):
