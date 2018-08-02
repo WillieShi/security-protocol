@@ -59,7 +59,7 @@ class DB(object):
 
     def get_atm(self, atm_id):
         return 1000
-        
+
     def get_atm_num_bills(self, atm_id):
         """get number of bills in atm: atm_id
 
@@ -80,44 +80,26 @@ class DB(object):
     # CUSTOM FUNCTIONS #
     ####################
     # Contains the balance in the double layer RSA.
-    def get_onion(self, card_id):
-        return self.read("cards", card_id, "onion")
+    def get_encrypted_balance(self, card_id):
+        return self.read("cards", card_id, "encrypted_balance")
 
     # Puts onion in the database.
-    def set_onion(self, card_id, value):
-        return self.modify("cards", card_id, "onion", value)
+    def set_encrypted_balance(self, card_id, value):
+        return self.modify("cards", card_id, "encrypted_balance", value)
 
-    # Gets the hash that contains the card ID and PIN from database.
-    def get_hash(self, card_id):
-        return self.read("cards", card_id, "hash")
+    def get_hashed_passkey(self, card_id):
+        return self.read("cards", card_id, "hashed_passkey")
 
-    # Sets the hash for card ID and PIN.
-    def set_hash(self, card_id, value):
-        return self.modify("cards", card_id, "hash", value)
+    # Puts onion in the database.
+    def set_hashed_passkey(self, card_id, value):
+        return self.modify("cards", card_id, "hashed_passkey", value)
 
-    # Gets the public key for the outer RSA layer.
-    def get_outer_onion_public_key(self, card_id):
-        return self.read("cards", card_id, "outer_onion_public_key")
+    def get_aes_key(self, card_id):
+        return self.read("cards", card_id, "aes_key")
 
-    # Sets the public key for the outer RSA layer.
-    def set_outer_onion_public_key(self, card_id, value):
-        return self.modify("cards", card_id, "outer_onion_public_key", value)
-
-    # Gets the private key for the inner RSA layer.
-    def get_inner_onion_private_key(self, card_id):
-        return self.read("cards", card_id, "inner_onion_private_key")
-
-    # Sets the private key for the inner RSA layer.
-    def set_inner_onion_private_key(self, card_id, value):
-        return self.modify("cards", card_id, "inner_onion_private_key", value)
-
-    # Gets the public key for the inner RSA layer.
-    def get_inner_onion_public_key(self, card_id):
-        return self.read("cards", card_id, "inner_onion_public_key")
-
-    # Sets the public key for the inner RSA layer.
-    def set_inner_onion_public_key(self, card_id, value):
-        return self.modify("cards", card_id, "inner_onion_public_key", value)
+    # Puts onion in the database.
+    def set_aes_key(self, card_id, value):
+        return self.modify("cards", card_id, "aes_key", value)
 
     #############################
     # ADMIN INTERFACE FUNCTIONS #
@@ -130,7 +112,7 @@ class DB(object):
             (bool): Returns True on Success. False otherwise.
         """
 
-        return self.modify('cards', card_id, ["onion"], [ciphers.encrypt_rsa(ciphers.encrypt_rsa(amount, self.get_inner_onion_public_key(card_id)), self.get_outer_onion_public_key(card_id))])
+        return self.modify('cards', card_id, ["encrypted_balance"], ciphers.encrypt_aes(amount, self.admin_db.get_hashed_data(card_id)))
 
     def admin_create_atm(self, atm_id):
         """create atm with atm_id
@@ -146,7 +128,7 @@ class DB(object):
         Returns:
             (string or None): Returns balance on Success. None otherwise.
         """
-        return ciphers.decrypt_rsa(ciphers.decrypt_rsa(self.read("cards", card_id, "onion"), self.get_inner_onion_private_key(card_id)), self.admin_db.get_outer_onion_private_key())
+        return ciphers.decrypt_aes(self.get_encrypted_balance(card_id), self.admin_db.get_hashed_data(card_id))
 
     def admin_set_balance(self, card_id, balance):
         """set balance of account: card_id
@@ -154,4 +136,4 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify("cards", card_id, ["onion"], [ciphers.encrypt_rsa(ciphers.encrypt_rsa(balance, self.get_inner_onion_public_key(card_id)), self.get_outer_onion_public_key(card_id))])
+        return self.modify("cards", card_id, ["encrypted_balance"], [ciphers.encrypt_aes(balance, self.admin_db.get_hashed_data(card_id))])
