@@ -53,6 +53,6 @@ if __name__ == "__main__":
     # update bank
     print "Updating bank..."
     bank = Bank(b_port)
-    bank.provision_update(aes_key, IV, card_num, ciphers.hash_message(passkey), ciphers.hash_message(format(aes_key) + format(balance)))
+    bank.provision_update(aes_key, IV, card_num, ciphers.hash_message(passkey), ciphers.hash_message(card_num+pin))
     print "Provisioning successful"
     print "Card already provisioned!"

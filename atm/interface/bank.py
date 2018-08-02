@@ -22,7 +22,6 @@ class Bank:
     Args:
         port (serial.Serial): Port to connect to
     """
-    uptime_key_atm = 0
 
     def __init__(self, port, verbose=False):
         self.ser = serial.Serial(port)
@@ -51,7 +50,8 @@ class Bank:
         # Sends ATM's half of diffie hellman to bank.
         self.default_write(struct.pack("32s256s", format("dif_side_atm"), format(side_atm, 256)))
         # uptime_key_atm is the final ATM-side agreed value for diffie hellman
-        self.uptime_key_atm = (side_bank**secret_number_a) % mod
+# #################################RECIEVE THE IV FROMT THE BANK
+        self.bank_key, self.bank_IV = (side_bank**secret_number_a) % mod
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set
@@ -63,58 +63,17 @@ class Bank:
         if self.verbose:
             stream("card: " + msg)
 
-    def check_balance(self, atm_id, card_id):
-        """Requests the balance of the account associated with the card_id
+    def read_verify_or_withdraw(self):
+        card_encrypted_balance, IV, atm_encrypted_balance = struct.pack(">16s16s16s", self.default_read(48))
+        return card_encrypted_balance, IV, ciphers.decrypt_aes(atm_encrypted_balance, self.bank_key, self.bank_IV)
 
-        Args:
-            atm_id (str): UUID of the ATM
-            card_id (str): UUID of the ATM card to look up
+    def write_verify(self, encrypted_hashed_passkey, card_id, pin):
+        pkt = struct.pack(">32s32s16s", encrypted_hashed_passkey, ciphers.encrypt_aes(ciphers.hash_message(card_id+pin), self.bank_key, self.bank_IV), ciphers.encrypt_aes(card_id, self.bank_key, self.bank_IV))
+        self.default_write(pkt)
 
-        Returns:
-            str: Balance of account on success
-            bool: False on failure
-        """
-        self._vp('check_balance: Sending request to Bank')
-        pkt = "bbb" + struct.pack(">36s36s", atm_id, card_id)
-        self.ser.write(pkt)
-
-        while pkt not in "ONE":
-            pkt = self.ser.read()
-
-        if pkt != "O":
-            return False
-        pkt = self.ser.read(76)
-        aid, cid, bal = struct.unpack(">36s36sI", pkt)
-
-        self._vp('check_balance: returning balance')
-        return bal
-
-    def withdraw(self, atm_id, card_id, amount):
-        """Requests a withdrawal from the account associated with the card_id
-
-        Args:
-            atm_id (str): UUID of the HSM
-            card_id (str): UUID of the ATM card
-            amount (str): Requested amount to withdraw
-
-        Returns:
-            str: hsm_id on success
-            bool: False on failure
-        """
-        self._vp('withdraw: Sending request to Bank')
-        pkt = "w" + struct.pack(">36s36sI", atm_id, card_id, amount)
-        self.ser.write(pkt)
-
-        while pkt not in "ONE":
-            pkt = self.ser.read()
-
-        if pkt != "O":
-            self._vp('withdraw: request denied')
-            return False
-        pkt = self.ser.read(72)
-        aid, cid = struct.unpack(">36s36s", pkt)
-        self._vp('withdraw: Withdrawal accepted')
-        return True
+    def write_withdraw(self, withdraw_amount):
+        pkt = struct.pack(">16s", ciphers.encrypt_aes(withdraw_amount, self.bank_key, self.bank_IV))
+        self.default_write(pkt)
 
     def provision_update(self, aes_key, IV, card_num, hashed_passkey, hashed_data):
         pkt = struct.pack(">32s16s16s32s32s", aes_key, IV, card_num, hashed_passkey, hashed_data)
