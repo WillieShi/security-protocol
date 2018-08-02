@@ -74,8 +74,9 @@ class ATM(cmd.Cmd, object):
         else:
             return False
         self.current_card_id = self.card.card_id_read()
-        self.bank.private_key_verify(self.current_card_id)
-        self.card.card_verify_write(self.bank.private_key_verify_read())
+        # Fox
+        # self.bank.private_key_verify(self.current_card_id)
+        # self.card.card_verify_write(self.bank.private_key_verify_read())
         if self.bank.private_key_verify_write(self.card.read_random_num()):
             self._vp("verified private key")
             return True
@@ -97,7 +98,8 @@ class ATM(cmd.Cmd, object):
             print("Here")
             try:
                 self._vp('check_balance: Requesting card_id using inputted pin')
-
+                '''
+                # Fox
                 # get balance from bank if card accepted PIN
                 if self.current_card_id:
                     self._vp('check_balance: Requesting balance from Bank')
@@ -107,6 +109,7 @@ class ATM(cmd.Cmd, object):
                     self.bank.inner_layer_write(inner_layer)
                     print "Balance is: ", self.balance_read()
                     return self.balance_read()
+                '''
                 self._vp('check_balance failed')
                 return False
             except NotProvisioned:

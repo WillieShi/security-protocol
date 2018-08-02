@@ -136,35 +136,40 @@ class Bank(object):
             return card_id
         return False
 
+'''
+    # Fox
     # Generates a random number and encrypts it with RSA encryption that a valid card would have the private key to.
     def private_key_verification_write(self, card_id):
         rand_num = ciphers.generate_salt(32)
         self.aes_write(struct.pack(">32s256s256s", format("private_key_verification_write"), format(ciphers.encrypt_rsa(rand_num, self.db.get_outer_onion_public_key(card_id)), 256), format(ciphers.sign_data(self.db.get_inner_onion_private_key(card_id)), 256)))
         return rand_num
-
+'''
     # Compares the random number sent by card (through ATM) to the originally generated random number. If they are equal, the card is a valid card.
     def private_key_verification_read(self, rand_num, card_id):
         transaction_id, cand_rand_num = struct.unpack(">32s32s", self.aes_read(64))
         if rand_num == cand_rand_num:
             return True
         return False
-
+'''
+    # Fox
     # Encrypts data with the outer layer of the onion in RSA.
     def outer_layer_write(self, card_id):
         val = struct.pack(">32s512s256s", format("outer_layer_write"), self.db.get_onion(card_id), ciphers.sign_data(self.db.get_inner_onion_private_key(card_id)))
         self.aes_write(val)
 
+    # Fox
     # Decrypts the inner layer of the onion (RSA).
     def inner_layer_read(self, card_id):
         transaction_id, enc_val = struct.unpack(">32s256s", self.aes_read(288))
         return ciphers.decrypt_rsa(enc_val, self.db.get_inner_onion_private_key(card_id))
-
+'''
     # Reads the withdraw request to get the amount the user would like to withdraw.
     def withdraw_amount_read(self):
         transaction_id, withdraw_amount = struct.unpack(">32s32s", self.aes_read(64))
         withdraw_amount = process(withdraw_amount)
         return withdraw_amount
-
+'''
+    # Fox
     # Calculates the new balance using the withdraw amount. Only passes if the user has enough money to withdraw their requested amount.
     def withdraw_balance_modify(self, balance, withdraw_amount, card_id):
         if(balance - withdraw_amount >= 0):
@@ -173,7 +178,7 @@ class Bank(object):
             return new_balance
         else:
             return "Bad, try again"  # fix this later, error system
-
+'''
     # Encrypts final balance with AES in preparation to send to ATM.
     def balance_write(self, balance):
         val = struct.pack(">32s32s", format("balance_write"), format(balance, 256))

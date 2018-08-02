@@ -1,8 +1,9 @@
 # Bank-side crypto
+# Fox
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
+# from Crypto.PublicKey import RSA
+# from Crypto.Cipher import PKCS1_OAEP
 from base64 import b64encode, b64decode
 import hashlib
 
@@ -49,7 +50,8 @@ def decrypt_aes(message, key):
     plain_text = decrypt_cipher.decrypt(message).decode("utf-8")
     return plain_text
 
-
+'''
+# Fox
 # generates rsa key
 # using generate() to generate key
 # first parameter can be any number that is a multiple of 256 and greater than 1024
@@ -58,7 +60,7 @@ def generate_key():
     public = private.publickey()
     return private, public
 
-
+# Fox
 # RSA encryption
 # rsa_pub_cipher is the public key with padding
 # encrypted_rsa is the ciphertext
@@ -74,6 +76,8 @@ def encrypt_rsa(message, pub_key):
 def export_public_key(key):
     # key is the public key object
     return key.publickey().exportKey(format='DER')
+
+# Fox
 # RSA decryption
 # rsa_pub_cipher is the private key with padding
 # decrypted_rsa is the decrypted ciphertext
@@ -85,14 +89,15 @@ def decrypt_rsa(encrypted_rsa, priv_key):
     rsa_priv_cipher = PKCS1_OAEP.new(priv_key)
     decrypted_rsa = rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
     return decrypted_rsa
-
+'''
 
 # Applies a hash to message input
 def hash_message(message):
     # message is anything you want hashes regardless of type.
     return(hashlib.sha3_256((str(message)).encode("utf-8")).hexdigest())
 
-
+'''
+# Fox
 # Makes new RSA signature
 def sign_data(key, data):
     signer = PKCS1_OAEP.new(key)
@@ -100,6 +105,7 @@ def sign_data(key, data):
     digest.update(b64decode(data))
     sign = signer.sign(digest)
     return b64encode(sign)
+'''
 
 # any test code goes here
 """
@@ -109,6 +115,7 @@ print(our_data)
 """
 
 #TESTING code
+'''
 #rsa
 
 mess= "12345678"
@@ -118,3 +125,4 @@ priv = b'-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEAqJ4tb2LShx1pFYwcRGzAgn
 encrypt_msg = encrypt_rsa(mess, pub)
 print("ENCRYPT:  ", encrypt_msg)
 print("DECRYPT: ", decrypt_rsa(encrypt_msg, priv))
+'''

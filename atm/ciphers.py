@@ -1,9 +1,10 @@
 # ATM-side crypto
+# Fox
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
-from Crypto.Cipher import PKCS1_OAEP
+# from Crypto.PublicKey import RSA
+# from Crypto.Signature import PKCS1_v1_5
+# from Crypto.Cipher import PKCS1_OAEP
 import hashlib
 from Crypto.Hash import SHA
 from base64 import b64decode
@@ -57,7 +58,8 @@ def decrypt_aes(message, key):
     plain_text = unpad(plain_text)
     return plain_text
 
-
+'''
+# Fox
 # generates rsa key
 # using generate() to generate key
 # first parameter can be any number that is a multiple of 256 and greater than 1024
@@ -66,7 +68,7 @@ def generate_key():
     public = private.publickey()
     return private, public
 
-
+# Fox
 # RSA encryption
 # rsa_pub_cipher is the public key with padding
 # encrypted_rsa is the ciphertext
@@ -87,7 +89,7 @@ def export_public_key(key):
     # key is the public key object (RSA)
     return key.publickey().exportKey(format='DER')
 
-
+# Fox
 # RSA decryption
 # rsa_pub_cipher is the private key with padding
 # decrypted_rsa is the decrypted ciphertext
@@ -100,14 +102,15 @@ def decrypt_rsa(encrypted_rsa, priv_key, isString=False):
     if isString:
         return rsa_priv_cipher.decrypt(encrypted_rsa).decode("utf-8")
     return rsa_priv_cipher.decrypt(encrypted_rsa)
-
+'''
 
 # Applies a hash to message input
 def hash_message(message):
     # message is anything you want hashes regardless of type.
     return(hashlib.sha3_256((str(message)).encode("utf-8")).hexdigest())
 
-
+'''
+# Fox
 # Makes new RSA signature
 def sign_data(key, data):
     data = data.encode("utf-8")
@@ -116,6 +119,7 @@ def sign_data(key, data):
     digest.update(b64decode(data))
     sign = signer.sign(digest)
     return sign
+'''
 
 """
 bank_priv, bank_pub = generate_key()

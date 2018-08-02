@@ -60,42 +60,46 @@ class Bank:
         self.default_write(struct.pack("32s256s", format("dif_side_atm"), format(side_atm, 256)))
         # uptime_key_atm is the final ATM-side agreed value for diffie hellman
         self.uptime_key_atm = (side_bank**secret_number_a) % mod
-
+'''
+    # Fox
     # Encrypts the verification number to test to see if the card is legitimate.
     def private_key_verify(self, card_id):
         self.aes_write("pkv" + struct.pack(">32s32s", format("private_key_verify"), format(card_id, 32)))
-
+'''
     # Sends hashed card ID and PIN to the bank.
     def pin_verify(self, pin, card_id):
         val = "pvc" + struct.pack(">32s32s32s", format("pin_verify"), format(card_id, 32), format(ciphers.hash_message(card_id+pin), 32))
         self.aes_write(val)
         transaction_id, result = struct.unpack(">32s?", self.aes_read(33))
         return result
-
+'''
+    # Fox
     # Decrypts the AES on the random number to send to the card.
     def private_key_verify_read(self):
         transaction_id, random_num, signature = struct.unpack(">32s256I256I", self.aes_read(544))
         random_num = process(random_num)
         signature = process(signature)
         return random_num, signature
-
+'''
     # private_key_verify() sends the random_num the card decrypted back to bank
     def private_key_verify_write(self, random_num):
         val = "pkw" + struct.pack(">32s32s", format("private_key_verify_write"), format(random_num, 32))
         self.aes_write(val)
-
+'''
+    # Fox
     # Writes the inner onion layer to the bank.
     def inner_layer_write(self, inner_layer):
         val = "ilw" + struct.pack(">32s256s", format("send_inner_layer"), format(inner_layer, 256))
         self.aes_write(val)
 
+    # Fox
     # Decrypts the AES on the onion from the bank to send to the card.
     def outer_layer_read(self):
         transaction_id, outer_layer, signature = struct.unpack(">32s512I256I", self.aes_read(800))
         outer_layer = process(outer_layer)
         signature = process(signature)
         return outer_layer, signature
-
+'''
     # Encrypts the withdraw amount requested by the card to send to the bank.
     def withdraw_amount_write(self, amount):
         val = "waw" + struct.pack(">32s32s", format("send_withdraw_amount"), format(amount, 256))
@@ -182,12 +186,13 @@ class Bank:
         aid, cid = struct.unpack(">36s36s", pkt)
         self._vp('withdraw: Withdrawal accepted')
         return True
-
+'''
+    # Fox
     def provision_update(self, card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance):
         pkt = struct.pack(">32s256s256s256s256s32s", format(card_num, 32), format(inner_layer_public_key, 256), format(inner_layer_private_key, 256), format(outer_layer_public_key, 256), format(outer_layer_private_key, 256), format(balance, 32))
         # total length is 1088 bytes
         self.ser.write("p" + pkt)
-
+'''
     def stupid_provision_update(self):
         self.ser.write("f")
 
