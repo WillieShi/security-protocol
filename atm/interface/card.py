@@ -36,7 +36,8 @@ class Card(object):
 
         self._send_op("req")
 
-        return self._get_uuid()
+        card_id, encrypted_hashed_passkey = struct.unpack(">16s32s", self.ser.read(48))
+        return card_id, encrypted_hashed_passkey
 
     def send_balance(self, encrypted_balance):
         """Sends encrypted balance to card to be decrypted and used to generate next key
@@ -44,8 +45,6 @@ class Card(object):
         self._sync(False)
 
         self._send_op("key" + encrypted_balance)
-
-        return self._get_uuid()
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set

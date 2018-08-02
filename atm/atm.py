@@ -67,21 +67,13 @@ class ATM(cmd.Cmd, object):
             pin (int): the pin of the card
 
         Returns:
-            bool: true if successfully verified
+            int: balance
         """
-        if self.pin_verify(pin, self.card.card_id_read()):
-            self._vp("verified pin")
-        else:
-            return False
-        self.current_card_id = self.card.card_id_read()
-        self.pin_verify(self.current_card_id, pin, passkey)
-        # Fox
-        # self.bank.private_key_verify(self.current_card_id)
-        # self.card.card_verify_write(self.bank.private_key_verify_read())
-        if self.bank.private_key_verify_write(self.card.read_random_num()):
-            self._vp("verified private key")
-            return True
-        return False
+        card_id, encrypted_hashed_passkey = self.card.request_verify()
+        self.bank.write_verify(encrypted_hashed_passkey, card_id, self.get_pin())
+        card_encrypted_balance, card_iv, balance = self.bank.read_verify_or_withdraw()
+        print(balance)
+        return balance
 
     def check_balance(self):
         """Tries to check the balance of the account associated with the
@@ -145,35 +137,24 @@ class ATM(cmd.Cmd, object):
             list of str: Withdrawn bills on success
             bool: False on failure
         """
-        if self.verify(self.get_pin()):
-            try:
-                self._vp('withdraw: Requesting card_id from card')
-                card_id = self.card.card_id_read()
-
-                # request UUID from HSM if card accepts PIN
-                if card_id:
-                    self._vp('withdraw: Requesting hsm_id from hsm')
-                    self.check_balance()
-                    if self.bank.withdraw_amount_write(amount):
-                        with open(self.billfile, "w") as f:
-                            self._vp('withdraw: Dispensing bills...')
-                            for i in range(self.dispensed, self.dispensed + amount):
-                                print(self.bills[i])
-                                f.write(self.bills[i] + "\n")
-                                self.bills[i] = "-DISPENSED BILL-"
-                                self.dispensed += 1
-                        self.update()
-                        self.check_balance()
-                        return True
-                else:
-                    self._vp('withdraw failed')
-                    return False
-            except ValueError:
-                self._vp('amount must be an int')
-                return False
-            except NotProvisioned:
-                self._vp('ATM card has not been provisioned!')
-                return False
+        try:
+            self._vp('withdraw: Requesting hsm_id from hsm')
+            if self.bank.write_withdraw(amount):
+                with open(self.billfile, "w") as f:
+                    self._vp('withdraw: Dispensing bills...')
+                    for i in range(self.dispensed, self.dispensed + amount):
+                        print(self.bills[i])
+                        f.write(self.bills[i] + "\n")
+                        self.bills[i] = "-DISPENSED BILL-"
+                        self.dispensed += 1
+                self.update()
+                return True
+        except ValueError:
+            self._vp('amount must be an int')
+            return False
+        except NotProvisioned:
+            self._vp('ATM card has not been provisioned!')
+            return False
 
     def get_pin(self, prompt="Please insert 8-digit PIN: "):
         pin = ''

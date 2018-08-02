@@ -74,6 +74,7 @@ class Bank:
     def write_withdraw(self, withdraw_amount):
         pkt = struct.pack(">16s", ciphers.encrypt_aes(withdraw_amount, self.bank_key, self.bank_IV))
         self.default_write(pkt)
+        return True
 
     def provision_update(self, aes_key, IV, card_num, hashed_passkey, hashed_data):
         pkt = struct.pack(">32s16s16s32s32s", aes_key, IV, card_num, hashed_passkey, hashed_data)
