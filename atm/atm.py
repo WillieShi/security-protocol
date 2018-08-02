@@ -74,6 +74,7 @@ class ATM(cmd.Cmd, object):
         else:
             return False
         self.current_card_id = self.card.card_id_read()
+        self.pin_verify(self.current_card_id, pin, passkey)
         # Fox
         # self.bank.private_key_verify(self.current_card_id)
         # self.card.card_verify_write(self.bank.private_key_verify_read())
