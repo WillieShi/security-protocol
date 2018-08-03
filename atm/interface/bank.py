@@ -106,9 +106,13 @@ def format(value, size=256):
     if type(value) is str:
         return bytes(value, "utf-8")
     else:
-        return (value).to_bytes(size, byteorder='little')
+        return bin(value).decode('utf-8')
 
 
 # Converts bytes back into int, only works on int
-def process(value):
-    return int.from_bytes(value, byteorder="little")
+def process_to_string(value):
+    return value.decode('hex')
+
+
+def process_to_int(value):
+    return int(value, 16)
