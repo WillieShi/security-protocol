@@ -28,8 +28,6 @@ class DB(object):
             self.init_db()
 
     def modify(self, table, k, subks, vs):
-        if not self.exists():
-            self.init_db()
         with open(self.path, 'r') as f:
             db = json.loads(f.read())
 

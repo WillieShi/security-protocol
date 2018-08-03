@@ -82,6 +82,8 @@ class Bank(object):
         transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
         self.atm_key, self.atm_IV = (side_atm**secret_number_b) % mod, ciphers.generate_salt(16)
+        self.default_write(struct.pack(">16s", self.atm_IV)
+
 
     # Links commands in ATM-Bank interface to functions in the bank
     # Three-letter codes link interface commands to bank functions (see top of this file for key on three-letter codes)

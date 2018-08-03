@@ -87,27 +87,7 @@ class ATM(cmd.Cmd, object):
             bool: False on failure
         """
 
-        if self.verify(self.get_pin()):
-            print("Here")
-            try:
-                self._vp('check_balance: Requesting card_id using inputted pin')
-                '''
-                # Fox
-                # get balance from bank if card accepted PIN
-                if self.current_card_id:
-                    self._vp('check_balance: Requesting balance from Bank')
-                    outer_layer, signature = self.bank.outer_layer_read()
-                    self.card.onion_write(outer_layer, signature)
-                    inner_layer = self.card.onion_read()
-                    self.bank.inner_layer_write(inner_layer)
-                    print "Balance is: ", self.balance_read()
-                    return self.balance_read()
-                '''
-                self._vp('check_balance failed')
-                return False
-            except NotProvisioned:
-                self._vp('ATM card has not been provisioned!')
-                return False
+        self.verify(self.get_pin())
 
     def change_pin(self, old_pin, new_pin):
         """Tries to change the PIN of the connected ATM card

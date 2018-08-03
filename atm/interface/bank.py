@@ -52,7 +52,7 @@ class Bank:
         self.default_write(struct.pack("32s256s", format("dif_side_atm"), format(side_atm, 256)))
         # uptime_key_atm is the final ATM-side agreed value for diffie hellman
 # #################################RECIEVE THE IV FROMT THE BANK
-        self.bank_key, self.bank_IV = (side_bank**secret_number_a) % mod
+        self.bank_key, self.bank_IV = (side_bank**secret_number_a) % mod, struct.unpack(">16s", self.default_read(16))
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set
@@ -83,6 +83,10 @@ class Bank:
         print(len(pkt))
         # total length is 128 bytes
         self.ser.write("p"+pkt)
+
+        self._vp('Provisioning complete')
+
+        return True
 
     def stupid_provision_update(self):
         self.ser.write("f")
