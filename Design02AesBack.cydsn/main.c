@@ -23,6 +23,7 @@
 
 const uint8_t row[CY_FLASH_SIZEOF_ROW] CY_ALIGN(CY_FLASH_SIZEOF_ROW) = {0};
 
+//Memory Row Constants
 #define AESrow 150
 #define ivrow 151
 #define cardrow 152
@@ -147,40 +148,6 @@ int provisionlaz(){
 
     return 0;
 }
-
-void init()
-{
-
-}
-
-void mark_provisioned()
-{
-    uint8 row[128];
-    *row = 1;
-    CySysFlashWriteRow(202, row);
-}
-
-// provisions card (should only ever be called once)
-void provision()
-{
-    uint8 message[128];
-
-    // synchronize with bank
-    syncConnection(SYNC_PROV);
-
-    pushMessage((uint8*)PROV_MSG, (uint8)strlen(PROV_MSG));
-
-    // set PIN
-    pullMessage(message);
-    write_pin(message);
-    pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
-
-    // set account number
-    pullMessage(message);
-    write_uuid(message);
-    pushMessage((uint8*)RECV_OK, strlen(RECV_OK));
-}
-
 
 void getValidBytes(uint8_t* buffer, int size)
 {
