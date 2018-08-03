@@ -159,15 +159,16 @@ def parse_args():
 # Used to reformat inputs to bytes, which can then be packed using struct
 def format(value, size=256):
     if type(value) is str:
-        return value.encode("hex")
+        ret = str(value.encode("hex"))
+        print(ret)
+        return ret
+
     else:
-        return hex(value)
+        ret = str(hex(value))
+        print(ret)
+        return ret
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 5d97b5ea5785ce148475ff8b4aa7fb383c4ce1bd
 # Converts bytes back into int, only works on int
 def process_to_string(value):
     return bytes.fromhex('4a4b4c').decode('utf-8')
