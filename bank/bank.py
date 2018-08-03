@@ -104,11 +104,11 @@ class Bank(object):
         encrypted_hashed_passkey, encrypted_hashed_data, encrypted_card_id = struct.unpack(">32s32s16s", self.default_read(80))
         # encrypted_hashed_passkey = process(encrypted_hashed_passkey)
         # encrypted_hashed_data = process(encrypted_hashed_data)
-        card_id = ciphers.decrypt_aes(encrypted_card_id, self.atm_key)
-        hashed_passkey = ciphers.decrypt_aes(encrypted_hashed_passkey, self.db.get_aes_key(card_id))
-        hashed_data = ciphers.decrypt_aes(encrypted_hashed_data, self.atm_key)
+        card_id = ciphers.decrypt_aes(encrypted_card_id, self.atm_key, self.atm_IV)
+        hashed_passkey = ciphers.decrypt_aes(encrypted_hashed_passkey, self.db.get_aes_key(card_id), self.get_iv(card_id))
+        hashed_data = ciphers.decrypt_aes(encrypted_hashed_data, self.atm_key, self.atm_IV)
 
-        balance = ciphers.decrypt_aes(self.db.get_encrypted_balance(), hashed_data)
+        balance = ciphers.decrypt_aes(self.db.get_encrypted_balance(), hashed_data, self.db.get_balance_iv())
         # If hashed_passkey corresponds to bank's record, AES channel between the bank and card will be established to encrypt the data with
         if hashed_passkey == self.db.get_hashed_passkey(card_id):
             newIV = ciphers.generate_salt(16)

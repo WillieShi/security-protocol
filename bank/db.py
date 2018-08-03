@@ -108,6 +108,12 @@ class DB(object):
     def set_iv(self, card_id, value):
         return self.modify("cards", card_id, "iv", value)
 
+    def get_balance_iv(self, card_id):
+        return self.read("cards", card_id, "balance_iv")
+
+    def set_balance_iv(self, card_id, value):
+        return self.modify("cards", card_id, "balance_iv", value)
+
     #############################
     # ADMIN INTERFACE FUNCTIONS #
     #############################
@@ -119,7 +125,7 @@ class DB(object):
             (bool): Returns True on Success. False otherwise.
         """
 
-        return self.modify('cards', card_id, ["encrypted_balance"], ciphers.encrypt_aes(amount, self.admin_db.get_hashed_data(card_id)))
+        return self.modify('cards', card_id, ["encrypted_balance"], ciphers.encrypt_aes(amount, self.admin_db.get_hashed_data(card_id), self.db.get_balance_iv(card_id)))
 
     def admin_create_atm(self, atm_id):
         """create atm with atm_id
@@ -135,7 +141,7 @@ class DB(object):
         Returns:
             (string or None): Returns balance on Success. None otherwise.
         """
-        return ciphers.decrypt_aes(self.get_encrypted_balance(card_id), self.admin_db.get_hashed_data(card_id))
+        return ciphers.decrypt_aes(self.get_encrypted_balance(card_id), self.admin_db.get_hashed_data(card_id), self.db.get_balance_iv(card_id))
 
     def admin_set_balance(self, card_id, balance):
         """set balance of account: card_id
@@ -143,4 +149,4 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify("cards", card_id, ["encrypted_balance"], [ciphers.encrypt_aes(balance, self.admin_db.get_hashed_data(card_id))])
+        return self.modify("cards", card_id, ["encrypted_balance"], [ciphers.encrypt_aes(balance, self.admin_db.get_hashed_data(card_id), self.db.get_balance_iv(card_id))])

@@ -22,7 +22,7 @@ def parse_args():
 if __name__ == "__main__":
     port, baudrate, db_file, admin_db_file = parse_args()
 
-    atm = serial.serial(port, baudrate, timeout=5)
+    atm = serial.Serial(port, baudrate, timeout=5)
 
     try:
         while True:
@@ -37,6 +37,7 @@ if __name__ == "__main__":
             aes_key, IV, card_id, hashed_passkey, hashed_data = struct.pack(">32s16s16s32s32s", atm.read(128))
             db.set_aes_key(card_id, aes_key)
             db.set_iv(card_id, IV)
+            db.set_balance_iv(card_id, IV)
             db.set_hashed_passkey(card_id, hashed_passkey)
             db.set_encrypted_balance(card_id, ciphers.encrypt_aes(1000, hashed_data))
             admin_db.set_hashed_data(hashed_data)
