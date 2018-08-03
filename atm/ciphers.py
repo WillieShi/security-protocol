@@ -55,7 +55,11 @@ def encrypt_aes(message, key, IV):
 
 # Takes a message and AES key, and decrypts the message.
 def decrypt_aes(message, key, IV):
+<<<<<<< HEAD
     # the key is the AES key
+=======
+    # the key is the AES key that was generated earlier
+>>>>>>> e709fd7878cc0d41e75187f079ad062dacaa4327
     # message is the encrypted message you want to decrypt
     # the IV is still the IV
     decrypt_cipher = AES.new(key.encode('utf-8'), AES.MODE_CTR, IV)
@@ -68,101 +72,3 @@ def decrypt_aes(message, key, IV):
 def hash_message(message):
     # message is anything you want hashed regardless of type.
     return(hashlib.sha256((str(message)).encode("utf-8")).hexdigest())
-
-
-'''
-# Fox
-# Makes new RSA signature
-def sign_data(key, data):
-    data = data.encode("utf-8")
-    signer = PKCS1_v1_5.new(key)
-    digest = SHA.new()
-    digest.update(b64decode(data))
-    sign = signer.sign(digest)
-    return sign
-'''
-
-"""
-bank_priv, bank_pub = generate_key()
-f = open("bank_priv.pem", "wb")
-priv_key = bank_priv.exportKey()
-f.write("%s" % (priv_key))
-f.close()
-f = open("bank_priv.pem", "w")
-f.write("\n")
-f.write("%s" % (bank_priv.n))
-f.write("\n")
-f.write("%s" % (bank_priv.e))
-f.write("\n")
-f.write("%s" % (bank_priv.d))
-f.write("\n")
-f.write("%s" % (bank_priv.p))
-f.write("\n")
-f.write("%s" % (bank_priv.q))
-f.write("\n")
-f.write("%s" % (bank_priv.u))
-f.write("\n")
-f.close()
-
-f = open("bank_pub.pem", "wb")
-pub_key = bank_priv.publickey().exportKey()
-f.write("%s" % (pub_key))
-f.close()
-f = open("bank_pub.pem", "w")
-f.write("\n")
-f.write("%s" % (bank_priv.n))
-f.write("\n")
-f.write("%s" % (bank_priv.e))
-f.close()
-
-bank_priv, bank_pub = generate_key()
-f = open("card_priv.pem", "wb")
-priv_key = bank_priv.exportKey()
-f.close()
-f = open("card_priv.pem", "w")
-f.write("%s" % (priv_key))
-f.write("\n")
-f.write("%s" % (bank_priv.n))
-f.write("\n")
-f.write("%s" % (bank_priv.e))
-f.write("\n")
-f.write("%s" % (bank_priv.d))
-f.write("\n")
-f.write("%s" % (bank_priv.p))
-f.write("\n")
-f.write("%s" % (bank_priv.q))
-f.write("\n")
-f.write("%s" % (bank_priv.u))
-f.write("\n")
-f.close()
-
-f = open("card_pub.pem", "wb")
-priv_key = bank_priv.publickey().exportKey()
-f.close()
-f = open("card_pub.pem", "w")
-f.write("%s" % (priv_key))
-f.write("\n")
-f.write("%s" % (bank_priv.n))
-f.write("\n")
-f.write("%s" % (bank_priv.e))
-f.close()
-
-
-plain_message = "fuck off"
-plain_message = plain_message.encode("utf-8")
-public_key = RSA.import_key("-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqJ4tb2LShx1pFYwcRGzA\ngn/2J7fowEuLY9vLMib9AokRwxbRQYmL2DKDTSq1B9TAot3ONmIFx88t9JwpdCYP\nfYqOFFo7LSffgzmwOdc1vPnLqGm/W2tavs2YJygSdmoy+s3hCrHq7IcXD/a7PR23\nv+88LkrnaZz9zsQlpuY1dJ7F5sAblf/u8rdPq6iu4LglSdNk9sC5jVSc5H5le8Gm\n2xbO+gyrS2YLpmzu32M9nvKenFFpLPig+zHFZYjoti5koseHINSAMaZc8QWHOMf+\nqtDPNI/EK76lUs7v3PZcN5QjglOc7j1TnR/tTD8olaRcA2lbxOAz3fJIjCCFWnaV\nNQIDAQAB\n-----END PUBLIC KEY-----")
-encrypted_message = encrypt_rsa(message=plain_message, pub_key=public_key)
-print(type(encrypted_message))
-f = open("fuck.txt", "w")
-f.write("%s" % (encrypted_message))
-"""
-
-'''
-# Test Code for AES
-message = "Hello, World"
-key = create_aes_key()
-encrypted = encrypt_aes(message, key)
-print(encrypted)
-decrypted = decrypt_aes(encrypted, key)
-print(decrypted)
-'''
