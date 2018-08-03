@@ -155,12 +155,8 @@ def parse_args():
     return parser.parse_args()
 
 
-<<<<<<< HEAD
-def format(value, size=256, endianess = 'little'):
-=======
 # Used to reformat inputs to bytes, which can then be packed using struct
-def format(value, size=256):
->>>>>>> 87916d56c630be1f20ecc5bda91fa6bdf489b55c
+def format(value, size=256, endianess = 'little'):
     if type(value) is str:
         return bytes(value)
     else:
