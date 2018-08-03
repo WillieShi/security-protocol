@@ -173,9 +173,9 @@ def format(value, size=256):
 def process_to_string(value):
     return bytes.fromhex('4a4b4c').decode('utf-8')
 
-
 def process_to_int(value):
     return int(value, 16)
+
 
 
 def main():
