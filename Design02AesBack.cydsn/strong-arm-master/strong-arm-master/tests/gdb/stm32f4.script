@@ -1,0 +1,9 @@
+target remote localhost:3333
+monitor arm semihosting enable
+monitor halt
+monitor poll
+
+monitor flash probe 0
+monitor reset halt
+load
+monitor reset init

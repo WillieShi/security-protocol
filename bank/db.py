@@ -101,6 +101,13 @@ class DB(object):
     def set_aes_key(self, card_id, value):
         return self.modify("cards", card_id, "aes_key", value)
 
+    def get_iv(self, card_id):
+        return self.read("cards", card_id, "iv")
+
+    # Puts onion in the database.
+    def set_iv(self, card_id, value):
+        return self.modify("cards", card_id, "iv", value)
+
     #############################
     # ADMIN INTERFACE FUNCTIONS #
     #############################
