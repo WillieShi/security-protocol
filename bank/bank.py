@@ -66,20 +66,20 @@ class Bank(object):
 
     # Generates the modulus and base for Diffie Hellman using a prime number
     def diffie_hellman(self):
-        modulus = self.generate_prime_number(2)
-        base = self.generate_prime_number(3)
+        modulus = self.generate_prime_number(100)
+        base = self.generate_prime_number(100)
         return (modulus, base)
 
     # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
     def diffie_bank(self):
         mod, base = self.diffie_hellman()
         #  Sends modulus and base to ATM
-        self.default_write(struct.pack(">32s256s256s", "dif_mod_base", format(mod, 256), format(base, 256)))
+        self.default_write(struct.pack(">32s256s256s", format("dif_mod_base"), format(mod, 256), format(base, 256)))
         # random.randint() is a pseudorandom num generator that returns a value N such that a <= N <= b
         secret_number_b = random.randint(1, 9999)
         side_bank = (base**secret_number_b) % mod
         # Sends bank's half of diffie hellman to ATM.
-        self.default_write(struct.pack(">32s256s", "dif_side_bank", format(side_bank, 256)))
+        self.default_write(struct.pack(">32s256s", format("dif_side_bank"), format(side_bank, 256)))
         # Receives ATM's half of diffie hellman from ATM to compute final value.
         the_size = self.bytesize(side_bank)
         print("The size: ", the_size)
@@ -159,12 +159,10 @@ def parse_args():
 # Used to reformat inputs to bytes, which can then be packed using struct
 def format(value, size=256):
     if type(value) is str:
-        ret = str(value.encode("hex"))
-        print(ret)
-        return ret
+        return binascii.hexlify(value.encode('utf-8'))
 
     else:
-        ret = str(hex(value))
+        ret = str(hex(value)).encode('utf-8')
         print(ret)
         return ret
 
@@ -173,9 +171,9 @@ def format(value, size=256):
 def process_to_string(value):
     return bytes.fromhex('4a4b4c').decode('utf-8')
 
+
 def process_to_int(value):
     return int(value, 16)
-
 
 
 def main():
