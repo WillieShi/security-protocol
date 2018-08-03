@@ -23,9 +23,10 @@ class Bank:
         port (serial.Serial): Port to connect to
     """
 
-    def __init__(self, port, verbose=False):
+    def __init__(self, port, verbose=True):
         self.ser = serial.Serial(port)
         self.verbose = verbose
+        self.ser.xonxoff = 1
 
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
@@ -78,15 +79,21 @@ class Bank:
 
     # Sends user's requested withdraw amount from atm to bank after encrypting
     def write_withdraw(self, withdraw_amount):
-        pkt = struct.pack(">16s", ciphers.encrypt_aes(withdraw_amount, self.bank_key, self.bank_IV))
+        pkt = struct.pack(">16s", ciphers.encrypt_aes(str(withdraw_amount), self.bank_key, self.bank_IV))
         self.default_write(pkt)
         return True
 
     # Begins provision process and sends important data to bank
     def provision_update(self, aes_key, IV, card_num, hashed_passkey, hashed_data):
         pkt = struct.pack(">32s16s16s32s32s", aes_key, IV, card_num, hashed_passkey, hashed_data)
-        # total length is not 1088 bytes
-        self.ser.write("p" + pkt)
+        print(pkt)
+        print(len(pkt))
+        # total length is 128 bytes
+        self.ser.write("p"+pkt)
+
+        self._vp('Provisioning complete')
+
+        return True
 
     def stupid_provision_update(self):
         self.ser.write("f")

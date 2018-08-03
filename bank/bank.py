@@ -82,6 +82,8 @@ class Bank(object):
         transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
         self.atm_key, self.atm_IV = (side_atm**secret_number_b) % mod, ciphers.generate_salt(16)
+        self.default_write(struct.pack(">16s", self.atm_IV)
+
 
     # Links commands in ATM-Bank interface to functions in the bank
     # Three-letter codes link interface commands to bank functions (see top of this file for key on three-letter codes)
@@ -123,7 +125,7 @@ class Bank(object):
     # Decrypts AES to read the withdraw_amount
     def withdraw(self, balance, card_id, hashed_data):
         encrypted_withdraw_amount = struct.unpack(">16s", self.default_read(16))
-        withdraw_amount = ciphers.decrypt_aes(encrypted_withdraw_amount, self.db.get_aes_key(card_id), self.db.get_iv(card_id))
+        withdraw_amount = int(ciphers.decrypt_aes(encrypted_withdraw_amount, self.db.get_aes_key(card_id), self.db.get_iv(card_id)))
     # If the user has enough money to withdraw the requested amount, the bank will proceed with calculating the remaining balance
     # Will send the user the new balance after encrypting it with AES
     # If the user does not have enough money, an error message will be sent
@@ -133,7 +135,7 @@ class Bank(object):
             self.default_write(struct.pack(">16s16s16s", ciphers.encrypt_aes(new_balance, self.db.get_aes_key(card_id), self.db.get_iv(card_id)), newIV, ciphers.encrypt_aes(new_balance, self.atm_key, self.atm_IV)))
             self.db.set_aes_key(card_id, gen_new_key(self.db.get_aes_key(card_id), new_balance))
             self.db.set_iv(card_id, newIV)
-            self.db.set_encrypted_balance(card_id, ciphers.encrypt_aes(new_balance, hashed_data))
+            self.db.set_encrypted_balance(card_id, ciphers.encrypt_aes(new_balance, hashed_data), self.db.get_balance_iv(card_id))
         else:
             self.default_write("You're broke ponyboy")
 
