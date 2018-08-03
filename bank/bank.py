@@ -36,6 +36,7 @@ class Bank(object):
         self.db = db.DB(db_path=db_path)
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
 
+
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
         self.atm.write(msg)
@@ -156,7 +157,7 @@ def parse_args():
 
 
 # Used to reformat inputs to bytes, which can then be packed using struct
-def format(value, size=256, endianess = 'little'):
+def format(value, size=256):
     if type(value) is str:
         return bytes(value)
     else:
