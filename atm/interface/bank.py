@@ -39,18 +39,20 @@ class Bank:
     # Performs computations after receving modulus and base from bank.
     def diffie_atm(self):
         # Receives modulus and base from bank.
-        transaction_id, mod, base = struct.unpack(">32s256s256s", self.default_read(544))
+        transaction_id, mod, base = struct.unpack(">64s512s512s", self.default_read(1088))
+        transaction_id = process_to_string(transaction_id)
         # converts mod and base from bytes to int using process()
-        mod = process(mod)
-        base = process(base)
+        base = process_to_int(base)
+        mod = process_to_int(mod)
         # random.randint() is a pseudorandom num generator that returns a value N such that a <= N <= b
         secret_number_a = randint(0, 9999)
         side_atm = (base**secret_number_a) % mod
         # Receives bank's half of diffie hellman from bank to compute final value.
-        transaction_id, side_bank = struct.unpack("32s256s", self.default_read(288))
-        side_bank = process(side_bank)
+        transaction_id, side_bank = struct.unpack("64s512s", self.default_read(576))
+        transaction_id = process_to_string(transaction_id)
+        side_bank = process_to_int(side_bank)
         # Sends ATM's half of diffie hellman to bank.
-        self.default_write(struct.pack("32s256s", format("dif_side_atm"), format(side_atm, 256)))
+        self.default_write(struct.pack("64s512s", format("dif_side_atm"), format(side_atm)))
         # uptime_key_atm is the final ATM-side agreed value for diffie hellman
         # RECIEVE THE IV FROMT THE BANK
         # Fix
@@ -68,23 +70,26 @@ class Bank:
 
     # Sends to bank the card-encrypted balance (only card and bank have AES key), and the atm-encrypted balance (only atm and bank have AES key)
     def read_verify_or_withdraw(self):
-        card_encrypted_balance, IV, atm_encrypted_balance = struct.pack(">16s16s16s", self.default_read(48))
+        card_encrypted_balance, IV, atm_encrypted_balance = struct.pack(">32s32s132s", self.default_read(96))
+        card_encrypted_balance = process_to_int(card_encrypted_balance)
+        IV = process_to_int(IV)
+        atm_encrypted_balance = process_to_int(atm_encrypted_balance)
         return card_encrypted_balance, IV, ciphers.decrypt_aes(atm_encrypted_balance, self.bank_key, self.bank_IV)
 
     # Encrypts information needed to verify user with atm-bank-only AES and sends to bank
     def write_verify(self, encrypted_hashed_passkey, card_id, pin):
-        pkt = struct.pack(">32s32s16s", encrypted_hashed_passkey, ciphers.encrypt_aes(ciphers.hash_message(card_id+pin), self.bank_key, self.bank_IV), ciphers.encrypt_aes(card_id, self.bank_key, self.bank_IV))
+        pkt = struct.pack(">64s64s32s", format(encrypted_hashed_passkey), format(ciphers.encrypt_aes(ciphers.hash_message(card_id+pin), self.bank_key, self.bank_IV)), format(ciphers.encrypt_aes(card_id, self.bank_key, self.bank_IV)))
         self.default_write(pkt)
 
     # Sends user's requested withdraw amount from atm to bank after encrypting
     def write_withdraw(self, withdraw_amount):
-        pkt = struct.pack(">16s", ciphers.encrypt_aes(str(withdraw_amount), self.bank_key, self.bank_IV))
+        pkt = struct.pack(">32s", format(ciphers.encrypt_aes(str(withdraw_amount), self.bank_key, self.bank_IV)))
         self.default_write(pkt)
         return True
 
     # Begins provision process and sends important data to bank
     def provision_update(self, aes_key, IV, card_num, hashed_passkey, hashed_data):
-        pkt = struct.pack(">32s16s16s32s32s", aes_key, IV, card_num, hashed_passkey, hashed_data)
+        pkt = struct.pack(">64s32s32s64s64s", format(aes_key), format(IV), format(card_num), format(hashed_passkey), format(hashed_data))
         print(pkt)
         print(len(pkt))
         self.ser = serial.Serial('/dev/ttyO1', baudrate=115200, timeout=2)
