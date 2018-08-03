@@ -108,6 +108,12 @@ class DB(object):
     def set_iv(self, card_id, value):
         return self.modify("cards", card_id, "iv", value)
 
+    def get_balance_iv(self, card_id):
+        return self.read("cards", card_id, "balance_iv")
+
+    def set_balance_iv(self, card_id, value):
+        return self.modify("cards", card_id, "balance_iv", value)
+
     #############################
     # ADMIN INTERFACE FUNCTIONS #
     #############################
