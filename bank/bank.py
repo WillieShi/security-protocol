@@ -36,6 +36,7 @@ class Bank(object):
         self.db = db.DB(db_path=db_path)
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
 
+
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
         self.atm.write(msg)
@@ -79,7 +80,10 @@ class Bank(object):
         # Sends bank's half of diffie hellman to ATM.
         self.default_write(struct.pack(">32s256s", format("dif_side_bank"), format(side_bank, 256)))
         # Receives ATM's half of diffie hellman from ATM to compute final value.
+        the_size = self.bytesize(side_bank)
+        print "The size: ", the_size
         transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
+        print(self.bytesize(side_atm))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
         self.atm_key, self.atm_IV = (side_atm**secret_number_b) % mod, ciphers.generate_salt(16)
         self.default_write(struct.pack(">16s", self.atm_IV))
@@ -154,9 +158,12 @@ def parse_args():
 # Used to reformat inputs to bytes, which can then be packed using struct
 def format(value, size=256):
     if type(value) is str:
-        return bytes(value, "utf-8")
+        return bytes(value)
     else:
-        return (value).to_bytes(size, byteorder='little')
+        h = '%x' % value
+        s = ('0'*(len(h) % 2) + h).zfill(size*2).decode('hex')
+        return s[::-1]
+
 
 
 # Converts bytes back into int, only works on int

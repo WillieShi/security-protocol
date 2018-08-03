@@ -7,6 +7,10 @@
 <wrkspc_folders />
 <files />
 <projects>
+<<<<<<< HEAD
+=======
+<v>.\Design01.cydsn\Design01.cyprj</v>
+>>>>>>> 65adf47bbe2cd2edacf9ac506417df4e8766dfab
 <v>.\Design02AesBack.cydsn\Design02AesBack.cyprj</v>
 </projects>
 <workspace_id v="45437f38-92fb-4567-8c8c-ed5ee4d3dcc3" />

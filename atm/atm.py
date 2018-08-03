@@ -61,7 +61,10 @@ class ATM(cmd.Cmd, object):
                                 "bills": self.bills}))
 
     def verify(self, pin):
-        """Verifies card with pin an private key
+        """Verifies card with pin and private key
+
+        Writes the hashed passkey, card number, and pin to send to bank
+        Sends the encrypted balance, card iv, and decrypted balance to bank
 
         Args:
             pin (int): the pin of the card
