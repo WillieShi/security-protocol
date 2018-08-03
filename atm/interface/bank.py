@@ -24,9 +24,8 @@ class Bank:
     """
 
     def __init__(self, port, verbose=True):
-        self.ser = serial.Serial(port)
+        # self.ser = serial.Serial(port, baudrate=115200, timeout=2)
         self.verbose = verbose
-        self.ser.xonxoff = 1
 
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
@@ -81,12 +80,15 @@ class Bank:
         pkt = struct.pack(">32s16s16s32s32s", aes_key, IV, card_num, hashed_passkey, hashed_data)
         print(pkt)
         print(len(pkt))
+        self.ser = serial.Serial('/dev/ttyO1', baudrate=115200, timeout=2)
         # total length is 128 bytes
-        self.ser.write("p"+pkt)
+        self.ser.write("p" + pkt)
 
         self._vp('Provisioning complete')
 
         return True
+
+        self._vp('Provisioning complete')
 
     def stupid_provision_update(self):
         self.ser.write("f")

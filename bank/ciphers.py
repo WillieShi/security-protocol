@@ -3,7 +3,7 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import hashlib
-
+from Crypto.Util import Counter
 
 # here we define AES functions
 
@@ -13,11 +13,12 @@ def generate_salt(length):
     return get_random_bytes(length)
 
 
-def pad(unpadded_message, pad_length):
+def pad(unpadded_message):
     # unpadded_message is the message you want sent
     # pad_length is the length of the final message
-    padded_message = unpadded_message + (((pad_length - len(unpadded_message)) % pad_length * '!'))
-    return padded_message
+    while len(str(unpadded_message)) % 16 != 0:
+        unpadded_message = "0" + str(unpadded_message)
+    return unpadded_message
 
 
 # Creates new AES key
@@ -32,7 +33,8 @@ def encrypt_aes(message, key, IV):
     # key has to be 16 bytes long, probably generated from create_aes_key()
     # message is just the message you want to send
     message = pad(message)
-    encrypt_cipher = AES.new(key, AES.MODE_CTR, IV)
+    ctr = Counter.new(128, init_val=IV)
+    encrypt_cipher = AES.new(key, AES.MODE_CTR, counter=ctr)
     cipher_text = encrypt_cipher.encrypt(message)
     return cipher_text
 
@@ -41,7 +43,9 @@ def encrypt_aes(message, key, IV):
 def decrypt_aes(message, key, IV):
     # the key is the AES key that you generated earlier
     # message is the encrypted message you want to decrypt
-    decrypt_cipher = AES.new(key, AES.MODE_CTR, IV)
+    ctr = Counter.new(128, init_val=IV)
+    decrypt_cipher = AES.new(key, AES.MODE_CTR, counter=ctr)
+
     # ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
     plain_text = decrypt_cipher.decrypt(message).decode("utf-8")
     return plain_text

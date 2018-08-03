@@ -81,38 +81,38 @@ class DB(object):
     ####################
     # Contains the balance in the double layer RSA.
     def get_encrypted_balance(self, card_id):
-        return self.read("cards", card_id, "encrypted_balance")
+        return self.read("cards", str(card_id), "encrypted_balance")
 
     # Puts onion in the database.
     def set_encrypted_balance(self, card_id, value):
-        return self.modify("cards", card_id, "encrypted_balance", value)
+        return self.modify("cards", str(card_id), ["encrypted_balance"], [str(value)])
 
     def get_hashed_passkey(self, card_id):
-        return self.read("cards", card_id, "hashed_passkey")
+        return self.read("cards", str(card_id), "hashed_passkey")
 
     # Puts onion in the database.
     def set_hashed_passkey(self, card_id, value):
-        return self.modify("cards", card_id, "hashed_passkey", value)
+        return self.modify("cards", str(card_id), ["hashed_passkey"], [str(value)])
 
     def get_aes_key(self, card_id):
-        return self.read("cards", card_id, "aes_key")
+        return self.read("cards", str(card_id), "aes_key")
 
     # Puts onion in the database.
     def set_aes_key(self, card_id, value):
-        return self.modify("cards", card_id, "aes_key", value)
+        return self.modify("cards", str(card_id), ["aes_key"], [str(value)])
 
     def get_iv(self, card_id):
-        return self.read("cards", card_id, "iv")
+        return self.read("cards", str(card_id), "iv")
 
     # Puts onion in the database.
     def set_iv(self, card_id, value):
-        return self.modify("cards", card_id, "iv", value)
+        return self.modify("cards", str(card_id), ["iv"], [str(value)])
 
     def get_balance_iv(self, card_id):
-        return self.read("cards", card_id, "balance_iv")
+        return self.read("cards", str(card_id), "balance_iv")
 
     def set_balance_iv(self, card_id, value):
-        return self.modify("cards", card_id, "balance_iv", value)
+        return self.modify("cards", str(card_id), ["balance_iv"], [str(value)])
 
     #############################
     # ADMIN INTERFACE FUNCTIONS #
@@ -125,7 +125,7 @@ class DB(object):
             (bool): Returns True on Success. False otherwise.
         """
 
-        return self.modify('cards', card_id, ["encrypted_balance"], ciphers.encrypt_aes(amount, self.admin_db.get_hashed_data(card_id), self.db.get_balance_iv(card_id)))
+        return self.modify('cards', str(card_id), ["encrypted_balance"], str(ciphers.encrypt_aes(amount, self.admin_db.get_hashed_data(card_id), self.db.get_balance_iv(card_id))))
 
     def admin_create_atm(self, atm_id):
         """create atm with atm_id
@@ -133,7 +133,7 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify("atms", atm_id, ["bills"], [128])
+        return self.modify("atms", str(atm_id), ["bills"], [128])
 
     def admin_get_balance(self, card_id):
         """get balance of account: card_id
@@ -149,4 +149,4 @@ class DB(object):
         Returns:
             (bool): Returns True on Success. False otherwise.
         """
-        return self.modify("cards", card_id, ["encrypted_balance"], [ciphers.encrypt_aes(balance, self.admin_db.get_hashed_data(card_id), self.db.get_balance_iv(card_id))])
+        return self.modify("cards", str(card_id), ["encrypted_balance"], [str(ciphers.encrypt_aes(balance, self.admin_db.get_hashed_data(card_id), self.db.get_balance_iv(card_id)))])

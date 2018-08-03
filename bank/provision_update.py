@@ -22,11 +22,12 @@ def parse_args():
 if __name__ == "__main__":
     port, baudrate, db_file, admin_db_file = parse_args()
 
-    atm = serial.Serial(port, baudrate, timeout=5)
+    atm = serial.Serial(port, baudrate=115200, timeout=5)
 
     try:
         db = DB(db_path=db_file)
         admin_db = Admin_DB(db_path=admin_db_file)
+        db.init_db()
         while True:
             print("Listening for provisioning info...")
             pkt = atm.read()
@@ -38,12 +39,15 @@ if __name__ == "__main__":
                 print(len(pkt))
                 aes_key, IV, card_id, hashed_passkey, hashed_data = struct.unpack(">32s16s16s32s32s", pkt)
                 print("parts", aes_key, IV, card_id, hashed_passkey, hashed_data)
+
                 db.set_aes_key(card_id, aes_key)
                 db.set_iv(card_id, IV)
                 db.set_balance_iv(card_id, IV)
                 db.set_hashed_passkey(card_id, hashed_passkey)
-                db.set_encrypted_balance(card_id, ciphers.encrypt_aes(1000, hashed_data))
+                db.set_encrypted_balance(card_id, ciphers.encrypt_aes(1000, hashed_data, db.get_balance_iv(card_id)))
                 admin_db.set_hashed_data(hashed_data)
+
+                break
 
             # card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance = struct.unpack(">36I256I256I256I256I32I", pkt)
 
