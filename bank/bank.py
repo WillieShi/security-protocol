@@ -20,6 +20,7 @@ import struct
 from Crypto.Util import number
 import ciphers
 import random
+import binascii
 
 
 class Bank(object):
@@ -73,15 +74,15 @@ class Bank(object):
     def diffie_bank(self):
         mod, base = self.diffie_hellman()
         #  Sends modulus and base to ATM
-        self.default_write(struct.pack(">32s256s256s", format("dif_mod_base"), format(mod, 256), format(base, 256)))
+        self.default_write(struct.pack(">32s256s256s", "dif_mod_base", format(mod, 256), format(base, 256)))
         # random.randint() is a pseudorandom num generator that returns a value N such that a <= N <= b
         secret_number_b = random.randint(1, 9999)
         side_bank = (base**secret_number_b) % mod
         # Sends bank's half of diffie hellman to ATM.
-        self.default_write(struct.pack(">32s256s", format("dif_side_bank"), format(side_bank, 256)))
+        self.default_write(struct.pack(">32s256s", "dif_side_bank", format(side_bank, 256)))
         # Receives ATM's half of diffie hellman from ATM to compute final value.
         the_size = self.bytesize(side_bank)
-        print "The size: ", the_size
+        print("The size: ", the_size)
         transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
         print(self.bytesize(side_atm))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
@@ -145,7 +146,7 @@ class Bank(object):
 
 # Generates new AES key using the old key and the current balance hashed together
 def gen_new_key(old_key, balance):
-    return ciphers.hash_message(format(old_key) + format(balance))
+    return ciphers.hash_message(old_key + str(balance))
 
 
 def parse_args():
@@ -158,16 +159,26 @@ def parse_args():
 # Used to reformat inputs to bytes, which can then be packed using struct
 def format(value, size=256):
     if type(value) is str:
+<<<<<<< HEAD
         return value.encode("hex")
     else:
         return hex(value)
 
 
+=======
+        return bytes(value, "utf-8")
+    else:
+        return bin(value).decode('utf-8')
+>>>>>>> 17106a7fee52e76d36f63fa30ca694e1867eab32
 
 
 # Converts bytes back into int, only works on int
-def process(value):
-    return int.from_bytes(value, byteorder="little")
+def process_to_string(value):
+    return bytes.fromhex('4a4b4c').decode('utf-8')
+
+def process_to_int(value):
+    return int(value, 16)
+
 
 
 def main():
