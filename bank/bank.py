@@ -65,7 +65,7 @@ class Bank(object):
         generated_number = number.getPrime(n)
         return generated_number
 
-    def bytesize(value):
+    def bytesize(self, value):
         if type(value) is str:
             return len(bytes(value, "utf-8"))
         else:
@@ -92,8 +92,8 @@ class Bank(object):
         # Sends bank's half of diffie hellman to ATM.
         self.default_write(struct.pack(">32s256s", format("dif_side_bank"), format(side_bank, 256)))
         # Receives ATM's half of diffie hellman from ATM to compute final value.
-        print(self.bytesize(side_bank))
-        print(self.bytesize(side_atm))
+        the_size = self.bytesize(side_bank)
+        print "The size: ", the_size
         transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
         self.uptime_key_bank = (side_atm**secret_number_b) % mod
