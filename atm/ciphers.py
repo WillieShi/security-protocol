@@ -55,11 +55,8 @@ def encrypt_aes(message, key, IV):
 
 # Takes a message and AES key, and decrypts the message.
 def decrypt_aes(message, key, IV):
-<<<<<<< HEAD
     # the key is the AES key
-=======
     # the key is the AES key that was generated earlier
->>>>>>> e709fd7878cc0d41e75187f079ad062dacaa4327
     # message is the encrypted message you want to decrypt
     # the IV is still the IV
     decrypt_cipher = AES.new(key.encode('utf-8'), AES.MODE_CTR, IV)
