@@ -48,6 +48,7 @@ if __name__ == "__main__":
     aes_key = ciphers.create_aes_key()
     pin = str(random.randint(0, 9999))
 
+
     card.provision(aes_key, IV, card_num, passkey)
     print "Card provisioned!"
     # update bank
