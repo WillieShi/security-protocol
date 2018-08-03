@@ -1,11 +1,7 @@
 # Bank-side crypto
-# Fox
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import hashlib
-
-
-# here we define AES functions
 
 
 def generate_salt(length):
