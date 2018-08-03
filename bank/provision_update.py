@@ -22,7 +22,7 @@ def parse_args():
 if __name__ == "__main__":
     port, baudrate, db_file, admin_db_file = parse_args()
 
-    atm = serial.serial(port, baudrate, timeout=5)
+    atm = serial.Serial(port, baudrate= "115200", timeout=5)
 
     try:
         while True:
