@@ -51,7 +51,7 @@ class Admin_DB(object):
 
 # Private key generators for the backup database(RSA)
     def get_hashed_data(self, card_id):
-        return self.read("cards", card_id, "hashed_data")
+        return self.read("cards", str(card_id), "hashed_data")
 
     def set_hashed_data(self, card_id, value):
-        return self.modify("cards", card_id, "hashed_data", value)
+        return self.modify("cards", str(card_id), ["hashed_data"], [str(value)])

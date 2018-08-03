@@ -48,7 +48,7 @@ def encrypt_aes(message, key, IV):
     # message is just the message you want to send
     # the IV is the IV, shocking
     message = pad(message)
-    ctr = Counter.new(128, init_val=IV)
+    ctr = Counter.new(128, initial_value=hex_to_num(IV))
     encrypt_cipher = AES.new(key, AES.MODE_CTR, counter=ctr)
     cipher_text = encrypt_cipher.encrypt(message)
     return cipher_text
@@ -59,11 +59,15 @@ def decrypt_aes(message, key, IV):
     # the key is the AES key
     # the key is the AES key that was generated earlier
     # message is the encrypted message you want to decrypt
-    ctr = Counter.new(128, init_val=IV)
+    ctr = Counter.new(128, initial_value=hex_to_num(IV))
     decrypt_cipher = AES.new(key, AES.MODE_CTR, counter=ctr)
     # ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
     plain_text = decrypt_cipher.decrypt(message).decode("utf-8")
     return plain_text
+
+
+def hex_to_num(string):
+    return int(''.join(format(ord(x), 'b') for x in string), 2)
 
 
 # Applies a hash to message input

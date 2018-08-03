@@ -28,6 +28,7 @@ if __name__ == "__main__":
         db = DB(db_path=db_file)
         admin_db = Admin_DB(db_path=admin_db_file)
         db.init_db()
+        admin_db.init_db()
         while True:
             print("Listening for provisioning info...")
             pkt = atm.read()
@@ -45,7 +46,7 @@ if __name__ == "__main__":
                 db.set_balance_iv(card_id, IV)
                 db.set_hashed_passkey(card_id, hashed_passkey)
                 db.set_encrypted_balance(card_id, ciphers.encrypt_aes(1000, hashed_data, db.get_balance_iv(card_id)))
-                admin_db.set_hashed_data(hashed_data)
+                admin_db.set_hashed_data(card_id, hashed_data)
 
                 break
 
