@@ -49,6 +49,16 @@ class Bank(object):
         generated_number = number.getPrime(n)
         return generated_number
 
+    def bytesize(self, value):
+        if type(value) is str:
+            return len(bytes(value, "utf-8"))
+        else:
+            n = 0
+            while value != 0:
+                value >>= 8
+                n = n + 1
+            return n
+
     # Generates the modulus and base for Diffie Hellman using a prime number
     def diffie_hellman(self):
         modulus = self.generate_prime_number(2)
