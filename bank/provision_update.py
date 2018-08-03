@@ -39,10 +39,17 @@ if __name__ == "__main__":
                 print(pkt)
                 print(len(pkt))
                 aes_key, IV, card_id, hashed_passkey, hashed_data = struct.unpack(">64s32s32s64s64s", pkt)
+<<<<<<< HEAD
                 aes_key = process_to_int(aes_key)
                 IV = process_to_int(IV)
                 hashed_passkey = process_to_int(aes_key)
                 hashed_data = process_to_int(hashed_data)
+=======
+                aes_key = format(aes_key)
+                IV = format(IV)
+                card_id = format(card_id)
+                hashed_passkey = format(hashed_passkey)
+>>>>>>> 00eb41fadf354ca78b0174076a4b4ac80db3c76e
                 print("parts", aes_key, IV, card_id, hashed_passkey, hashed_data)
 
                 db.set_aes_key(card_id, aes_key)
