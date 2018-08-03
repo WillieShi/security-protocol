@@ -95,6 +95,7 @@ class Bank(object):
         the_size = self.bytesize(side_bank)
         print "The size: ", the_size
         transaction_id, side_atm = struct.unpack("32s256s", self.default_read(288))
+        print(self.bytesize(side_atm))
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
         self.uptime_key_bank = (side_atm**secret_number_b) % mod
 
@@ -199,11 +200,14 @@ def parse_args():
     return parser.parse_args()
 
 
-def format(value, size=256):
+def format(value, size=256, endianess = 'little'):
     if type(value) is str:
-        return bytes(value, "utf-8")
+        return bytes(value)
     else:
-        return (value).to_bytes(size, byteorder='little')
+        h = '%x' % value
+        s = ('0'*(len(h) % 2) + h).zfill(size*2).decode('hex')
+        return s[::-1]
+
 
 
 def process(value):
