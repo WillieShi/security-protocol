@@ -116,7 +116,7 @@ class Bank(object):
 
     def withdraw(self, balance, card_id, hashed_data):
         encrypted_withdraw_amount = struct.unpack(">16s", self.default_read(16))
-        withdraw_amount = ciphers.decrypt_aes(encrypted_withdraw_amount, self.db.get_aes_key(card_id), self.db.get_iv(card_id))
+        withdraw_amount = int(ciphers.decrypt_aes(encrypted_withdraw_amount, self.db.get_aes_key(card_id), self.db.get_iv(card_id)))
 
         if balance > withdraw_amount:
             new_balance = balance - withdraw_amount
@@ -124,7 +124,7 @@ class Bank(object):
             self.default_write(struct.pack(">16s16s16s", ciphers.encrypt_aes(new_balance, self.db.get_aes_key(card_id), self.db.get_iv(card_id)), newIV, ciphers.encrypt_aes(new_balance, self.atm_key, self.atm_IV)))
             self.db.set_aes_key(card_id, gen_new_key(self.db.get_aes_key(card_id), new_balance))
             self.db.set_iv(card_id, newIV)
-            self.db.set_encrypted_balance(card_id, ciphers.encrypt_aes(new_balance, hashed_data))
+            self.db.set_encrypted_balance(card_id, ciphers.encrypt_aes(new_balance, hashed_data), self.db.get_balance_iv(card_id))
         else:
             self.default_write("You're broke ponyboy")
 

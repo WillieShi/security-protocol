@@ -163,7 +163,7 @@ class ATM(cmd.Cmd, object):
             if not pin.isdigit():
                 print("Please only use digits")
                 continue
-        return pin
+        return str(pin)
 
     def do_1(self, args):
         """Check Balance"""
