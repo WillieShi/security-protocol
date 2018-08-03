@@ -158,11 +158,10 @@ def parse_args():
 # Used to reformat inputs to bytes, which can then be packed using struct
 def format(value, size=256):
     if type(value) is str:
-        return bytes(value)
+        return value.encode("hex")
     else:
-        h = '%x' % value
-        s = ('0'*(len(h) % 2) + h).zfill(size*2).decode('hex')
-        return s[::-1]
+        return hex(value)
+
 
 
 
