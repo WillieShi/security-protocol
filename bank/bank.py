@@ -44,10 +44,21 @@ class Bank(object):
     def default_read(self, size):
         return self.atm.read(size)
 
-    # generates a prime number to be used in diffie hellman
+    # Generates a prime number to be used in diffie hellman
     def generate_prime_number(self, n):
         generated_number = number.getPrime(n)
         return generated_number
+
+    # Used to measure sizes of a given value in bytes, for debugging
+    def bytesize(self, value):
+        if type(value) is str:
+            return len(bytes(value, "utf-8"))
+        else:
+            n = 0
+            while value != 0:
+                value >>= 8
+                n = n + 1
+            return n
 
     # Generates the modulus and base for Diffie Hellman using a prime number
     def diffie_hellman(self):
@@ -62,7 +73,6 @@ class Bank(object):
         self.default_write(struct.pack(">32s256s256s", format("dif_mod_base"), format(mod, 256), format(base, 256)))
         secret_number_b = random.randint(1, 9999)
         side_bank = (base**secret_number_b) % mod
-
         # Sends bank's half of diffie hellman to ATM.
         self.default_write(struct.pack(">32s256s", format("dif_side_bank"), format(side_bank, 256)))
         # Receives ATM's half of diffie hellman from ATM to compute final value.
@@ -71,8 +81,8 @@ class Bank(object):
         self.atm_key, self.atm_IV = (side_atm**secret_number_b) % mod, ciphers.generate_salt(16)
 
     # Links commands in ATM-Bank interface to functions in the bank
-    # Three letter codes link interface commands to bank functions.
-    # Initializes AES Key first upon power cycle.
+    # Three-letter codes link interface commands to bank functions.
+    # Initializes AES Key first upon power cycle with diffie_bank()
     def start(self):
         self.diffie_bank()
         self.atm_key = 0
