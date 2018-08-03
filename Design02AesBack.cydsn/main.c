@@ -24,16 +24,20 @@
 const uint8_t row[CY_FLASH_SIZEOF_ROW] CY_ALIGN(CY_FLASH_SIZEOF_ROW) = {0};
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 //Memory Row Constants
 =======
 >>>>>>> 65adf47bbe2cd2edacf9ac506417df4e8766dfab
+=======
+//Memory Row Constants, Since it's Flash we write in 128 chunks. Start at 150 to avoid overwriting important things
+>>>>>>> 87916d56c630be1f20ecc5bda91fa6bdf489b55c
 #define AESrow 150
 #define ivrow 151
 #define cardrow 152
 #define passrow 153
 
 //Ben's crappy variable
-#define PIN_LEN 8
+#define PIN_LEN 8i
 #define UUID_LEN 36
 #define PINCHG_SUC "SUCCESS"
 #define PROV_MSG "P"
@@ -71,6 +75,7 @@ int main (void)
     uint8_t balance[16];
     uint8_t iv[16];
     //loop over and await commands from overlord
+    
     for(;;)
     {
 <<<<<<< HEAD
@@ -97,6 +102,10 @@ int main (void)
         }
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+    
+>>>>>>> 87916d56c630be1f20ecc5bda91fa6bdf489b55c
 
 =======
     
@@ -151,6 +160,7 @@ void req()
     pushMessage(bigboi, 48);
 }
 
+//load memory from flash given the row, size, and buffer pointer
 void loadmem(int row, int size, uint8* buf)
 {
     for(int i = 0; i < size; i++)

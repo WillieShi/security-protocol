@@ -22,27 +22,35 @@ def parse_args():
 if __name__ == "__main__":
     port, baudrate, db_file, admin_db_file = parse_args()
 
+<<<<<<< HEAD
     atm = serial.Serial(port, baudrate= "115200", timeout=5)
+=======
+    atm = serial.Serial(port, baudrate, timeout=5)
+>>>>>>> 87916d56c630be1f20ecc5bda91fa6bdf489b55c
 
     try:
+        db = DB(db_path=db_file)
+        admin_db = Admin_DB(db_path=admin_db_file)
         while True:
             print("Listening for provisioning info...")
-            while atm.read() != "p":
-                continue
-
-            print("Reading provisioning info...")
-            db = DB(db_file=db_file)
-            admin_db = Admin_DB(admin_db_file=admin_db_file)
-
-            aes_key, IV, card_id, hashed_passkey, hashed_data = struct.pack(">32s16s16s32s32s", atm.read(128))
-            db.set_aes_key(card_id, aes_key)
-            db.set_iv(card_id, IV)
-            db.set_hashed_passkey(card_id, hashed_passkey)
-            db.set_encrypted_balance(card_id, ciphers.encrypt_aes(1000, hashed_data))
-            admin_db.set_hashed_data(hashed_data)
+            pkt = atm.read()
+            print(pkt)
+            if pkt == b'p':
+                print("Reading provisioning info...")
+                pkt = atm.read(128)
+                print(pkt)
+                print(len(pkt))
+                aes_key, IV, card_id, hashed_passkey, hashed_data = struct.unpack(">32s16s16s32s32s", pkt)
+                print("parts", aes_key, IV, card_id, hashed_passkey, hashed_data)
+                db.set_aes_key(card_id, aes_key)
+                db.set_iv(card_id, IV)
+                db.set_balance_iv(card_id, IV)
+                db.set_hashed_passkey(card_id, hashed_passkey)
+                db.set_encrypted_balance(card_id, ciphers.encrypt_aes(1000, hashed_data))
+                admin_db.set_hashed_data(hashed_data)
 
             # card_num, inner_layer_public_key, inner_layer_private_key, outer_layer_public_key, outer_layer_private_key, balance = struct.unpack(">36I256I256I256I256I32I", pkt)
 
-            print("Account added!")
+                print("Account added!")
     except KeyboardInterrupt:
         print("Shutting down...")

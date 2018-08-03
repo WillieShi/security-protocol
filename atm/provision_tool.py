@@ -46,7 +46,7 @@ if __name__ == "__main__":
     IV = ciphers.generate_salt(16)
     passkey = ciphers.generate_salt(16)
     aes_key = ciphers.create_aes_key()
-    pin = random.randint(0, 9999)
+    pin = str(random.randint(0, 9999))
 
     card.provision(aes_key, IV, card_num, passkey)
     print "Card provisioned!"
