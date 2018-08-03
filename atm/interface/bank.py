@@ -104,9 +104,9 @@ class Bank:
 # Used to reformat inputs to bytes, which can then be packed using struct
 def format(value, size=256):
     if type(value) is str:
-        return bytes(value, "utf-8")
+        return value.encode("hex")
     else:
-        return bin(value).decode('utf-8')
+        return hex(value)
 
 
 # Converts bytes back into int, only works on int
