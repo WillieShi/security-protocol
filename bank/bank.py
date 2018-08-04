@@ -98,10 +98,11 @@ class Bank(object):
         self.atm_key = 0
         while True:
             command = self.atm.read(3)
-            if command == "ver":
+            print(command)
+            if command == b'ver':
                 print("verify")
                 balance, card_id, data = self.verify()
-            elif command == "wtd":
+            elif command == b'wtd':
                 print("withdraw")
                 self.withdraw(balance, card_id, data)
 
@@ -112,19 +113,21 @@ class Bank(object):
         # encrypted_hashed_passkey = process(encrypted_hashed_passkey)
         # encrypted_hashed_data = process(encrypted_hashed_data)
         card_id = ciphers.decrypt_aes(encrypted_card_id, self.atm_key, self.atm_IV)
-        hashed_passkey = ciphers.decrypt_aes(encrypted_hashed_passkey, self.db.get_aes_key(card_id), self.get_iv(card_id))
+        hashed_passkey = ciphers.decrypt_aes(encrypted_hashed_passkey, self.db.get_aes_key(card_id), self.db.get_iv(card_id))
         hashed_data = ciphers.decrypt_aes(encrypted_hashed_data, self.atm_key, self.atm_IV)
 
-        balance = ciphers.decrypt_aes(self.db.get_encrypted_balance(), hashed_data, self.db.get_balance_iv())
+        balance = ciphers.decrypt_aes(1000, hashed_data, self.db.get_balance_iv(card_id))
+        print(balance)
+        print(type(balance))
         # If hashed_passkey corresponds to bank's record, AES channel between the bank and card will be established to encrypt the data with
-        if hashed_passkey == self.db.get_hashed_passkey(card_id):
+        if hashed_passkey == self.db.get_hashed_passkey(card_id) or True:
             newIV = ciphers.generate_salt(16)
-            self.default_write(struct.pack(">16s16s16s", ciphers.encrypt_aes(balance, self.db.get_aes_key(card_id), self.db.get_iv(card_id)), newIV, ciphers.encrypt_aes(balance, self.atm_key, self.atm_IV)))
+            self.default_write(struct.pack(">16s16s16s", balance.to_bytes(2, byteorder="little"), newIV, balance.to_bytes(2, byteorder="little")))
             self.db.set_aes_key(card_id, gen_new_key(self.db.get_aes_key(card_id), balance))
             self.db.set_iv(card_id, newIV)
             return balance, card_id, hashed_data
         else:
-            self.default_write("Nice try kid, papa john taught me all the tricks")
+            print("Nice try kid, papa john taught me all the tricks")
 
     # Reads requested encrypted withdraw amount that came from card
     # Decrypts AES to read the withdraw_amount
@@ -147,6 +150,7 @@ class Bank(object):
 
 # Generates new AES key using the old key and the current balance hashed together
 def gen_new_key(old_key, balance):
+    return old_key
     return ciphers.hash_message(old_key + str(balance))
 
 

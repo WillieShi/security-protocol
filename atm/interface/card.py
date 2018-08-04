@@ -2,6 +2,7 @@
 import logging
 import struct
 import serial
+import os
 
 
 class NotProvisioned(Exception):
@@ -34,8 +35,9 @@ class Card(object):
 
         self.ser.write("req")
 
-        card_id, encrypted_hashed_passkey = struct.unpack(">16s32s", self.ser.read(48))
-        return card_id, encrypted_hashed_passkey
+        # card_id, encrypted_hashed_passkey = struct.unpack(">16s32s", self.ser.read(48))
+        # return card_id, encrypted_hashed_passkey
+        return os.urandom(16), os.urandom(32)
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set

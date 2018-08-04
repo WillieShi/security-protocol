@@ -13,7 +13,6 @@ import logging
 import struct
 import serial
 import ciphers
-from random import randint
 
 
 class Bank:
@@ -75,7 +74,7 @@ class Bank:
 
     # Sends to bank the card-encrypted balance (only card and bank have AES key), and the atm-encrypted balance (only atm and bank have AES key)
     def read_verify_or_withdraw(self):
-        card_encrypted_balance, IV, atm_encrypted_balance = struct.pack(">16s16s16s", self.default_read(48))
+        card_encrypted_balance, IV, atm_encrypted_balance = struct.unpack(">16s16s16s", self.default_read(48))
         card_encrypted_balance = process_to_int(card_encrypted_balance)
         IV = process_to_int(IV)
         atm_encrypted_balance = process_to_int(atm_encrypted_balance)
@@ -83,7 +82,7 @@ class Bank:
 
     # Encrypts information needed to verify user with atm-bank-only AES and sends to bank
     def write_verify(self, encrypted_hashed_passkey, card_id, pin):
-        pkt = "ver" + struct.pack(">16s16s16s", format(encrypted_hashed_passkey), format(ciphers.encrypt_aes(ciphers.hash_message(card_id+pin), self.bank_key, self.bank_IV)), format(ciphers.encrypt_aes(card_id, self.bank_key, self.bank_IV)))
+        pkt = "ver" + struct.pack(">32s32s16s", format(encrypted_hashed_passkey), format(ciphers.encrypt_aes(ciphers.hash_message(card_id+pin), self.bank_key, self.bank_IV)), format(ciphers.encrypt_aes(card_id, self.bank_key, self.bank_IV)))
         print(pkt)
         self.default_write(pkt)
 
@@ -118,10 +117,9 @@ def format(value, size=256):
     return value
 
 
-# Converts bytes back into int, only works on int
 def process_to_string(value):
-    return value.decode('hex')
+    return value
 
 
 def process_to_int(value):
-    return int(value, 16)
+    return value

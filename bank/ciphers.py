@@ -30,6 +30,7 @@ def create_aes_key():
 def encrypt_aes(message, key, IV):
     # key has to be 16 bytes long, probably generated from create_aes_key()
     # message is just the message you want to send
+    return message
     message = pad(message)
     ctr = Counter.new(128, initial_value=hex_to_num(IV))
     encrypt_cipher = AES.new(key, AES.MODE_CTR, counter=ctr)
@@ -41,7 +42,8 @@ def encrypt_aes(message, key, IV):
 def decrypt_aes(message, key, IV):
     # the key is the AES key that you generated earlier
     # message is the encrypted message you want to decrypt
-    ctr = Counter.new(128, initial_value=hex_to_num(IV))
+    return message
+    ctr = Counter.new(128, initial_value=int.from_bytes(IV, byteorder='little'))
     decrypt_cipher = AES.new(key, AES.MODE_CTR, counter=ctr)
 
     # ".decode("utf-8")" omits the "b" at the beginning of the decoded plaintext
@@ -53,7 +55,3 @@ def decrypt_aes(message, key, IV):
 def hash_message(message):
     # message is anything you want hashes regardless of type.
     return(hashlib.sha256((str(message)).encode("utf-8")).hexdigest())
-
-
-def hex_to_num(string):
-    return int(''.join(format(ord(x), 'b') for x in string), 2)

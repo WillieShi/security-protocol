@@ -150,9 +150,7 @@ class ATM(cmd.Cmd, object):
 
     def do_1(self, args):
         """Check Balance"""
-        pin = self.get_pin()
-        if not self.check_balance(pin):
-            print("Balance lookup failed!")
+        self.check_balance()
 
     def do_2(self, args):
         """Withdraw"""
