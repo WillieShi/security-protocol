@@ -83,12 +83,14 @@ class Bank:
 
     # Encrypts information needed to verify user with atm-bank-only AES and sends to bank
     def write_verify(self, encrypted_hashed_passkey, card_id, pin):
-        pkt = struct.pack(">16s16s16s", format(encrypted_hashed_passkey), format(ciphers.encrypt_aes(ciphers.hash_message(card_id+pin), self.bank_key, self.bank_IV)), format(ciphers.encrypt_aes(card_id, self.bank_key, self.bank_IV)))
+        pkt = "ver" + struct.pack(">16s16s16s", format(encrypted_hashed_passkey), format(ciphers.encrypt_aes(ciphers.hash_message(card_id+pin), self.bank_key, self.bank_IV)), format(ciphers.encrypt_aes(card_id, self.bank_key, self.bank_IV)))
+        print(pkt)
         self.default_write(pkt)
 
     # Sends user's requested withdraw amount from atm to bank after encrypting
     def write_withdraw(self, withdraw_amount):
-        pkt = struct.pack(">16s", format(ciphers.encrypt_aes(str(withdraw_amount), self.bank_key, self.bank_IV)))
+        pkt = "wtd" + struct.pack(">16s", format(ciphers.encrypt_aes(str(withdraw_amount), self.bank_key, self.bank_IV)))
+        print(pkt)
         self.default_write(pkt)
         return True
 

@@ -5,6 +5,7 @@ import ciphers
 import sys
 import struct
 import random
+import os
 
 
 def parse_args():
@@ -42,9 +43,9 @@ if __name__ == "__main__":
     print "Provisioning card..."
     card = Card(c_port, baudrate=c_baud, verbose=True)
 
-    card_num = ciphers.generate_salt(16)
-    IV = ciphers.generate_salt(16)
-    passkey = ciphers.generate_salt(16)
+    card_num = os.urandom(16)
+    IV = os.urandom(16)
+    passkey = os.urandom(16)
     aes_key = ciphers.create_aes_key()
     pin = str(random.randint(0, 9999))
 
