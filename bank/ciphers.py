@@ -1,14 +1,14 @@
 
 # Bank-side crypto
 from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
 import hashlib
 from Crypto.Util import Counter
+import os
 
 
 def generate_salt(length):
     # length is the length of the salt you want
-    return get_random_bytes(length)
+    return os.urandom(length)
 
 
 def pad(unpadded_message):
@@ -22,7 +22,7 @@ def pad(unpadded_message):
 # Creates new AES key
 def create_aes_key():
     # this takes 32 random bytes to make our key
-    new_key = get_random_bytes(32)
+    new_key = os.urandom(32)
     return new_key
 
 

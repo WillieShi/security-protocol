@@ -75,7 +75,7 @@ class Bank:
 
     # Sends to bank the card-encrypted balance (only card and bank have AES key), and the atm-encrypted balance (only atm and bank have AES key)
     def read_verify_or_withdraw(self):
-        card_encrypted_balance, IV, atm_encrypted_balance = struct.pack(">32s32s132s", self.default_read(96))
+        card_encrypted_balance, IV, atm_encrypted_balance = struct.pack(">16s16s16s", self.default_read(48))
         card_encrypted_balance = process_to_int(card_encrypted_balance)
         IV = process_to_int(IV)
         atm_encrypted_balance = process_to_int(atm_encrypted_balance)
@@ -83,18 +83,18 @@ class Bank:
 
     # Encrypts information needed to verify user with atm-bank-only AES and sends to bank
     def write_verify(self, encrypted_hashed_passkey, card_id, pin):
-        pkt = struct.pack(">64s64s32s", format(encrypted_hashed_passkey), format(ciphers.encrypt_aes(ciphers.hash_message(card_id+pin), self.bank_key, self.bank_IV)), format(ciphers.encrypt_aes(card_id, self.bank_key, self.bank_IV)))
+        pkt = struct.pack(">16s16s16s", format(encrypted_hashed_passkey), format(ciphers.encrypt_aes(ciphers.hash_message(card_id+pin), self.bank_key, self.bank_IV)), format(ciphers.encrypt_aes(card_id, self.bank_key, self.bank_IV)))
         self.default_write(pkt)
 
     # Sends user's requested withdraw amount from atm to bank after encrypting
     def write_withdraw(self, withdraw_amount):
-        pkt = struct.pack(">32s", format(ciphers.encrypt_aes(str(withdraw_amount), self.bank_key, self.bank_IV)))
+        pkt = struct.pack(">16s", format(ciphers.encrypt_aes(str(withdraw_amount), self.bank_key, self.bank_IV)))
         self.default_write(pkt)
         return True
 
     # Begins provision process and sends important data to bank
     def provision_update(self, aes_key, IV, card_num, hashed_passkey, hashed_data):
-        pkt = struct.pack(">64s32s32s64s64s", format(aes_key), format(IV), format(card_num), format(hashed_passkey), format(hashed_data))
+        pkt = struct.pack(">32s16s16s32s32s", format(aes_key), format(IV), format(card_num), format(hashed_passkey), format(hashed_data))
         print(pkt)
         print(len(pkt))
 
@@ -113,10 +113,7 @@ class Bank:
 
 # Used to reformat inputs to bytes, which can then be packed using struct
 def format(value, size=256):
-    if type(value) is str:
-        return value.encode("hex")
-    else:
-        return hex(value)
+    return value
 
 
 # Converts bytes back into int, only works on int

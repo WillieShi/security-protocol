@@ -2,8 +2,7 @@
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 import hashlib
-import random
-import string
+import os
 
 # here we define AES functions
 
@@ -12,8 +11,7 @@ def generate_salt(length):
     # length is the length of the salt you want
     # returns an encoded string of the specified length
 
-    result = ''.join(random.choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(length))
-
+    result = os.urandom(length)
     return result.encode('utf-8')
 
 
