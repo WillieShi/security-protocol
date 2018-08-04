@@ -116,12 +116,13 @@ class Bank(object):
         hashed_data = ciphers.decrypt_aes(encrypted_hashed_data, self.atm_key, self.atm_IV)
 
         balance = ciphers.decrypt_aes(1000, hashed_data, self.db.get_balance_iv(card_id))
+        balance = 1000
         print(balance)
         print(type(balance))
         # If hashed_passkey corresponds to bank's record, AES channel between the bank and card will be established to encrypt the data with
         if hashed_passkey == self.db.get_hashed_passkey(card_id) or True:
             newIV = ciphers.generate_salt(16)
-            self.default_write(struct.pack(">16s16s16s", balance.to_bytes(2, byteorder="little"), newIV, balance.to_bytes(2, byteorder="little")))
+            self.default_write(struct.pack(">16s16sL", balance.to_bytes(2, byteorder="little"), newIV, balance))
             self.db.set_aes_key(card_id, gen_new_key(self.db.get_aes_key(card_id), balance))
             self.db.set_iv(card_id, newIV)
             return balance, card_id, hashed_data

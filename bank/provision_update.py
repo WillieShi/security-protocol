@@ -29,7 +29,7 @@ if __name__ == "__main__":
         admin_db = Admin_DB(db_path=admin_db_file)
         if(not db.exists()):
             db.init_db()
-        if(not db.exits()):
+        if(not db.exists()):
             admin_db.init_db()
         while True:
             print("Listening for provisioning info...")
