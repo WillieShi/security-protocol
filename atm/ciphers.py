@@ -44,6 +44,7 @@ def create_aes_key():
 
 # Takes a message and AES key, and encrypts the message.
 def encrypt_aes(message, key, IV):
+    return message
     # key has to be a multiple of 16 bytes long, probably generated from create_aes_key()
     # message is just the message you want to send
     # the IV is the IV, shocking
@@ -56,6 +57,7 @@ def encrypt_aes(message, key, IV):
 
 # Takes a message and AES key, and decrypts the message.
 def decrypt_aes(message, key, IV):
+    return message
     # the key is the AES key
     # the key is the AES key that was generated earlier
     # message is the encrypted message you want to decrypt

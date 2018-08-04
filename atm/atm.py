@@ -27,7 +27,7 @@ class ATM(cmd.Cmd, object):
     prompt = '1. Check Balance\r\n2. Withdraw\r\n3. Change PIN\r\n> '
     current_card_id = 0
 
-    def __init__(self, bank, card, config_path="config.json",
+    def __init__(self, bank, card, config_path="../config.json",
                  billfile="billfile.out", verbose=False):
         super(ATM, self).__init__()
         self.bank = bank

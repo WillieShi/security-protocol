@@ -66,15 +66,15 @@ class Bank(object):
 
     # Generates the modulus and base for Diffie Hellman using a prime number
     def diffie_hellman(self):
-        modulus = self.generate_prime_number(100)
-        base = self.generate_prime_number(100)
+        modulus = self.generate_prime_number(1000)
+        base = self.generate_prime_number(1000)
         return (modulus, base)
 
     # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
     def diffie_bank(self):
         mod, base = self.diffie_hellman()
         #  Sends modulus and base to ATM
-        self.default_write(struct.pack(">32s256s256s", format("dif_mod_base"), format(mod, 256), format(base, 256)))
+        self.default_write(struct.pack(">64s512s512s", format("dif_mod_base"), format(mod), format(base)))
         # random.randint() is a pseudorandom num generator that returns a value N such that a <= N <= b
         secret_number_b = random.randint(1, 9999)
         side_bank = (base**secret_number_b) % mod

@@ -24,7 +24,7 @@ class Bank:
     """
 
     def __init__(self, port, verbose=True):
-        # self.ser = serial.Serial(port, baudrate=115200, timeout=2)
+        self.ser = serial.Serial(port='/dev/ttyO1', baudrate=115200, timeout=2)
         self.verbose = verbose
 
     # Write function for when AES tunnel is not established.
@@ -40,6 +40,7 @@ class Bank:
     def diffie_atm(self):
         # Receives modulus and base from bank.
         transaction_id, mod, base = struct.unpack(">64s512s512s", self.default_read(1088))
+        print(transaction_id, mod, base)
         transaction_id = process_to_string(transaction_id)
         # converts mod and base from bytes to int using process()
         base = process_to_int(base)
@@ -92,7 +93,7 @@ class Bank:
         pkt = struct.pack(">64s32s32s64s64s", format(aes_key), format(IV), format(card_num), format(hashed_passkey), format(hashed_data))
         print(pkt)
         print(len(pkt))
-        self.ser = serial.Serial('/dev/ttyO1', baudrate=115200, timeout=2)
+
         # total length is 128 bytes
         self.ser.write("p" + pkt)
 
