@@ -27,8 +27,10 @@ if __name__ == "__main__":
     try:
         db = DB(db_path=db_file)
         admin_db = Admin_DB(db_path=admin_db_file)
-        db.init_db()
-        admin_db.init_db()
+        if(not db.exists()):
+            db.init_db()
+        if(not db.exits()):
+            admin_db.init_db()
         while True:
             print("Listening for provisioning info...")
             pkt = atm.read()

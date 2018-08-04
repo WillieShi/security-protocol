@@ -31,7 +31,6 @@ class Bank(object):
     '''
 
     def __init__(self, port, baud=115200, db_path="bank.json"):
-        super(Bank, self).__init__()
         self.db = db.DB(db_path=db_path)
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
 
