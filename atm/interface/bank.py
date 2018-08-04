@@ -38,6 +38,7 @@ class Bank:
     # The ATM-side diffie hellman function, which receives the modulus and base from the bank.
     # Performs computations after receving modulus and base from bank.
     def diffie_atm(self):
+        """
         # Receives modulus and base from bank.
         transaction_id, mod, base = struct.unpack(">64s512s512s", self.default_read(1088))
         print(transaction_id, mod, base)
@@ -58,6 +59,9 @@ class Bank:
         # RECIEVE THE IV FROMT THE BANK
         # Fix
         self.bank_key, self.bank_IV = (side_bank**secret_number_a) % mod
+        """
+        self.bank_key = ciphers.hash_message("Super secret key")
+        self.bank_IV = ciphers.generate_salt(16)
 
     def _vp(self, msg, stream=logging.info):
         """Prints message if verbose was set

@@ -1,3 +1,4 @@
+
 # Bank-side crypto
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
@@ -27,7 +28,6 @@ def create_aes_key():
 
 # Takes a message and AES key, and encrypts the message.
 def encrypt_aes(message, key, IV):
-    return message
     # key has to be 16 bytes long, probably generated from create_aes_key()
     # message is just the message you want to send
     message = pad(message)
@@ -39,7 +39,6 @@ def encrypt_aes(message, key, IV):
 
 # Takes a message and AES key, and decrypts the message.
 def decrypt_aes(message, key, IV):
-    return message
     # the key is the AES key that you generated earlier
     # message is the encrypted message you want to decrypt
     ctr = Counter.new(128, initial_value=hex_to_num(IV))
@@ -53,7 +52,7 @@ def decrypt_aes(message, key, IV):
 # Applies a hash to message input
 def hash_message(message):
     # message is anything you want hashes regardless of type.
-    return(hashlib.sha3_256((str(message)).encode("utf-8")).hexdigest())
+    return(hashlib.sha256((str(message)).encode("utf-8")).hexdigest())
 
 
 def hex_to_num(string):

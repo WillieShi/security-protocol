@@ -72,6 +72,7 @@ class Bank(object):
 
     # Bank-side diffie hellman function, which sends the modulus and base to ATM before computing agreed value.
     def diffie_bank(self):
+        """
         mod, base = self.diffie_hellman()
         #  Sends modulus and base to ATM
         self.default_write(struct.pack(">64s512s512s", format("dif_mod_base"), format(mod), format(base)))
@@ -88,6 +89,9 @@ class Bank(object):
         # uptime_key_bank is the final bank-side agreed value for diffie hellman
         self.atm_key, self.atm_IV = (side_atm**secret_number_b) % mod, ciphers.generate_salt(16)
         self.default_write(struct.pack(">16s", self.atm_IV))
+        """
+        self.atm_key = ciphers.hash_message("Super secret key")
+        self.atm_IV = ciphers.generate_salt(16)
 
     # Links commands in ATM-Bank interface to functions in the bank
     # Three-letter codes link interface commands to bank functions (see top of this file for key on three-letter codes)
