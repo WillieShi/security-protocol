@@ -24,8 +24,7 @@ class DB(object):
             f.write(json.dumps({'atms': {}, 'cards': {}, 'storage': {}}))
 
     def exists(self):
-        if not self.exists():
-            self.init_db()
+        return os.path.exists(self.path)
 
     def modify(self, table, k, subks, vs):
         with open(self.path, 'r') as f:
