@@ -38,12 +38,7 @@ if __name__ == "__main__":
                 pkt = atm.read(128)
                 print(pkt)
                 print(len(pkt))
-                aes_key, IV, card_id, hashed_passkey, hashed_data = struct.unpack(">64s32s32s64s64s", pkt)
-
-                aes_key = process_to_int(aes_key)
-                IV = process_to_int(IV)
-                hashed_passkey = process_to_int(aes_key)
-                hashed_data = process_to_int(hashed_data)
+                aes_key, IV, card_id, hashed_passkey, hashed_data = struct.unpack(">32s16s16s32s32s", pkt)
 
                 print("parts", aes_key, IV, card_id, hashed_passkey, hashed_data)
 
@@ -65,10 +60,7 @@ if __name__ == "__main__":
 
 # Used to reformat inputs to bytes, which can then be packed using struct
 def format(value, size=256):
-    if type(value) is str:
-        return value.encode("hex")
-    else:
-        return hex(value)
+    return value
 
 
 # Converts bytes back into int, only works on int

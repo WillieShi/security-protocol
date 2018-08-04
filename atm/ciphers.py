@@ -2,8 +2,7 @@
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 import hashlib
-import random
-import string
+import os
 
 # here we define AES functions
 
@@ -12,9 +11,7 @@ def generate_salt(length):
     # length is the length of the salt you want
     # returns an encoded string of the specified length
 
-    result = ''.join(random.choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(length))
-
-    return result.encode('utf-8')
+    return os.urandom(length)
 
 
 def generate_byte_length_num(length):
@@ -75,4 +72,4 @@ def hex_to_num(string):
 # Applies a hash to message input
 def hash_message(message):
     # message is anything you want hashed regardless of type.
-    return(hashlib.sha256((str(message)).encode("utf-8")).hexdigest())
+    return hashlib.sha256(message).digest()

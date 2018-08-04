@@ -19,8 +19,6 @@ import argparse
 import struct
 from Crypto.Util import number
 import ciphers
-import random
-import binascii
 
 
 class Bank(object):
@@ -36,7 +34,6 @@ class Bank(object):
         super(Bank, self).__init__()
         self.db = db.DB(db_path=db_path)
         self.atm = serial.Serial(port, baudrate=baud, timeout=10)
-
 
     # Write function for when AES tunnel is not established.
     def default_write(self, msg):
@@ -102,11 +99,11 @@ class Bank(object):
         while True:
             command = self.atm.read(3)
             if command == "ver":
+                print("verify")
                 balance, card_id, data = self.verify()
             elif command == "wtd":
+                print("withdraw")
                 self.withdraw(balance, card_id, data)
-            elif command != "":
-                self.atm.write(self.ERROR)
 
     # Reads hashed data that was sent by card to verify the card/account using default.read(), and then decrypts the AES on data
     # Gets user's balance using the decrypted data
@@ -162,22 +159,7 @@ def parse_args():
 
 # Used to reformat inputs to bytes, which can then be packed using struct
 def format(value, size=256):
-    if type(value) is str:
-        return binascii.hexlify(value.encode('utf-8'))
-
-    else:
-        ret = str(hex(value)).encode('utf-8')
-        print(ret)
-        return ret
-
-
-# Converts bytes back into int, only works on int
-def process_to_string(value):
-    return bytes.fromhex('4a4b4c').decode('utf-8')
-
-
-def process_to_int(value):
-    return int(value, 16)
+    return value
 
 
 def main():
