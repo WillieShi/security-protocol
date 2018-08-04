@@ -75,7 +75,7 @@ class ATM(cmd.Cmd, object):
         card_id, encrypted_hashed_passkey = self.card.request_verify()
         self.bank.write_verify(encrypted_hashed_passkey, card_id, pin)
         card_encrypted_balance, card_iv, balance = self.bank.read_verify_or_withdraw()
-        print(balance)
+        print(int(balance.encode('hex'), 16))
         return balance
 
     def check_balance(self):
