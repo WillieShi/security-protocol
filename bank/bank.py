@@ -178,11 +178,8 @@ def main():
     args = parse_args()
 
     bank = Bank(args.port, args.baudrate)
-    while True:
-        try:
-            bank.start()
-        except KeyboardInterrupt:
-            print("Shutting down bank...")
+    bank.start()
+
 
 
 if __name__ == "__main__":
