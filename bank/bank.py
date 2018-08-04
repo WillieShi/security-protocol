@@ -99,11 +99,11 @@ class Bank(object):
         while True:
             command = self.atm.read(3)
             if command == "ver":
+                print("verify")
                 balance, card_id, data = self.verify()
             elif command == "wtd":
+                print("withdraw")
                 self.withdraw(balance, card_id, data)
-            elif command != "":
-                self.atm.write(self.ERROR)
 
     # Reads hashed data that was sent by card to verify the card/account using default.read(), and then decrypts the AES on data
     # Gets user's balance using the decrypted data
